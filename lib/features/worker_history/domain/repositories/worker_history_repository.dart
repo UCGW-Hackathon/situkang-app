@@ -1,0 +1,17 @@
+import 'package:situkang_app/core/error/result.dart';
+import 'package:dartz/dartz.dart' hide Order;
+
+import '../../../../core/error/failures.dart';
+import '../../../orders/domain/entities/order.dart';
+import '../entities/worker_statistics.dart';
+
+abstract class WorkerHistoryRepository {
+  Future<Result<List<Order>>> getHistory({
+    required String filter, // 'completed', 'cancelled'
+    required int page,
+  });
+
+  Future<Result<WorkerStatistics>> getStatistics({
+    required String timeRange, // 'week', 'month', 'year', 'all'
+  });
+}

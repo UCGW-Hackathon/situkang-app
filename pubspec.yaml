@@ -1,0 +1,82 @@
+name: situkang_app
+description: "SITUKANG - Flutter marketplace connecting Users with Workers/Tukang for home repair services."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.4.1
+  google_maps_flutter: ^2.10.0
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+
+  # State Management
+  flutter_bloc: ^9.1.0
+  equatable: ^2.0.7
+
+  # Dependency Injection
+  get_it: ^8.0.3
+  injectable: ^2.5.0
+
+  # Networking
+  dio: ^5.7.0
+  web_socket_channel: ^3.0.2
+
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  flutter_secure_storage: ^9.2.4
+  path_provider: ^2.1.5
+
+  # Functional Programming
+  dartz: ^0.10.1
+
+  # Code Generation (runtime annotations)
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+
+  # Routing
+  go_router: ^14.8.1
+
+  # Location
+  geolocator: ^13.0.2
+
+  # Notifications
+  firebase_messaging: ^15.2.4
+  flutter_local_notifications: ^18.0.1
+
+  # Utilities
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Code Generation
+  build_runner: ^2.4.14
+  injectable_generator: ^2.7.0
+  freezed: ^3.0.0
+  json_serializable: ^6.9.4
+
+  # Testing
+  bloc_test: ^10.0.0
+  mocktail: ^1.0.4
+  glados: ^1.1.1
+  http_mock_adapter: ^0.6.1
+
+  # Linting
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/

@@ -1,0 +1,74 @@
+import 'package:situkang_app/core/error/result.dart';
+import 'dart:io';
+
+import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
+
+import '../../../../core/error/failures.dart';
+import '../../domain/entities/invoice.dart';
+import '../../domain/repositories/invoice_repository.dart';
+import '../datasources/invoice_remote_data_source.dart';
+
+@LazySingleton(as: InvoiceRepository)
+class InvoiceRepositoryImpl implements InvoiceRepository {
+  const InvoiceRepositoryImpl(this.remoteDataSource);
+
+  final InvoiceRemoteDataSource remoteDataSource;
+
+  @override
+  Future<Result<Invoice>> getInvoice({required String orderId}) async {
+    try {
+      final invoice = await remoteDataSource.getInvoice(orderId);
+      return Right(invoice);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure(e.toString(), statusCode: 500));
+    }
+  }
+
+  @override
+  Future<Result<Invoice>> confirmPayment({
+    required String invoiceId,
+    required String paymentMethod,
+  }) async {
+    try {
+      final invoice =
+          await remoteDataSource.confirmPayment(invoiceId, paymentMethod);
+      return Right(invoice);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure(e.toString(), statusCode: 500));
+    }
+  }
+
+  @override
+  Future<Result<Invoice>> uploadPaymentProof({
+    required String invoiceId,
+    required File proofImage,
+  }) async {
+    try {
+      final invoice =
+          await remoteDataSource.uploadPaymentProof(invoiceId, proofImage);
+      return Right(invoice);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure(e.toString(), statusCode: 500));
+    }
+  }
+
+  @override
+  Future<Result<String>> downloadInvoicePdf(
+      {required String invoiceId}) async {
+    try {
+      final url = await remoteDataSource.downloadInvoicePdf(invoiceId);
+      return Right(url);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure(e.toString(), statusCode: 500));
+    }
+  }
+}
