@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
@@ -11,8 +12,13 @@ import '../routing/app_router.dart';
 /// Wires incoming push notifications to in-app navigation using GoRouter.
 @lazySingleton
 class PushNotificationService {
+  bool _isInitialized = false;
+
   Future<void> initialize() async {
     try {
+      await Firebase.initializeApp();
+      _isInitialized = true;
+      
       final messaging = FirebaseMessaging.instance;
 
       // Request permission
@@ -64,6 +70,10 @@ FirebaseMessaging.onMessage.listen((RemoteMessage message) {
 
   
   Future<void> registerToken(String userId) async {
+    if (!_isInitialized) {
+      debugPrint('Skipping FCM token registration: Firebase is not initialized');
+      return;
+    }
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
@@ -76,6 +86,10 @@ FirebaseMessaging.onMessage.listen((RemoteMessage message) {
   }
 
   Future<void> clearToken() async {
+    if (!_isInitialized) {
+      debugPrint('Skipping FCM token clear: Firebase is not initialized');
+      return;
+    }
     try {
       await FirebaseMessaging.instance.deleteToken();
       debugPrint('Cleared FCM token');

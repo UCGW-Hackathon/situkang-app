@@ -98,7 +98,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     final response = await apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.chatMessages(orderId),
       data: {
-        'type': 'text',
+        'message_type': 'text',
         'content': content,
       },
     );
@@ -119,7 +119,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     String? caption,
   }) async {
     final formData = FormData.fromMap(<String, dynamic>{
-      'type': 'image',
+      'message_type': 'image',
       'image': await MultipartFile.fromFile(
         image.path,
         filename: image.path.split('/').last,
@@ -143,7 +143,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
   @override
   Future<void> markAsRead(String orderId) async {
-    await apiClient.post<Map<String, dynamic>>(
+    await apiClient.patch<Map<String, dynamic>>(
       ApiEndpoints.chatMarkRead(orderId),
     );
   }

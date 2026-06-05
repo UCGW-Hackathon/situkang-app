@@ -18,35 +18,35 @@ class FetchInvoice extends InvoiceEvent {
 
 class ConfirmPayment extends InvoiceEvent {
   const ConfirmPayment({
-    required this.invoiceId,
+    required this.orderId,
     required this.paymentMethod,
   });
 
-  final String invoiceId;
+  final String orderId;
   final String paymentMethod;
 
   @override
-  List<Object?> get props => [invoiceId, paymentMethod];
+  List<Object?> get props => [orderId, paymentMethod];
 }
 
 class UploadPaymentProof extends InvoiceEvent {
   const UploadPaymentProof({
-    required this.invoiceId,
+    required this.orderId,
     required this.proofImage,
   });
 
-  final String invoiceId;
+  final String orderId;
   final File proofImage;
 
   @override
-  List<Object?> get props => [invoiceId, proofImage];
+  List<Object?> get props => [orderId, proofImage];
 }
 
 class DownloadInvoice extends InvoiceEvent {
-  const DownloadInvoice({required this.invoiceId});
+  const DownloadInvoice({required this.orderId});
 
-  final String invoiceId;
+  final String orderId;
 
   @override
-  List<Object?> get props => [invoiceId];
+  List<Object?> get props => [orderId];
 }

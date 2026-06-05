@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
@@ -27,7 +28,7 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
 
   @override
   Future<WorkerProfileModel> getWorkerProfile() async {
-    final response = await apiClient.get<Map<String, dynamic>>('/worker/profile');
+    final response = await apiClient.get<Map<String, dynamic>>(ApiEndpoints.workerProfile);
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,
       fromJsonT: (json) => WorkerProfileModel.fromJson(json as Map<String, dynamic>),
@@ -37,10 +38,10 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
 
   @override
   Future<WorkerProfileModel> updateWorkerProfile(String? name, String? bio) async {
-    final response = await apiClient.patch<Map<String, dynamic>>(
-      '/worker/profile',
+    final response = await apiClient.put<Map<String, dynamic>>(
+      ApiEndpoints.workerProfile,
       data: {
-        if (name != null) 'name': name,
+        if (name != null) 'full_name': name,
         if (bio != null) 'bio': bio,
       },
     );
@@ -56,8 +57,8 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
     final formData = FormData.fromMap({
       'cover_photo': await MultipartFile.fromFile(filePath),
     });
-    final response = await apiClient.upload<Map<String, dynamic>>(
-      '/worker/profile/cover',
+    final response = await apiClient.put<Map<String, dynamic>>(
+      ApiEndpoints.workerCoverPhoto,
       data: formData,
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
@@ -88,7 +89,7 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
     formMap['certificates[]'] = certFiles;
 
     await apiClient.upload<Map<String, dynamic>>(
-      '/worker/verification',
+      ApiEndpoints.workerVerification,
       data: FormData.fromMap(formMap),
     );
   }

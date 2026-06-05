@@ -64,7 +64,7 @@ class _InvoicePageState extends State<InvoicePage> {
                       : () {
                           context.read<InvoiceBloc>().add(
                                 DownloadInvoice(
-                                  invoiceId: state.invoice.id,
+                                  orderId: state.invoice.orderId,
                                 ),
                               );
                         },
@@ -514,7 +514,7 @@ class _InvoicePageState extends State<InvoicePage> {
                   _paymentProof != null) {
                 context.read<InvoiceBloc>().add(
                       UploadPaymentProof(
-                        invoiceId: state.invoice.id,
+                        orderId: state.invoice.orderId,
                         proofImage: _paymentProof!,
                       ),
                     );
@@ -532,7 +532,7 @@ class _InvoicePageState extends State<InvoicePage> {
 
                 context.read<InvoiceBloc>().add(
                       ConfirmPayment(
-                        invoiceId: state.invoice.id,
+                        orderId: state.invoice.orderId,
                         paymentMethod: methodStr,
                       ),
                     );

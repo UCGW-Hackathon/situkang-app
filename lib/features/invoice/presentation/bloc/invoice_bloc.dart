@@ -46,7 +46,7 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
     emit(currentState.copyWith(isPaymentLoading: true));
 
     final result = await repository.confirmPayment(
-      invoiceId: event.invoiceId,
+      orderId: event.orderId,
       paymentMethod: event.paymentMethod,
     );
 
@@ -72,7 +72,7 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
     emit(currentState.copyWith(isPaymentLoading: true));
 
     final result = await repository.uploadPaymentProof(
-      invoiceId: event.invoiceId,
+      orderId: event.orderId,
       proofImage: event.proofImage,
     );
 
@@ -98,7 +98,7 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
     emit(currentState.copyWith(isDownloadLoading: true));
 
     final result = await repository.downloadInvoicePdf(
-      invoiceId: event.invoiceId,
+      orderId: event.orderId,
     );
 
     result.fold(

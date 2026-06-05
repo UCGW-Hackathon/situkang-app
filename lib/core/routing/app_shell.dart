@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/theme.dart';
-
 class UserAppShell extends StatelessWidget {
   const UserAppShell({super.key, required this.child});
 
@@ -35,10 +33,26 @@ class UserAppShell extends StatelessWidget {
       selectedIndex: _selectedIndex(context),
       onTap: (index) => _onItemTapped(context, index),
       items: const [
-        _ShellNavItem(Icons.home, 'Home'),
-        _ShellNavItem(Icons.handyman, 'Orders'),
-        _ShellNavItem(Icons.chat_bubble_outline, 'Chat'),
-        _ShellNavItem(Icons.person_outline, 'Profile'),
+        _ShellNavItem(
+          activeIcon: Icons.home,
+          inactiveIcon: Icons.home_outlined,
+          label: 'Home',
+        ),
+        _ShellNavItem(
+          activeIcon: Icons.handyman,
+          inactiveIcon: Icons.handyman_outlined,
+          label: 'Orders',
+        ),
+        _ShellNavItem(
+          activeIcon: Icons.chat_bubble,
+          inactiveIcon: Icons.chat_bubble_outline,
+          label: 'Chat',
+        ),
+        _ShellNavItem(
+          activeIcon: Icons.person,
+          inactiveIcon: Icons.person_outline,
+          label: 'Profile',
+        ),
       ],
       child: child,
     );
@@ -77,10 +91,26 @@ class WorkerAppShell extends StatelessWidget {
       selectedIndex: _selectedIndex(context),
       onTap: (index) => _onItemTapped(context, index),
       items: const [
-        _ShellNavItem(Icons.home, 'Home'),
-        _ShellNavItem(Icons.handyman, 'Orders'),
-        _ShellNavItem(Icons.chat_bubble_outline, 'Chat'),
-        _ShellNavItem(Icons.person_outline, 'Profile'),
+        _ShellNavItem(
+          activeIcon: Icons.home,
+          inactiveIcon: Icons.home_outlined,
+          label: 'Home',
+        ),
+        _ShellNavItem(
+          activeIcon: Icons.handyman,
+          inactiveIcon: Icons.handyman_outlined,
+          label: 'Orders',
+        ),
+        _ShellNavItem(
+          activeIcon: Icons.chat_bubble,
+          inactiveIcon: Icons.chat_bubble_outline,
+          label: 'Chat',
+        ),
+        _ShellNavItem(
+          activeIcon: Icons.person,
+          inactiveIcon: Icons.person_outline,
+          label: 'Profile',
+        ),
       ],
       child: child,
     );
@@ -105,56 +135,55 @@ class _ShellScaffold extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       body: child,
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-        child: Container(
-          height: 82,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 18,
-                offset: Offset(0, -4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(items.length, (index) {
-              final item = items[index];
-              final selected = index == selectedIndex;
-              final color =
-                  selected ? const Color(0xFF00758A) : const Color(0xFF424B50);
-              return Expanded(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => onTap(index),
-                  child: SizedBox(
-                    height: 68,
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x0F000000),
+              blurRadius: 10,
+              offset: Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Container(
+            height: 64,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(items.length, (index) {
+                final item = items[index];
+                final selected = index == selectedIndex;
+                final color = selected ? const Color(0xFF00758A) : const Color(0xFF8E8E93);
+                return Expanded(
+                  child: InkWell(
+                    onTap: () => onTap(index),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(item.icon, color: color, size: 34),
-                        const SizedBox(height: 2),
+                        Icon(
+                          selected ? item.activeIcon : item.inactiveIcon,
+                          color: color,
+                          size: 24,
+                        ),
+                        const SizedBox(height: 4),
                         Text(
                           item.label,
                           style: TextStyle(
                             color: color,
-                            fontSize: 14,
-                            fontWeight:
-                                selected ? FontWeight.w700 : FontWeight.w400,
-                            height: 1,
-                            letterSpacing: 0,
+                            fontSize: 12,
+                            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
+            ),
           ),
         ),
       ),
@@ -163,8 +192,13 @@ class _ShellScaffold extends StatelessWidget {
 }
 
 class _ShellNavItem {
-  const _ShellNavItem(this.icon, this.label);
+  const _ShellNavItem({
+    required this.activeIcon,
+    required this.inactiveIcon,
+    required this.label,
+  });
 
-  final IconData icon;
+  final IconData activeIcon;
+  final IconData inactiveIcon;
   final String label;
 }

@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
 import '../models/knowledge_models.dart';
@@ -31,7 +32,7 @@ class KnowledgeRemoteDataSourceImpl implements KnowledgeRemoteDataSource {
     };
 
     final response = await apiClient.get<Map<String, dynamic>>(
-      '/knowledge/articles',
+      ApiEndpoints.knowledgeArticles,
       queryParams: queryParams,
     );
 
@@ -59,7 +60,7 @@ class KnowledgeRemoteDataSourceImpl implements KnowledgeRemoteDataSource {
   @override
   Future<ArticleModel> getArticleDetail(String id) async {
     final response = await apiClient.get<Map<String, dynamic>>(
-      '/knowledge/articles/$id',
+      ApiEndpoints.knowledgeArticleDetail(id),
     );
 
     final apiResponse = ApiResponse<ArticleModel>.fromJson(response.data!, fromJsonT: (json) => ArticleModel.fromJson(json as Map<String, dynamic>),
@@ -69,7 +70,7 @@ class KnowledgeRemoteDataSourceImpl implements KnowledgeRemoteDataSource {
 
   @override
   Future<List<FaqModel>> getFaqs() async {
-    final response = await apiClient.get<Map<String, dynamic>>('/knowledge/faqs');
+    final response = await apiClient.get<Map<String, dynamic>>(ApiEndpoints.knowledgeFaq);
 
     final apiResponse = ApiResponse<List<FaqModel>>.fromJson(response.data!, fromJsonT: (json) => (json as List)
           .map((e) => FaqModel.fromJson(e as Map<String, dynamic>))

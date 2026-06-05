@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
 import '../models/worker_dashboard_model.dart';
@@ -18,17 +19,19 @@ class WorkerHomeRemoteDataSourceImpl implements WorkerHomeRemoteDataSource {
   @override
   Future<WorkerDashboardModel> getDashboardData() async {
     final response = await apiClient.get<Map<String, dynamic>>(
-      '/worker/dashboard',
+      ApiEndpoints.workerHome,
     );
-    final apiResponse = ApiResponse<WorkerDashboardModel>.fromJson(response.data!, fromJsonT: (json) => WorkerDashboardModel.fromJson(json as Map<String, dynamic>),
+    final apiResponse = ApiResponse<WorkerDashboardModel>.fromJson(
+      response.data!,
+      fromJsonT: (json) => WorkerDashboardModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;
   }
 
   @override
   Future<bool> toggleAvailability({required bool isAvailable}) async {
-    final response = await apiClient.post<Map<String, dynamic>>(
-      '/worker/availability',
+    final response = await apiClient.patch<Map<String, dynamic>>(
+      ApiEndpoints.workerAvailability,
       data: {'is_available': isAvailable},
     );
     // Assuming backend returns { "data": { "is_available": true } }

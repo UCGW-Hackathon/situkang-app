@@ -54,3 +54,10 @@ code_review_tasks_16_to_26.md
 .vscode/
 .test_hive_*/
 *.hive
+
+# Local developer configurations
+dev_config.json
+
+# Garbage / Executables
+*.exe
+api_mismatch_report.md

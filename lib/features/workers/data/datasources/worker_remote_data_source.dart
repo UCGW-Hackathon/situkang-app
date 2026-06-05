@@ -26,7 +26,9 @@ abstract class WorkerRemoteDataSource {
   /// Fetches the full detail profile of a specific worker.
   ///
   /// Calls `GET /workers/{workerId}`.
-  Future<WorkerProfileModel> getWorkerDetail(String workerId);
+  /// Returns the worker model and the embedded top_reviews from the response.
+  Future<(WorkerProfileModel, List<WorkerReviewModel>)> getWorkerDetail(
+      String workerId);
 
   /// Fetches paginated reviews for a specific worker.
   ///
@@ -83,6 +85,13 @@ class WorkerRemoteDataSourceImpl implements WorkerRemoteDataSource {
     if (filter?.searchKeyword != null && filter!.searchKeyword!.isNotEmpty) {
       endpoint = ApiEndpoints.workersSearch;
       queryParams['q'] = filter.searchKeyword;
+      
+      // /workers/search endpoint only supports q, latitude, longitude, radius_km, page, per_page
+      queryParams.remove('category_id');
+      queryParams.remove('service_id');
+      queryParams.remove('min_rating');
+      queryParams.remove('sort_by');
+      queryParams.remove('sort_order');
     } else {
       endpoint = ApiEndpoints.workersNearby;
     }
@@ -112,14 +121,24 @@ class WorkerRemoteDataSourceImpl implements WorkerRemoteDataSource {
   }
 
   @override
-  Future<WorkerProfileModel> getWorkerDetail(String workerId) async {
+  Future<(WorkerProfileModel, List<WorkerReviewModel>)> getWorkerDetail(
+      String workerId) async {
     final response = await apiClient.get<Map<String, dynamic>>(
       ApiEndpoints.workerDetail(workerId),
     );
 
     final data = response.data!;
     final workerJson = data['data'] as Map<String, dynamic>;
-    return WorkerProfileModel.fromJson(workerJson);
+    final workerModel = WorkerProfileModel.fromJson(workerJson);
+
+    // Parse top_reviews embedded in the detail response (API spec section 6.1)
+    final topReviewsJson =
+        workerJson['top_reviews'] as List<dynamic>? ?? [];
+    final topReviews = topReviewsJson
+        .map((r) => WorkerReviewModel.fromJson(r as Map<String, dynamic>))
+        .toList();
+
+    return (workerModel, topReviews);
   }
 
   @override
@@ -128,12 +147,9 @@ class WorkerRemoteDataSourceImpl implements WorkerRemoteDataSource {
     int page = 1,
     int perPage = 10,
   }) async {
+    // Per openapi.yaml, GET /workers/{workerId}/reviews does NOT accept query params like page/per_page
     final response = await apiClient.get<Map<String, dynamic>>(
       ApiEndpoints.workerReviews(workerId),
-      queryParams: {
-        'page': page,
-        'per_page': perPage,
-      },
     );
 
     final data = response.data!;

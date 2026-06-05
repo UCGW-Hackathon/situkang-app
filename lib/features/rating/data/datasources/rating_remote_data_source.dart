@@ -38,13 +38,10 @@ class RatingRemoteDataSourceImpl implements RatingRemoteDataSource {
     List<String> tags = const [],
   }) async {
     final response = await apiClient.post<Map<String, dynamic>>(
-      '/ratings',
+      '/orders/$orderId/rating',
       data: {
-        'order_id': orderId,
-        'worker_id': workerId,
-        'score': score,
-        if (comment != null) 'comment': comment,
-        'tags': tags,
+        'rating': score,
+        'review_text': comment ?? '',
       },
     );
 

@@ -1,3 +1,4 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
@@ -25,8 +26,30 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Future<HomeDataModel> getHomeData() async {
+    double latitude = -6.2; // Jakarta fallback
+    double longitude = 106.8;
+
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
+        final position = await Geolocator.getLastKnownPosition() ??
+            await Geolocator.getCurrentPosition(
+              timeLimit: const Duration(seconds: 3),
+            );
+        latitude = position.latitude;
+        longitude = position.longitude;
+      }
+    } catch (_) {
+      // Fallback silently
+    }
+
     final response = await apiClient.get<Map<String, dynamic>>(
       ApiEndpoints.home,
+      queryParams: {
+        'latitude': latitude,
+        'longitude': longitude,
+      },
     );
 
     final data = response.data!['data'] as Map<String, dynamic>;

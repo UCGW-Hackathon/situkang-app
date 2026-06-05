@@ -84,24 +84,28 @@ class WorkerRepositoryImpl implements WorkerRepository {
   }
 
   @override
-  Future<Result<WorkerProfile>> getWorkerDetail(String workerId) async {
+  Future<Result<(WorkerProfile, List<WorkerReview>)>> getWorkerDetail(
+      String workerId) async {
     try {
-      final workerModel = await remoteDataSource.getWorkerDetail(workerId);
-      // Cache the detail
+      final (workerModel, topReviewModels) =
+          await remoteDataSource.getWorkerDetail(workerId);
+      // Cache the detail (worker only)
       await localDataSource.cacheWorkerDetail(workerModel);
-      return Right(workerModel.toEntity());
+      final worker = workerModel.toEntity();
+      final topReviews = topReviewModels.map((m) => m.toEntity()).toList();
+      return Right((worker, topReviews));
     } on DioException catch (e) {
-      // On network failure, try to return cached data
+      // On network failure, try to return cached data (with empty reviews)
       final cached = await localDataSource.getCachedWorkerDetail(workerId);
       if (cached != null) {
-        return Right(cached.toEntity());
+        return Right((cached.toEntity(), <WorkerReview>[]));
       }
       return Left(_mapDioExceptionToFailure(e));
     } on Exception catch (e) {
       // On other failures, try cache as fallback
       final cached = await localDataSource.getCachedWorkerDetail(workerId);
       if (cached != null) {
-        return Right(cached.toEntity());
+        return Right((cached.toEntity(), <WorkerReview>[]));
       }
       return Left(ServerFailure(e.toString(), statusCode: 500));
     }

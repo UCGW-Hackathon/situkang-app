@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
 import '../models/wallet_models.dart';
@@ -29,7 +30,7 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
 
   @override
   Future<WalletSummaryModel> getWalletSummary() async {
-    final response = await apiClient.get<Map<String, dynamic>>('/worker/wallet/summary');
+    final response = await apiClient.get<Map<String, dynamic>>(ApiEndpoints.workerWallet);
     final apiResponse = ApiResponse<WalletSummaryModel>.fromJson(response.data!, fromJsonT: (json) => WalletSummaryModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;

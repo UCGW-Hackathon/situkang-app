@@ -39,7 +39,7 @@ class WorkerHistoryRemoteDataSourceImpl implements WorkerHistoryRemoteDataSource
     final response = await apiClient.get<Map<String, dynamic>>(
       '/worker/statistics',
       queryParams: {
-        'time_range': timeRange,
+        'period': timeRange,
       },
     );
     

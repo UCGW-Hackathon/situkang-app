@@ -29,12 +29,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
 
   @override
   Future<Result<Invoice>> confirmPayment({
-    required String invoiceId,
+    required String orderId,
     required String paymentMethod,
   }) async {
     try {
       final invoice =
-          await remoteDataSource.confirmPayment(invoiceId, paymentMethod);
+          await remoteDataSource.confirmPayment(orderId, paymentMethod);
       return Right(invoice);
     } on Failure catch (e) {
       return Left(e);
@@ -45,12 +45,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
 
   @override
   Future<Result<Invoice>> uploadPaymentProof({
-    required String invoiceId,
+    required String orderId,
     required File proofImage,
   }) async {
     try {
       final invoice =
-          await remoteDataSource.uploadPaymentProof(invoiceId, proofImage);
+          await remoteDataSource.uploadPaymentProof(orderId, proofImage);
       return Right(invoice);
     } on Failure catch (e) {
       return Left(e);
@@ -61,9 +61,9 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
 
   @override
   Future<Result<String>> downloadInvoicePdf(
-      {required String invoiceId}) async {
+      {required String orderId}) async {
     try {
-      final url = await remoteDataSource.downloadInvoicePdf(invoiceId);
+      final url = await remoteDataSource.downloadInvoicePdf(orderId);
       return Right(url);
     } on Failure catch (e) {
       return Left(e);

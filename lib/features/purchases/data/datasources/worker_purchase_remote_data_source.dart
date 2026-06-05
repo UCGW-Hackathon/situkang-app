@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
 import '../models/purchase_model.dart';
@@ -68,7 +69,7 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
     }
 
     final response = await apiClient.upload<Map<String, dynamic>>(
-      '/worker/orders/$orderId/purchases',
+      ApiEndpoints.workerOrderPurchases(orderId),
       data: FormData.fromMap(formDataMap),
     );
 
@@ -80,8 +81,8 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
   @override
   Future<List<PurchaseModel>> processAiInput(String orderId, String rawText) async {
     final response = await apiClient.post<Map<String, dynamic>>(
-      '/worker/orders/$orderId/purchases/ai-process',
-      data: {'raw_text': rawText},
+      ApiEndpoints.workerPurchaseAiProcess(orderId),
+      data: {'raw_input': rawText},
     );
 
     final apiResponse = ApiResponse<List<PurchaseModel>>.fromJson(response.data!, fromJsonT: (json) => (json as List)
@@ -94,11 +95,11 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
   @override
   Future<List<PurchaseModel>> scanReceipt(String orderId, String photoPath) async {
     final formData = FormData.fromMap({
-      'receipt_photo': await MultipartFile.fromFile(photoPath),
+      'receipt': await MultipartFile.fromFile(photoPath),
     });
 
     final response = await apiClient.upload<Map<String, dynamic>>(
-      '/worker/orders/$orderId/purchases/scan',
+      ApiEndpoints.workerPurchaseReceiptScan(orderId),
       data: formData,
     );
 
@@ -112,7 +113,7 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
   @override
   Future<PurchaseModel> submitForApproval(String orderId, String purchaseId) async {
     final response = await apiClient.post<Map<String, dynamic>>(
-      '/worker/orders/$orderId/purchases/$purchaseId/submit',
+      ApiEndpoints.workerPurchaseSubmit(orderId, purchaseId),
     );
 
     final apiResponse = ApiResponse<PurchaseModel>.fromJson(response.data!, fromJsonT: (json) => PurchaseModel.fromJson(json as Map<String, dynamic>),
@@ -123,7 +124,7 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
   @override
   Future<void> deleteDraft(String orderId, String purchaseId) async {
     await apiClient.delete<Map<String, dynamic>>(
-      '/worker/orders/$orderId/purchases/$purchaseId',
+      ApiEndpoints.workerPurchaseDetail(orderId, purchaseId),
     );
   }
 
@@ -135,10 +136,10 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
     String? updatedItemName,
     String? updatedReason,
   }) async {
-    final response = await apiClient.post<Map<String, dynamic>>(
-      '/worker/orders/$orderId/purchases/$purchaseId/clarify-response',
+    final response = await apiClient.patch<Map<String, dynamic>>(
+      ApiEndpoints.workerPurchaseClarifyResponse(orderId, purchaseId),
       data: {
-        'response_text': responseText,
+        'response': responseText,
         if (updatedItemName != null) 'updated_item_name': updatedItemName,
         if (updatedReason != null) 'updated_reason': updatedReason,
       },

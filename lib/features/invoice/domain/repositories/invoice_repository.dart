@@ -11,16 +11,16 @@ abstract class InvoiceRepository {
 
   /// Confirms a payment for an invoice with a specific method.
   Future<Result<Invoice>> confirmPayment({
-    required String invoiceId,
+    required String orderId,
     required String paymentMethod,
   });
 
   /// Uploads payment proof (e.g. for bank transfers).
   Future<Result<Invoice>> uploadPaymentProof({
-    required String invoiceId,
+    required String orderId,
     required File proofImage,
   });
 
   /// Downloads the invoice as a PDF file, returning the local file path.
-  Future<Result<String>> downloadInvoicePdf({required String invoiceId});
+  Future<Result<String>> downloadInvoicePdf({required String orderId});
 }

@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/storage/cache_manager.dart';
+import '../../../../core/constants/constants.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../bloc/auth_bloc.dart';
@@ -38,10 +42,61 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+  Timer? _autoLoginTimer;
+  bool _isAutoLoggingIn = false;
+  String? _bypassEmail;
+  String? _bypassPassword;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDevConfig();
+    });
+  }
+
+  Future<void> _loadDevConfig() async {
+    if (DevConfig.bypassEnabled && DevConfig.bypassRole.isNotEmpty) {
+      final String email;
+      final String password;
+
+      if (DevConfig.bypassRole == 'worker') {
+        email = DevConfig.workerEmail;
+        password = DevConfig.workerPassword;
+      } else {
+        email = DevConfig.userEmail;
+        password = DevConfig.userPassword;
+      }
+
+      if (email.isNotEmpty && password.isNotEmpty) {
+        setState(() {
+          _bypassEmail = email;
+          _bypassPassword = password;
+          _isAutoLoggingIn = true;
+        });
+        _startAutoLoginTimer();
+      }
+    }
+  }
+
+  void _startAutoLoginTimer() {
+    _autoLoginTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (_isAutoLoggingIn && _bypassEmail != null && _bypassPassword != null) {
+        context.read<AuthBloc>().add(
+          LoginRequested(
+            email: _bypassEmail!,
+            password: _bypassPassword!,
+          ),
+        );
+      }
+    });
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _autoLoginTimer?.cancel();
     super.dispose();
   }
 
@@ -64,6 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: AppSpacing.xxl),
                     _buildHeader(),
                     const SizedBox(height: AppSpacing.xl),
+                    _buildAutoLoginBanner(),
                     _buildErrorBanner(state),
                     _buildEmailField(isLoading),
                     const SizedBox(height: AppSpacing.formFieldSpacing),
@@ -231,6 +287,53 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAutoLoginBanner() {
+    if (!_isAutoLoggingIn) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Bypass Login Developer ke ${_bypassEmail ?? ''}...',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _isAutoLoggingIn = false;
+                });
+                _autoLoginTimer?.cancel();
+              },
+              child: const Text('Batal'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

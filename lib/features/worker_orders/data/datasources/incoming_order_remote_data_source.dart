@@ -46,7 +46,7 @@ class IncomingOrderRemoteDataSourceImpl implements IncomingOrderRemoteDataSource
   Future<void> rejectOrder(String orderId, String reasonCode) async {
     await apiClient.post<Map<String, dynamic>>(
       '/worker/orders/$orderId/reject',
-      data: {'reason_code': reasonCode},
+      data: {'reject_reason': reasonCode},
     );
   }
 }

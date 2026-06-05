@@ -51,34 +51,21 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
 
   @override
   Future<OrderModel> createOrder(CreateOrderParams params) async {
-    // Build request data
+    // Build request data as per openapi.yaml spec.
+    // Only fields defined in the spec are sent:
+    // worker_id, service_id, address, latitude, longitude, urgency,
+    // problem_description, photos.
+    // Non-spec fields (title, address_detail, notes, preferred_date, etc.)
+    // are intentionally excluded to avoid "invalid field" errors.
     final requestData = <String, dynamic>{
       'worker_id': params.workerId,
       'service_id': params.serviceId,
-      'title': params.title,
-      'description': params.description,
-      'location': {
-        'latitude': params.latitude,
-        'longitude': params.longitude,
-        'address': params.address,
-        if (params.addressDetail != null)
-          'address_detail': params.addressDetail,
-      },
+      'address': params.address,
+      'latitude': params.latitude,
+      'longitude': params.longitude,
       'urgency': params.urgency,
+      'problem_description': params.description,
     };
-
-    if (params.preferredDate != null) {
-      requestData['preferred_date'] = params.preferredDate;
-    }
-    if (params.preferredTimeStart != null) {
-      requestData['preferred_time_start'] = params.preferredTimeStart;
-    }
-    if (params.preferredTimeEnd != null) {
-      requestData['preferred_time_end'] = params.preferredTimeEnd;
-    }
-    if (params.notes != null && params.notes!.isNotEmpty) {
-      requestData['notes'] = params.notes;
-    }
 
     // Handle photos upload
     if (params.photos.isNotEmpty) {
@@ -119,11 +106,11 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     int page = 1,
     int perPage = 10,
   }) async {
+    // Per openapi.yaml, GET /orders only accepts: status, page, per_page.
+    // sort_by and sort_order are not in the spec and cause "invalid field" errors.
     final queryParams = <String, dynamic>{
       'page': page,
       'per_page': perPage,
-      'sort_by': 'created_at',
-      'sort_order': 'desc',
     };
 
     if (filter?.status != null) {
@@ -169,7 +156,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     final response = await apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.orderCancel(orderId),
       data: {
-        'reason': reason,
+        'cancel_reason': reason,
       },
     );
 

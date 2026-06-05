@@ -42,30 +42,41 @@ class WorkerDetailBloc extends Bloc<WorkerDetailEvent, WorkerDetailState> {
 
   /// Handles [FetchWorkerDetail] events.
   ///
-  /// Fetches the full worker profile and the first 3 recent reviews.
+  /// If [preloadedWorker] is provided (passed from the list view), it is
+  /// displayed immediately. Then the full detail API call is made to
+  /// enrich the data (bio, cover photo, full services, top_reviews, etc.).
+  /// If the detail API fails, the preloaded data remains visible.
   Future<void> _onFetchWorkerDetail(
     FetchWorkerDetail event,
     Emitter<WorkerDetailState> emit,
   ) async {
-    emit(const WorkerDetailLoading());
+    // Show preloaded data immediately if available, otherwise show loading
+    if (event.preloadedWorker != null) {
+      emit(WorkerDetailLoaded(
+        worker: event.preloadedWorker!,
+        recentReviews: const [],
+      ));
+    } else {
+      emit(const WorkerDetailLoading());
+    }
 
     final result = await _workerRepository.getWorkerDetail(event.workerId);
 
-    await result.fold(
-      (failure) async => emit(WorkerDetailError(failure: failure)),
-      (worker) async {
-        // Also fetch the first 3 recent reviews
-        final reviewsResult = await _workerRepository.getWorkerReviews(
-          event.workerId,
-          page: 1,
-          perPage: 3,
-        );
-
-        final recentReviews = reviewsResult.fold(
-          (_) => <WorkerReview>[],
-          (reviews) => reviews,
-        );
-
+    result.fold(
+      (failure) {
+        // If we already have preloaded data, don't replace it with an error
+        if (event.preloadedWorker != null) {
+          // Keep showing the preloaded data — just silently swallow the error
+          emit(WorkerDetailLoaded(
+            worker: event.preloadedWorker!,
+            recentReviews: const [],
+          ));
+        } else {
+          emit(WorkerDetailError(failure: failure));
+        }
+      },
+      (workerAndReviews) {
+        final (worker, recentReviews) = workerAndReviews;
         emit(WorkerDetailLoaded(
           worker: worker,
           recentReviews: recentReviews,

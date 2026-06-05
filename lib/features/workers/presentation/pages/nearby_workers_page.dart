@@ -25,7 +25,9 @@ import '../widgets/worker_card.dart';
 /// Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9.
 class NearbyWorkersPage extends StatefulWidget {
   /// Creates a [NearbyWorkersPage].
-  const NearbyWorkersPage({super.key});
+  const NearbyWorkersPage({super.key, this.initialCategoryId});
+
+  final String? initialCategoryId;
 
   @override
   State<NearbyWorkersPage> createState() => _NearbyWorkersPageState();
@@ -37,7 +39,9 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
   @override
   void initState() {
     super.initState();
-    context.read<WorkerListBloc>().add(const FetchWorkers());
+    if (widget.initialCategoryId == null) {
+      context.read<WorkerListBloc>().add(const FetchWorkers());
+    }
   }
 
   @override

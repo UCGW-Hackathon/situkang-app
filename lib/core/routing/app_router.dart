@@ -2,6 +2,7 @@ import '../../core/constants/enums.dart';
 import '../../features/orders/presentation/pages/order_list_page.dart';
 import '../../features/orders/presentation/pages/order_create_page.dart';
 import '../../features/orders/domain/entities/order.dart';
+import '../../features/workers/domain/entities/worker_profile.dart';
 import '../../features/workers/domain/entities/worker_service.dart';
 import '../../features/workers/presentation/bloc/worker_detail_bloc.dart';
 import '../../features/workers/presentation/bloc/worker_list_bloc.dart';
@@ -74,29 +75,28 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
         navigatorKey: _userShellNavigatorKey,
         redirect: RoleGuard.userRedirect,
         builder: (context, state, child) {
-          return UserAppShell(child: child);
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider<HomeBloc>(create: (_) => getIt<HomeBloc>()),
+              BlocProvider<OrderBloc>(create: (_) => getIt<OrderBloc>()),
+              BlocProvider<ChatBloc>(create: (_) => getIt<ChatBloc>()),
+              BlocProvider<ProfileBloc>(create: (_) => getIt<ProfileBloc>()),
+            ],
+            child: UserAppShell(child: child),
+          );
         },
         routes: [
           GoRoute(
             path: '/home',
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<HomeBloc>(),
-              child: const HomePage(),
-            ),
+            builder: (context, state) => const HomePage(),
           ),
           GoRoute(
             path: '/orders',
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<OrderBloc>(),
-              child: const OrderListPage(),
-            ),
+            builder: (context, state) => const OrderListPage(),
           ),
           GoRoute(
             path: '/chat',
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<ChatBloc>(),
-              child: const ChatListPage(),
-            ),
+            builder: (context, state) => const ChatListPage(),
             routes: [
               GoRoute(
                 path: ':id',
@@ -111,10 +111,7 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
           ),
           GoRoute(
             path: '/profile',
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<ProfileBloc>(),
-              child: const ProfilePage(),
-            ),
+            builder: (context, state) => const ProfilePage(),
           ),
         ],
       ),
@@ -130,9 +127,17 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
         path: '/workers/:id',
         builder: (context, state) {
           final workerId = state.pathParameters['id']!;
+          // Partial worker data may be passed via extra to show immediately
+          // while the detail API call is in progress (or if it fails with 500)
+          final preloadedWorker = state.extra is WorkerProfile
+              ? state.extra as WorkerProfile
+              : null;
           return BlocProvider(
             create: (_) => getIt<WorkerDetailBloc>()
-              ..add(FetchWorkerDetail(workerId: workerId)),
+              ..add(FetchWorkerDetail(
+                workerId: workerId,
+                preloadedWorker: preloadedWorker,
+              )),
             child: WorkerDetailPage(
               workerId: workerId,
               onBookNow: (worker) => context.push(
@@ -190,25 +195,27 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
         navigatorKey: _workerShellNavigatorKey,
         redirect: RoleGuard.workerRedirect,
         builder: (context, state, child) {
-          return WorkerAppShell(child: child);
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider<WorkerHomeBloc>(create: (_) => getIt<WorkerHomeBloc>()),
+              BlocProvider<IncomingOrderBloc>(create: (_) => getIt<IncomingOrderBloc>()),
+              BlocProvider<ChatBloc>(create: (_) => getIt<ChatBloc>()),
+              BlocProvider<WorkerProfileBloc>(create: (_) => getIt<WorkerProfileBloc>()),
+            ],
+            child: WorkerAppShell(child: child),
+          );
         },
         routes: [
           GoRoute(
             path: '/worker',
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<WorkerHomeBloc>(),
-              child: const WorkerHomePage(),
-            ),
+            builder: (context, state) => const WorkerHomePage(),
           ),
           GoRoute(
             path: '/worker/orders',
             builder: (context, state) {
               final order = state.extra;
               if (order is! Order) {
-                return BlocProvider(
-                  create: (_) => getIt<IncomingOrderBloc>(),
-                  child: const IncomingOrderPage(),
-                );
+                return const IncomingOrderPage();
               }
 
               return BlocProvider(
@@ -219,10 +226,7 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
           ),
           GoRoute(
             path: '/worker/chat',
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<ChatBloc>(),
-              child: const ChatListPage(),
-            ),
+            builder: (context, state) => const ChatListPage(),
             routes: [
               GoRoute(
                 path: ':id',
@@ -236,10 +240,7 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
           ),
           GoRoute(
             path: '/worker/profile',
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<WorkerProfileBloc>(),
-              child: const WorkerProfilePage(),
-            ),
+            builder: (context, state) => const WorkerProfilePage(),
           ),
         ],
       ),

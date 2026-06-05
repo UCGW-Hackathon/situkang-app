@@ -23,8 +23,11 @@ abstract class WorkerRepository {
 
   /// Fetches the full detail profile of a specific worker.
   ///
+  /// Returns the worker profile together with the embedded top_reviews
+  /// (up to 3 recent reviews) that the API includes in the detail response.
   /// Returns cached data if available, then fetches fresh data from the API.
-  Future<Result<WorkerProfile>> getWorkerDetail(String workerId);
+  Future<Result<(WorkerProfile, List<WorkerReview>)>> getWorkerDetail(
+      String workerId);
 
   /// Fetches paginated reviews for a specific worker.
   ///

@@ -1,0 +1,8 @@
+{
+  "DEV_BYPASS_ENABLED": false,
+  "DEV_BYPASS_ROLE": "user",
+  "DEV_USER_EMAIL": "your-user-email@example.com",
+  "DEV_USER_PASSWORD": "your-user-password",
+  "DEV_WORKER_EMAIL": "your-worker-email@example.com",
+  "DEV_WORKER_PASSWORD": "your-worker-password"
+}

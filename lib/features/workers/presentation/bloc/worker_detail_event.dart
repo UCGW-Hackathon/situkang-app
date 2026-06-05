@@ -16,13 +16,22 @@ sealed class WorkerDetailEvent extends Equatable {
 /// Validates: Requirements 6.1, 6.2, 6.3, 6.4.
 class FetchWorkerDetail extends WorkerDetailEvent {
   /// Creates a [FetchWorkerDetail] event with the given [workerId].
-  const FetchWorkerDetail({required this.workerId});
+  ///
+  /// [preloadedWorker] is optional partial data from the list view that can
+  /// be displayed immediately while the full detail is being fetched.
+  const FetchWorkerDetail({
+    required this.workerId,
+    this.preloadedWorker,
+  });
 
   /// The ID of the worker to fetch details for.
   final String workerId;
 
+  /// Optional partial worker data from the list for immediate display.
+  final WorkerProfile? preloadedWorker;
+
   @override
-  List<Object?> get props => [workerId];
+  List<Object?> get props => [workerId, preloadedWorker];
 }
 
 /// Event dispatched to fetch the paginated reviews list for a worker.
