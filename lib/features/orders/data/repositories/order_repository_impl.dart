@@ -1,6 +1,6 @@
-import 'package:injectable/injectable.dart' hide Order;
 import 'package:dartz/dartz.dart' hide Order;
 import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart' hide Order;
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';

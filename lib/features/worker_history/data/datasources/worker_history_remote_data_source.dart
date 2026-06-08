@@ -1,12 +1,14 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/enums.dart';
+
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
 import '../../../orders/data/models/order_model.dart';
 import '../models/worker_statistics_model.dart';
 
 abstract class WorkerHistoryRemoteDataSource {
-  Future<List<OrderModel>> getHistory(String filter, int page);
+  Future<List<OrderModel>> getHistory(OrderStatus? status, int page);
   Future<WorkerStatisticsModel> getStatistics(String timeRange);
 }
 
@@ -17,13 +19,17 @@ class WorkerHistoryRemoteDataSourceImpl implements WorkerHistoryRemoteDataSource
   final ApiClient apiClient;
 
   @override
-  Future<List<OrderModel>> getHistory(String filter, int page) async {
+  Future<List<OrderModel>> getHistory(OrderStatus? status, int page) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+    };
+    if (status != null) {
+      queryParams['status'] = status.value;
+    }
+    
     final response = await apiClient.get<Map<String, dynamic>>(
-      '/worker/history',
-      queryParams: {
-        'filter': filter,
-        'page': page,
-      },
+      '/worker/orders',
+      queryParams: queryParams,
     );
     
     // Assuming the API returns a paginated list inside 'data' array

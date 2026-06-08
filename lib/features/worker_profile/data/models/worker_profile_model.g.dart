@@ -24,16 +24,17 @@ Map<String, dynamic> _$WorkerServiceModelToJson(WorkerServiceModel instance) =>
 
 WorkerProfileModel _$WorkerProfileModelFromJson(Map<String, dynamic> json) =>
     WorkerProfileModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      avatarUrl: json['avatar_url'] as String?,
-      coverUrl: json['cover_url'] as String?,
-      phoneNumber: json['phone_number'] as String,
-      bio: json['bio'] as String?,
+      id: json['worker_id'] as String,
+      name: json['full_name'] as String,
+      phoneNumber: json['phone'] as String,
       verificationStatus: $enumDecode(
         _$VerificationStatusEnumMap,
         json['verification_status'],
       ),
+      joinedAt: DateTime.parse(json['joined_at'] as String),
+      avatarUrl: json['avatar_url'] as String?,
+      coverUrl: json['cover_photo_url'] as String?,
+      bio: json['bio'] as String?,
       verificationReason: json['verification_reason'] as String?,
       servicesModel:
           (json['services'] as List<dynamic>?)
@@ -42,16 +43,15 @@ WorkerProfileModel _$WorkerProfileModelFromJson(Map<String, dynamic> json) =>
               )
               .toList() ??
           const [],
-      joinedAt: DateTime.parse(json['joined_at'] as String),
     );
 
 Map<String, dynamic> _$WorkerProfileModelToJson(WorkerProfileModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
+      'worker_id': instance.id,
+      'full_name': instance.name,
       'avatar_url': instance.avatarUrl,
-      'cover_url': instance.coverUrl,
-      'phone_number': instance.phoneNumber,
+      'cover_photo_url': instance.coverUrl,
+      'phone': instance.phoneNumber,
       'bio': instance.bio,
       'verification_status':
           _$VerificationStatusEnumMap[instance.verificationStatus]!,

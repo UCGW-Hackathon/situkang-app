@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class UserAppShell extends StatelessWidget {
-  const UserAppShell({super.key, required this.child});
+  const UserAppShell({required this.child, super.key});
 
   final Widget child;
 
@@ -60,7 +60,7 @@ class UserAppShell extends StatelessWidget {
 }
 
 class WorkerAppShell extends StatelessWidget {
-  const WorkerAppShell({super.key, required this.child});
+  const WorkerAppShell({required this.child, super.key});
 
   final Widget child;
 
@@ -135,7 +135,7 @@ class _ShellScaffold extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       body: child,
-      bottomNavigationBar: Container(
+      bottomNavigationBar: DecoratedBox(
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

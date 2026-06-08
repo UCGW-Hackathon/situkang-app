@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 
-import 'app_module.dart'; // Ensure it's imported
+// Ensure it's imported
 import 'injection.config.dart';
 
 /// Global GetIt service locator instance.

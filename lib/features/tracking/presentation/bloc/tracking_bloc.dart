@@ -176,7 +176,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   /// Determines the current order status from the timeline entries.
   OrderStatus _determineCurrentStatus(List<TimelineEntry> timeline) {
     // Find the last completed entry
-    for (int i = timeline.length - 1; i >= 0; i--) {
+    for (var i = timeline.length - 1; i >= 0; i--) {
       if (timeline[i].isCompleted) {
         return timeline[i].status;
       }

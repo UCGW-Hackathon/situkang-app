@@ -8,9 +8,8 @@ class Rating extends Equatable {
     required this.workerId,
     required this.userId,
     required this.score,
-    this.comment,
+    required this.createdAt, this.comment,
     this.tags = const [],
-    required this.createdAt,
   });
 
   final String id;

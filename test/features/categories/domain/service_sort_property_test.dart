@@ -12,7 +12,7 @@ void main() {
   // **Validates: Requirements 4.1**
   group('Property 7: Service List Alphabetical Sort', () {
     // Characters that can appear in service names (letters, digits, spaces, common punctuation)
-    final nameChars =
+    const nameChars =
         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -';
 
     Glados<List<String>>(any.list(any.nonEmptyStringOf(nameChars))).test(

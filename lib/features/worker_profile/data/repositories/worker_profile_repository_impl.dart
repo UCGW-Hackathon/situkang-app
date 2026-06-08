@@ -1,8 +1,8 @@
-import '../../../../core/error/result.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/error/result.dart';
 import '../../domain/entities/worker_profile.dart';
 import '../../domain/repositories/worker_profile_repository.dart';
 import '../datasources/worker_profile_remote_data_source.dart';

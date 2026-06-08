@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 /// Adds a shimmering animation effect to its child, typically used for loading skeletons.
 class ShimmerLoader extends StatefulWidget {
   const ShimmerLoader({
-    super.key,
-    required this.child,
+    required this.child, super.key,
     this.baseColor,
     this.highlightColor,
   });

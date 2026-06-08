@@ -61,7 +61,7 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
       'unit': unit,
       'unit_price': unitPrice,
       'total_price': totalPrice,
-      if (reason != null) 'reason': reason,
+      'reason': ?reason,
     };
 
     if (receiptPhotoPath != null) {
@@ -140,8 +140,8 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
       ApiEndpoints.workerPurchaseClarifyResponse(orderId, purchaseId),
       data: {
         'response': responseText,
-        if (updatedItemName != null) 'updated_item_name': updatedItemName,
-        if (updatedReason != null) 'updated_reason': updatedReason,
+        'updated_item_name': ?updatedItemName,
+        'updated_reason': ?updatedReason,
       },
     );
 

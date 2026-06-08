@@ -7,6 +7,17 @@ part 'invoice_model.g.dart';
 
 @JsonSerializable()
 class InvoiceLineItemModel extends InvoiceLineItem {
+
+  factory InvoiceLineItemModel.fromEntity(InvoiceLineItem entity) {
+    return InvoiceLineItemModel(
+      id: entity.id,
+      name: entity.name,
+      quantity: entity.quantity,
+      unitPrice: entity.unitPrice,
+      totalPrice: entity.totalPrice,
+      type: entity.type,
+    );
+  }
   const InvoiceLineItemModel({
     required super.id,
     required super.name,
@@ -20,21 +31,13 @@ class InvoiceLineItemModel extends InvoiceLineItem {
       _$InvoiceLineItemModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$InvoiceLineItemModelToJson(this);
-
-  factory InvoiceLineItemModel.fromEntity(InvoiceLineItem entity) {
-    return InvoiceLineItemModel(
-      id: entity.id,
-      name: entity.name,
-      quantity: entity.quantity,
-      unitPrice: entity.unitPrice,
-      totalPrice: entity.totalPrice,
-      type: entity.type,
-    );
-  }
 }
 
 @JsonSerializable(explicitToJson: true)
 class InvoiceModel extends Invoice {
+
+  factory InvoiceModel.fromJson(Map<String, dynamic> json) =>
+      _$InvoiceModelFromJson(json);
   const InvoiceModel({
     required super.id,
     @JsonKey(name: 'order_id') required super.orderId,
@@ -47,10 +50,7 @@ class InvoiceModel extends Invoice {
     required super.discount,
     @JsonKey(name: 'grand_total') required super.grandTotal,
     required this.statusStr,
-    @JsonKey(name: 'payment_method') this.paymentMethodStr,
-    @JsonKey(name: 'items') required this.itemModels,
-    @JsonKey(name: 'created_at') required super.createdAt,
-    @JsonKey(name: 'due_date') required super.dueDate,
+    @JsonKey(name: 'items') required this.itemModels, @JsonKey(name: 'created_at') required super.createdAt, @JsonKey(name: 'due_date') required super.dueDate, @JsonKey(name: 'payment_method') this.paymentMethodStr,
     @JsonKey(name: 'paid_at') super.paidAt,
     @JsonKey(name: 'ai_summary') super.aiSummary,
     @JsonKey(name: 'worker_notes') super.workerNotes,
@@ -78,9 +78,6 @@ class InvoiceModel extends Invoice {
 
   @JsonKey(name: 'items')
   final List<InvoiceLineItemModel> itemModels;
-
-  factory InvoiceModel.fromJson(Map<String, dynamic> json) =>
-      _$InvoiceModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$InvoiceModelToJson(this);
 }

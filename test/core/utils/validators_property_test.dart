@@ -13,8 +13,8 @@ void main() {
   group('Property 1: Password Validation Correctness', () {
     // Use a generator that produces strings with a mix of characters
     // including uppercase, lowercase, digits, and special chars.
-    final passwordChars =
-        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%';
+    const passwordChars =
+        r'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
 
     Glados<String>(any.stringOf(passwordChars)).test(
       'accepts password iff >=8 chars AND has uppercase AND lowercase AND digit',
@@ -123,9 +123,8 @@ void main() {
       'accepts iff size <= limit AND extension in {jpg, jpeg, png}',
       (extension, fileSize) {
         final fileName = 'file.$extension';
-        final maxSize = AppConstants.maxAvatarFileSize;
-        final result = FileUploadValidator.validate(fileName, fileSize,
-            maxSize: maxSize);
+        const maxSize = AppConstants.maxAvatarFileSize;
+        final result = FileUploadValidator.validate(fileName, fileSize);
 
         final hasValidExtension = validExtensions.contains(extension);
         final hasValidSize = fileSize <= maxSize;
@@ -197,7 +196,7 @@ void main() {
     );
 
     // Test strings with non-whitespace content within length limits
-    final messageChars =
+    const messageChars =
         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ';
 
     Glados<String>(any.nonEmptyStringOf(messageChars)).test(

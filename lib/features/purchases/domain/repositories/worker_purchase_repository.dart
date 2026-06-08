@@ -1,7 +1,5 @@
 import 'package:situkang_app/core/error/result.dart';
-import 'package:dartz/dartz.dart';
 
-import '../../../../core/error/failures.dart';
 import '../entities/purchase.dart';
 
 /// Abstract repository interface for worker-side purchase management.

@@ -7,7 +7,7 @@ void main() async {
     Uri.parse('https://xryz-gcw-situkang.hf.space/v1/auth/login'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
-      'email': 'fardan.idnsolo@gmail.com',
+      'email': 'muhfardanhafidz@gmail.com',
       'password': '00000000Aa'
     })
   );
@@ -18,14 +18,14 @@ void main() async {
   final token = jsonDecode(loginRes.body)['data']['access_token'];
   final headers = {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'};
   
-  final workerId = '9d8ec210-8509-4fff-9748-e8de4550dbd7';
+  const workerId = '9d8ec210-8509-4fff-9748-e8de4550dbd7';
   
   final endpointsToTest = [
     '/workers/$workerId',
     '/worker/$workerId',
     '/worker/profile/$workerId',
+    '/worker/profile',
     '/workers/profile/$workerId',
-    '/worker/profile?worker_id=$workerId',
     '/workers/detail/$workerId',
   ];
   
@@ -34,7 +34,7 @@ void main() async {
     final res = await http.get(Uri.parse('https://xryz-gcw-situkang.hf.space/v1$ep'), headers: headers);
     print('Status: ${res.statusCode}');
     if (res.statusCode == 200) {
-      print('SUCCESS! Body: ${res.body.substring(0, 50)}...');
+      print('SUCCESS! Body: ${res.body}');
     } else {
       print('Body: ${res.body}');
     }

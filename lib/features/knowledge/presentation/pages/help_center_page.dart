@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -165,7 +164,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 
-                Text('Kategori Topik', style: AppTypography.h6),
+                const Text('Kategori Topik', style: AppTypography.h6),
                 const SizedBox(height: AppSpacing.sm),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -189,7 +188,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text('Artikel Bantuan', style: AppTypography.h6),
+                const Text('Artikel Bantuan', style: AppTypography.h6),
               ],
             ),
           ),
@@ -345,7 +344,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                 ),
               ),
               const Spacer(),
-              Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
+              const Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 4),
               Text('${article.readTime} mnt', style: AppTypography.caption),
             ],

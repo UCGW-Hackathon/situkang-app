@@ -46,8 +46,8 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
   }) async {
     final queryParams = <String, dynamic>{
       'page': page,
-      if (type != null) 'type': type,
-      if (status != null) 'status': status,
+      'type': ?type,
+      'status': ?status,
       if (startDate != null) 'start_date': startDate.toIso8601String(),
       if (endDate != null) 'end_date': endDate.toIso8601String(),
     };

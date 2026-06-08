@@ -1,8 +1,9 @@
-import 'package:situkang_app/core/error/result.dart';
 import 'package:dartz/dartz.dart' hide Order;
 import 'package:injectable/injectable.dart' hide Order;
+import 'package:situkang_app/core/error/result.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../orders/domain/entities/order.dart';
 import '../../domain/entities/worker_statistics.dart';
 import '../../domain/repositories/worker_history_repository.dart';
@@ -16,11 +17,11 @@ class WorkerHistoryRepositoryImpl implements WorkerHistoryRepository {
 
   @override
   Future<Result<List<Order>>> getHistory({
-    required String filter,
+    required OrderStatus? status,
     required int page,
   }) async {
     try {
-      final history = await remoteDataSource.getHistory(filter, page);
+      final history = await remoteDataSource.getHistory(status, page);
       return Right(history.map((m) => m.toEntity()).toList());
     } on Failure catch (e) {
       return Left(e);

@@ -126,7 +126,7 @@ class _WalletPageState extends State<WalletPage> {
                   ),
                   const SizedBox(height: AppSpacing.xxl),
                   
-                  Text('Ringkasan Keuangan', style: AppTypography.h6),
+                  const Text('Ringkasan Keuangan', style: AppTypography.h6),
                   const SizedBox(height: AppSpacing.md),
                   
                   GridView.count(

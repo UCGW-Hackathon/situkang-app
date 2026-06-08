@@ -46,6 +46,23 @@ class SubmitVerification extends WorkerProfileEvent {
   List<Object?> get props => [ktpPath, certificatePaths, selfiePath];
 }
 
+class CompleteIdentity extends WorkerProfileEvent {
+  const CompleteIdentity({
+    required this.bio,
+    required this.serviceName,
+    required this.serviceBasePrice,
+    required this.servicePriceUnit,
+  });
+
+  final String bio;
+  final String serviceName;
+  final int serviceBasePrice;
+  final String servicePriceUnit;
+
+  @override
+  List<Object?> get props => [bio, serviceName, serviceBasePrice, servicePriceUnit];
+}
+
 class AddWorkerService extends WorkerProfileEvent {
   const AddWorkerService({
     required this.name,

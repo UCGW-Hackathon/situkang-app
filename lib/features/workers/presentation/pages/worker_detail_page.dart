@@ -4,8 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/error/failures.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/worker_profile.dart';
@@ -235,7 +233,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Keahlian & Layanan', style: AppTypography.h6),
+          const Text('Keahlian & Layanan', style: AppTypography.h6),
           const SizedBox(height: AppSpacing.sm),
           Text(
             worker.bio ?? 'Berpengalaman menangani berbagai masalah rumah tangga dengan standar keamanan tinggi.',
@@ -295,10 +293,10 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
+          const CircleAvatar(
             backgroundColor: AppColors.primaryContainer,
             radius: 20,
-            child: const Text('"', style: TextStyle(fontSize: 24, color: AppColors.primary, fontWeight: FontWeight.bold)),
+            child: Text('"', style: TextStyle(fontSize: 24, color: AppColors.primary, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -327,22 +325,21 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
   Widget _buildBottomBar(WorkerProfile worker) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: const Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: const [BoxShadow(color: AppColors.shadow, blurRadius: 10, offset: Offset(0, -2))],
+        border: Border(top: BorderSide(color: AppColors.border)),
+        boxShadow: [BoxShadow(color: AppColors.shadow, blurRadius: 10, offset: Offset(0, -2))],
       ),
       child: SafeArea(
         top: false,
         child: Row(
           children: [
             Expanded(
-              flex: 1,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Booking Fee', style: AppTypography.caption),
+                  const Text('Booking Fee', style: AppTypography.caption),
                   Text(
                     'Rp${NumberFormat('#,###', 'id').format(worker.bookingFee)}',
                     style: AppTypography.priceMedium,
@@ -409,24 +406,24 @@ class _WorkerDetailSkeleton extends StatelessWidget {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Column(
+                          child: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: const [
+                                children: [
                                   Skeleton(height: 24, width: 150),
                                   Skeleton(height: 24, width: 80, borderRadius: 12),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              const Skeleton(height: 16, width: 100),
-                              const SizedBox(height: 16),
-                              const Divider(),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 8),
+                              Skeleton(height: 16, width: 100),
+                              SizedBox(height: 16),
+                              Divider(),
+                              SizedBox(height: 16),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                children: const [
+                                children: [
                                   Skeleton(height: 40, width: 80),
                                   Skeleton(height: 40, width: 80),
                                 ],
@@ -435,19 +432,19 @@ class _WorkerDetailSkeleton extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Skeleton(height: 20, width: 150),
-                              const SizedBox(height: 8),
-                              const Skeleton(height: 14, width: double.infinity),
-                              const SizedBox(height: 4),
-                              const Skeleton(height: 14, width: 250),
-                              const SizedBox(height: 16),
+                              Skeleton(height: 20, width: 150),
+                              SizedBox(height: 8),
+                              Skeleton(height: 14, width: double.infinity),
+                              SizedBox(height: 4),
+                              Skeleton(height: 14, width: 250),
+                              SizedBox(height: 16),
                               Row(
-                                children: const [
+                                children: [
                                   Skeleton(height: 30, width: 100, borderRadius: 8),
                                   SizedBox(width: 8),
                                   Skeleton(height: 30, width: 120, borderRadius: 8),
@@ -467,11 +464,11 @@ class _WorkerDetailSkeleton extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             color: Colors.white,
-            child: SafeArea(
+            child: const SafeArea(
               top: false,
               child: Row(
-                children: const [
-                  Expanded(flex: 1, child: Skeleton(height: 40)),
+                children: [
+                  Expanded(child: Skeleton(height: 40)),
                   SizedBox(width: 16),
                   Expanded(flex: 2, child: Skeleton(height: 48, borderRadius: 8)),
                 ],

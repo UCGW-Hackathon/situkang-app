@@ -6,7 +6,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../knowledge/presentation/pages/article_detail_page.dart';
 import '../../../orders/presentation/bloc/order_bloc.dart';
@@ -240,7 +239,6 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         GestureDetector(
           onTap: () => context.go('/profile'),
@@ -432,7 +430,7 @@ class _CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -529,14 +527,14 @@ class _PromoArticleStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     if (promos.isEmpty && articles.isEmpty) return const SizedBox.shrink();
 
-    final List<Widget> children = [];
+    final children = <Widget>[];
 
-    for (var promo in promos) {
+    for (final promo in promos) {
       children.add(_PromoCard(promo: promo));
       children.add(const SizedBox(width: 12));
     }
 
-    for (var article in articles) {
+    for (final article in articles) {
       children.add(_ArticleCard(article: article));
       children.add(const SizedBox(width: 12));
     }
@@ -576,9 +574,9 @@ class _PromoCard extends StatelessWidget {
             'assets/images/promo_ac_banner.png',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              return Container(
+              return const ColoredBox(
                 color: _teal,
-                child: const Center(
+                child: Center(
                   child: Icon(Icons.ac_unit, color: Colors.white, size: 40),
                 ),
               );
@@ -967,13 +965,13 @@ class _HomeSkeleton extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
                 child: Row(
                   children: [
-                    const Skeleton(width: 48, height: 48, shape: BoxShape.circle),
-                    const SizedBox(width: 8),
-                    const Expanded(
+                    Skeleton(width: 48, height: 48, shape: BoxShape.circle),
+                    SizedBox(width: 8),
+                    Expanded(
                       flex: 5,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -984,10 +982,10 @@ class _HomeSkeleton extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const Skeleton(width: 20, height: 20, shape: BoxShape.circle),
-                    const SizedBox(width: 4),
-                    const Expanded(
+                    SizedBox(width: 8),
+                    Skeleton(width: 20, height: 20, shape: BoxShape.circle),
+                    SizedBox(width: 4),
+                    Expanded(
                       flex: 6,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

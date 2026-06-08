@@ -14,8 +14,7 @@ import '../../domain/entities/purchase_summary.dart';
 /// Validates: Requirement 10.7
 class PurchaseSummaryCard extends StatelessWidget {
   const PurchaseSummaryCard({
-    super.key,
-    required this.summary,
+    required this.summary, super.key,
   });
 
   /// The purchase summary data.
@@ -32,7 +31,7 @@ class PurchaseSummaryCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.summarize_outlined,
                 color: AppColors.primary,
                 size: AppSizing.iconMd,
@@ -103,7 +102,7 @@ class PurchaseSummaryCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.auto_awesome,
                     size: AppSizing.iconSm,
                     color: AppColors.accent,

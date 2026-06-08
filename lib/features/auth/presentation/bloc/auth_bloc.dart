@@ -1,8 +1,6 @@
-import 'package:injectable/injectable.dart';
-import '../../../../core/services/push_notification_service.dart';
-import '../../../../core/di/injection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/user.dart';

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -94,14 +93,13 @@ void main() {
       status: OrderStatus.accepted,
       title: 'Diterima',
       description: 'Pesanan diterima oleh tukang',
-      timestamp: DateTime(2024, 1, 1, 10, 0),
+      timestamp: DateTime(2024, 1, 1, 10),
       isCompleted: true,
     ),
     const TimelineEntryModel(
       status: OrderStatus.onTheWay,
       title: 'Dalam Perjalanan',
       description: 'Tukang sedang menuju lokasi Anda',
-      isCompleted: false,
     ),
   ];
 

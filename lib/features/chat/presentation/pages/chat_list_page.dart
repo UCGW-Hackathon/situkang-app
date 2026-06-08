@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
-import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/chat_conversation.dart';
 
 /// Page displaying a list of active chat conversations.
@@ -37,7 +34,7 @@ class ChatListPage extends StatelessWidget {
           : ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               itemCount: conversations.length,
-              separatorBuilder: (_, __) => const Divider(
+              separatorBuilder: (_, _) => const Divider(
                 height: 1,
                 indent: 72,
               ),
@@ -59,7 +56,7 @@ class ChatListPage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.chat_bubble_outline,
               size: AppSizing.iconXxl,
               color: AppColors.textDisabled,
@@ -70,7 +67,7 @@ class ChatListPage extends StatelessWidget {
               style: AppTypography.h6.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
+            const Text(
               'Percakapan dengan tukang akan muncul di sini setelah Anda membuat pesanan',
               style: AppTypography.bodySmall,
               textAlign: TextAlign.center,

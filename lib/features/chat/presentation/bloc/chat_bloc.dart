@@ -1,9 +1,9 @@
-import 'package:injectable/injectable.dart';
 import 'dart:async';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/enums.dart';
@@ -86,7 +86,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final result = await _chatRepository.getMessages(
       event.orderId,
       cursor: event.cursor,
-      limit: AppConstants.chatPageSize,
     );
 
     result.fold(
@@ -209,7 +208,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (currentState is! ChatLoaded) return;
 
     // Validate image file
-    final fileName = event.image.path.split('/').last.split('\\').last;
+    final fileName = event.image.path.split('/').last.split(r'\').last;
     final fileSize = await event.image.length();
     final fileValidation = FileUploadValidator.validate(
       fileName,

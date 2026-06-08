@@ -1,5 +1,5 @@
-import 'package:injectable/injectable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../domain/repositories/home_repository.dart';
 import 'home_event.dart';

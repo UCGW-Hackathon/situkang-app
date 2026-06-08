@@ -11,12 +11,12 @@ ArticleModel _$ArticleModelFromJson(Map<String, dynamic> json) => ArticleModel(
   title: json['title'] as String,
   category: json['category'] as String,
   excerpt: json['excerpt'] as String,
-  body: json['body'] as String?,
   readTime: (json['read_time'] as num).toInt(),
   author: json['author'] as String,
   tags:
       (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
   createdAt: DateTime.parse(json['created_at'] as String),
+  body: json['body'] as String?,
 );
 
 Map<String, dynamic> _$ArticleModelToJson(ArticleModel instance) =>

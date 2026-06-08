@@ -6,9 +6,8 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_text_field.dart';
-import '../../../../core/widgets/loading_indicator.dart';
-import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/paginated_list_view.dart';
+import '../../../../core/widgets/skeleton_loader.dart';
 import '../../domain/entities/worker_filter.dart';
 import '../bloc/worker_list_bloc.dart';
 import '../widgets/worker_card.dart';
@@ -215,7 +214,7 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.sort,
               size: AppSizing.iconSm,
               color: AppColors.textSecondary,
@@ -226,7 +225,7 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
               style: AppTypography.bodySmall,
             ),
             const SizedBox(width: AppSpacing.xs),
-            Icon(
+            const Icon(
               Icons.arrow_drop_down,
               size: AppSizing.iconSm,
               color: AppColors.textSecondary,
@@ -288,7 +287,7 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.search_off,
               size: AppSizing.iconXl,
               color: AppColors.textDisabled,
@@ -302,7 +301,7 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(
+            const Text(
               'Coba sesuaikan filter atau perluas radius pencarian',
               style: AppTypography.bodySmall,
               textAlign: TextAlign.center,
@@ -346,7 +345,7 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.location_off,
               size: AppSizing.iconXl,
               color: AppColors.textDisabled,
@@ -360,7 +359,7 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(
+            const Text(
               'Aktifkan akses lokasi untuk menemukan tukang terdekat',
               style: AppTypography.bodySmall,
               textAlign: TextAlign.center,
@@ -474,7 +473,7 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
                   children: [
                     Text('≥ ${rating.toStringAsFixed(1)}'),
                     const SizedBox(width: AppSpacing.sm),
-                    Icon(
+                    const Icon(
                       Icons.star,
                       size: AppSizing.iconSm,
                       color: AppColors.ratingStar,

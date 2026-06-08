@@ -5,8 +5,7 @@ import '../../../../core/widgets/widgets.dart';
 
 class AddWorkItemBottomSheet extends StatefulWidget {
   const AddWorkItemBottomSheet({
-    super.key,
-    required this.onAdd,
+    required this.onAdd, super.key,
   });
 
   final void Function(String name, int cost, String? description) onAdd;
@@ -30,7 +29,7 @@ class _AddWorkItemBottomSheetState extends State<AddWorkItemBottomSheet> {
 
   void _submit() {
     final name = _nameController.text.trim();
-    final costText = _costController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final costText = _costController.text.replaceAll(RegExp('[^0-9]'), '');
     final cost = int.tryParse(costText) ?? 0;
     final desc = _descController.text.trim();
 
@@ -64,7 +63,7 @@ class _AddWorkItemBottomSheetState extends State<AddWorkItemBottomSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Tambah Material / Jasa', style: AppTypography.h6),
+              const Text('Tambah Material / Jasa', style: AppTypography.h6),
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.of(context).pop(),

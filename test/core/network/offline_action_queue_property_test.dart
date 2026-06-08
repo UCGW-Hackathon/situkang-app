@@ -190,7 +190,7 @@ void main() {
         // Set up mock to record execution order for each action
         for (var i = 0; i < numActions; i++) {
           final path = '/path-$i';
-          when(() => mockApiClient.post<dynamic>(path, data: null))
+          when(() => mockApiClient.post<dynamic>(path))
               .thenAnswer((_) async {
             executionOrder.add('action-$i');
             return Response(
@@ -206,9 +206,7 @@ void main() {
             id: 'action-$i',
             method: 'POST',
             path: '/path-$i',
-            data: null,
             createdAt: DateTime(2024, 1, 1, 0, 0, i),
-            retryCount: 0,
           ));
         }
 
@@ -291,7 +289,7 @@ void main() {
         // Set up mock to record execution order
         for (var i = 0; i < numActions; i++) {
           final path = '/path-$i';
-          when(() => mockApiClient.post<dynamic>(path, data: null))
+          when(() => mockApiClient.post<dynamic>(path))
               .thenAnswer((_) async {
             executionOrder.add('action-$i');
             return Response(
@@ -307,9 +305,7 @@ void main() {
             id: 'action-$i',
             method: 'POST',
             path: '/path-$i',
-            data: null,
             createdAt: DateTime(2024, 1, 1, 0, 0, i),
-            retryCount: 0,
           ));
         }
 

@@ -156,20 +156,20 @@ class _VerificationPageState extends State<VerificationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    AppCard(
+                    const AppCard(
                       color: AppColors.primaryContainer,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.security, color: AppColors.primary),
-                              const SizedBox(width: AppSpacing.md),
+                              Icon(Icons.security, color: AppColors.primary),
+                              SizedBox(width: AppSpacing.md),
                               Text('Keamanan Data', style: AppTypography.h6),
                             ],
                           ),
-                          const SizedBox(height: AppSpacing.sm),
-                          const Text(
+                          SizedBox(height: AppSpacing.sm),
+                          Text(
                             'Data identitas Anda akan dienkripsi dan disimpan dengan aman. Data ini hanya digunakan untuk keperluan verifikasi.',
                           ),
                         ],
@@ -202,7 +202,7 @@ class _VerificationPageState extends State<VerificationPage> {
                     ),
                     const SizedBox(height: AppSpacing.xl),
 
-                    Text('Sertifikat Keahlian (Opsional, max 5)', style: AppTypography.label),
+                    const Text('Sertifikat Keahlian (Opsional, max 5)', style: AppTypography.label),
                     const SizedBox(height: AppSpacing.sm),
                     
                     GridView.builder(
@@ -227,7 +227,7 @@ class _VerificationPageState extends State<VerificationPage> {
                                 });
                               });
                             },
-                            child: Container(
+                            child: DecoratedBox(
                               decoration: BoxDecoration(
                                 color: AppColors.surfaceVariant,
                                 borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -268,9 +268,9 @@ class _VerificationPageState extends State<VerificationPage> {
                 ),
               ),
               if (isLoading)
-                Container(
+                const ColoredBox(
                   color: Colors.black12,
-                  child: const Center(child: LoadingIndicator()),
+                  child: Center(child: LoadingIndicator()),
                 ),
             ],
           );

@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
 
@@ -23,9 +22,7 @@ class PushNotificationService {
 
       // Request permission
       await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
+        
       );
 
       // Handle background/terminated state messages
@@ -57,7 +54,6 @@ FirebaseMessaging.onMessage.listen((RemoteMessage message) {
                 onPressed: () => _handleMessage(message),
               ),
               behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 4),
             ),
           );
         }

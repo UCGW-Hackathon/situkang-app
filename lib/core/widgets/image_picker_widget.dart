@@ -204,9 +204,7 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
 /// Helper widget for clipping with rounded corners.
 class ClipRoundedRect extends StatelessWidget {
   const ClipRoundedRect({
-    super.key,
-    required this.borderRadius,
-    required this.child,
+    required this.borderRadius, required this.child, super.key,
   });
 
   final BorderRadius borderRadius;

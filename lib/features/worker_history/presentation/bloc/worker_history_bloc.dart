@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart' hide Order;
 
+import '../../../../core/constants/enums.dart';
 import '../../../../core/error/failures.dart';
 import '../../../orders/domain/entities/order.dart';
 import '../../domain/repositories/worker_history_repository.dart';
@@ -26,7 +27,7 @@ class WorkerHistoryBloc extends Bloc<WorkerHistoryEvent, WorkerHistoryState> {
     emit(state.copyWith(status: WorkerHistoryStatus.loading, page: 1));
 
     final result = await repository.getHistory(
-      filter: state.filter,
+      status: state.statusFilter,
       page: 1,
     );
 
@@ -51,7 +52,7 @@ class WorkerHistoryBloc extends Bloc<WorkerHistoryEvent, WorkerHistoryState> {
 
     final nextPage = state.page + 1;
     final result = await repository.getHistory(
-      filter: state.filter,
+      status: state.statusFilter,
       page: nextPage,
     );
 
@@ -77,7 +78,11 @@ class WorkerHistoryBloc extends Bloc<WorkerHistoryEvent, WorkerHistoryState> {
     FilterWorkerHistory event,
     Emitter<WorkerHistoryState> emit,
   ) async {
-    emit(state.copyWith(filter: event.filter));
+    if (event.status == null) {
+      emit(state.copyWith(clearStatusFilter: true));
+    } else {
+      emit(state.copyWith(statusFilter: event.status));
+    }
     add(FetchWorkerHistory()); // Re-fetch with new filter
   }
 }

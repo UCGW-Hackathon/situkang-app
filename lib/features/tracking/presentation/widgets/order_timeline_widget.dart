@@ -13,8 +13,7 @@ import '../../domain/entities/timeline_entry.dart';
 /// Validates: Requirement 9.5
 class OrderTimelineWidget extends StatelessWidget {
   const OrderTimelineWidget({
-    super.key,
-    required this.timeline,
+    required this.timeline, super.key,
   });
 
   /// The list of timeline entries to display.
@@ -27,7 +26,7 @@ class OrderTimelineWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Progress Pesanan', style: AppTypography.h6),
+        const Text('Progress Pesanan', style: AppTypography.h6),
         const SizedBox(height: AppSpacing.md),
         ...timeline.asMap().entries.map((entry) {
           final index = entry.key;

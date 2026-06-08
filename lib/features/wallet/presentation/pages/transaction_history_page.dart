@@ -55,7 +55,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
             selected: currentType == null,
             onSelected: (selected) {
               if (selected) {
-                context.read<WalletBloc>().add(const FilterWalletTransactions(type: null));
+                context.read<WalletBloc>().add(const FilterWalletTransactions());
               }
             },
           ),
@@ -141,7 +141,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                           itemCount: state.hasReachedMax
                               ? state.transactions.length
                               : state.transactions.length + 1,
-                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
                           itemBuilder: (context, index) {
                             if (index >= state.transactions.length) {
                               return const Padding(

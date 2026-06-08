@@ -8,8 +8,7 @@ import '../theme/theme.dart';
 class AppCard extends StatelessWidget {
   /// Creates an [AppCard].
   const AppCard({
-    super.key,
-    required this.child,
+    required this.child, super.key,
     this.onTap,
     this.padding,
     this.elevation,

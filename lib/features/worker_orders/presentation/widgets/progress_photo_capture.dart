@@ -5,8 +5,7 @@ import '../../../../core/widgets/widgets.dart';
 
 class ProgressPhotoCapture extends StatefulWidget {
   const ProgressPhotoCapture({
-    super.key,
-    required this.onPhotoCaptured,
+    required this.onPhotoCaptured, super.key,
   });
 
   final void Function(String filePath, String? caption) onPhotoCaptured;
@@ -55,7 +54,7 @@ class _ProgressPhotoCaptureState extends State<ProgressPhotoCapture> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Unggah Bukti Progres', style: AppTypography.h6),
+              const Text('Unggah Bukti Progres', style: AppTypography.h6),
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.of(context).pop(),
@@ -72,7 +71,7 @@ class _ProgressPhotoCaptureState extends State<ProgressPhotoCapture> {
                 decoration: BoxDecoration(
                   color: AppColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                  border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: const Column(
                   mainAxisAlignment: MainAxisAlignment.center,

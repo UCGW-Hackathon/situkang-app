@@ -13,9 +13,7 @@ import '../theme/theme.dart';
 class ConnectivityBanner extends StatefulWidget {
   /// Creates a [ConnectivityBanner].
   const ConnectivityBanner({
-    super.key,
-    required this.connectivityManager,
-    required this.child,
+    required this.connectivityManager, required this.child, super.key,
   });
 
   /// The connectivity manager to listen to.

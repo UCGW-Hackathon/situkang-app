@@ -14,7 +14,7 @@ void main() async {
   if (loginRes.statusCode != 200) return;
   final token = jsonDecode(loginRes.body)['data']['access_token'];
   final headers = {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'};
-  final workerId = '9d8ec210-8509-4fff-9748-e8de4550dbd7';
+  const workerId = '9d8ec210-8509-4fff-9748-e8de4550dbd7';
   
   final res = await http.get(Uri.parse('https://xryz-gcw-situkang.hf.space/v1/users/$workerId'), headers: headers);
   print('Status: ${res.statusCode}');

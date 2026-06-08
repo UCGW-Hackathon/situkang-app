@@ -1,13 +1,12 @@
 import 'package:situkang_app/core/error/result.dart';
-import 'package:dartz/dartz.dart' hide Order;
+import 'package:situkang_app/core/constants/enums.dart';
 
-import '../../../../core/error/failures.dart';
 import '../../../orders/domain/entities/order.dart';
 import '../entities/worker_statistics.dart';
 
 abstract class WorkerHistoryRepository {
   Future<Result<List<Order>>> getHistory({
-    required String filter, // 'completed', 'cancelled'
+    required OrderStatus? status,
     required int page,
   });
 

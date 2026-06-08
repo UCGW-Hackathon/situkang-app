@@ -20,14 +20,14 @@ enum AppButtonVariant {
 class AppButton extends StatelessWidget {
   /// Creates an [AppButton].
   const AppButton({
-    super.key,
-    required this.text,
+    required this.text, super.key,
     this.onPressed,
     this.variant = AppButtonVariant.primary,
     this.isLoading = false,
     this.isDisabled = false,
     this.icon,
     this.width,
+    this.isFullWidth = true,
   });
 
   /// The button label text.
@@ -50,6 +50,9 @@ class AppButton extends StatelessWidget {
 
   /// Optional fixed width. Defaults to full width.
   final double? width;
+
+  /// Whether the button should try to take full width. Defaults to true.
+  final bool isFullWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -106,6 +109,8 @@ class AppButton extends StatelessWidget {
   }
 
   ButtonStyle _getButtonStyle() {
+    final minWidth = isFullWidth && width == null ? double.infinity : 0.0;
+    
     switch (variant) {
       case AppButtonVariant.primary:
         return ElevatedButton.styleFrom(
@@ -113,7 +118,7 @@ class AppButton extends StatelessWidget {
           foregroundColor: AppColors.onPrimary,
           disabledBackgroundColor: AppColors.border,
           disabledForegroundColor: AppColors.textDisabled,
-          minimumSize: const Size(double.infinity, AppSizing.buttonHeightMd),
+          minimumSize: Size(minWidth, AppSizing.buttonHeightMd),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           ),
@@ -125,7 +130,7 @@ class AppButton extends StatelessWidget {
           foregroundColor: AppColors.onSecondary,
           disabledBackgroundColor: AppColors.border,
           disabledForegroundColor: AppColors.textDisabled,
-          minimumSize: const Size(double.infinity, AppSizing.buttonHeightMd),
+          minimumSize: Size(minWidth, AppSizing.buttonHeightMd),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           ),
@@ -135,7 +140,7 @@ class AppButton extends StatelessWidget {
         return OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           disabledForegroundColor: AppColors.textDisabled,
-          minimumSize: const Size(double.infinity, AppSizing.buttonHeightMd),
+          minimumSize: Size(minWidth, AppSizing.buttonHeightMd),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           ),

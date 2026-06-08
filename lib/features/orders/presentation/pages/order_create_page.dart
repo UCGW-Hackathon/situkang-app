@@ -3,19 +3,18 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/error/failures.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../workers/domain/entities/worker_profile.dart';
 import '../../domain/entities/create_order_params.dart';
 import '../bloc/order_bloc.dart';
-import '../../../workers/domain/entities/worker_profile.dart';
 
 class OrderCreatePage extends StatefulWidget {
   const OrderCreatePage({
@@ -226,7 +225,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Pilih Layanan', style: AppTypography.h6),
+        const Text('Pilih Layanan', style: AppTypography.h6),
         const SizedBox(height: AppSpacing.sm),
         Wrap(
           spacing: 8,
@@ -276,7 +275,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Lokasi Pekerjaan', style: AppTypography.h6),
+        const Text('Lokasi Pekerjaan', style: AppTypography.h6),
         const SizedBox(height: AppSpacing.sm),
         Container(
           height: 220,
@@ -294,8 +293,8 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                   initialCenter: _selectedLocation,
                   initialZoom: 15,
                   onPositionChanged: (position, hasGesture) {
-                    if (hasGesture && position.center != null) {
-                      _selectedLocation = position.center!;
+                    if (hasGesture) {
+                      _selectedLocation = position.center;
                     }
                   },
                 ),
@@ -327,15 +326,15 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                 ),
               ),
               if (_isLoadingLocation)
-                Container(
+                const ColoredBox(
                   color: Colors.white70,
-                  child: const Center(child: CircularProgressIndicator()),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
             ],
           ),
         ),
         const SizedBox(height: 8),
-        Text('Geser peta untuk menetapkan titik lokasi yang akurat.', style: AppTypography.caption),
+        const Text('Geser peta untuk menetapkan titik lokasi yang akurat.', style: AppTypography.caption),
       ],
     );
   }
@@ -344,7 +343,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Detail Kerusakan', style: AppTypography.label),
+        const Text('Detail Kerusakan', style: AppTypography.label),
         const SizedBox(height: AppSpacing.xs),
         AppTextField(
           controller: _descriptionController,
@@ -357,7 +356,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        Text('Detail Alamat Tambahan (Opsional)', style: AppTypography.label),
+        const Text('Detail Alamat Tambahan (Opsional)', style: AppTypography.label),
         const SizedBox(height: AppSpacing.xs),
         AppTextField(
           controller: _addressDetailController,
@@ -366,7 +365,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        Text('Foto Area Kerusakan (Opsional)', style: AppTypography.label),
+        const Text('Foto Area Kerusakan (Opsional)', style: AppTypography.label),
         const SizedBox(height: AppSpacing.xs),
         Wrap(
           spacing: AppSpacing.sm,
@@ -391,7 +390,6 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: AppColors.primaryContainer,
-            style: BorderStyle.solid,
             width: 1.5,
           ),
         ),
@@ -405,7 +403,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text('Unggah Foto Kerusakan', style: AppTypography.label.copyWith(color: AppColors.primary)),
-            Text('Maksimal 5MB (JPG/PNG)', style: AppTypography.caption),
+            const Text('Maksimal 5MB (JPG/PNG)', style: AppTypography.caption),
           ],
         ),
       ),
@@ -485,22 +483,21 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: const Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: const [BoxShadow(color: AppColors.shadow, blurRadius: 10, offset: Offset(0, -2))],
+        border: Border(top: BorderSide(color: AppColors.border)),
+        boxShadow: [BoxShadow(color: AppColors.shadow, blurRadius: 10, offset: Offset(0, -2))],
       ),
       child: SafeArea(
         top: false,
         child: Row(
           children: [
             Expanded(
-              flex: 1,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Booking Fee', style: AppTypography.caption),
+                  const Text('Booking Fee', style: AppTypography.caption),
                   Text(
                     'Rp${NumberFormat('#,###', 'id').format(bookingFee)}',
                     style: AppTypography.priceMedium,

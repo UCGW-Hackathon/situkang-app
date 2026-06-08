@@ -1,6 +1,6 @@
-import 'package:injectable/injectable.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/worker_filter.dart';
@@ -57,8 +57,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
 
     final result = await _workerRepository.getNearbyWorkers(
       filter: _currentFilter,
-      page: 1,
-      perPage: _perPage,
     );
 
     result.fold(
@@ -67,7 +65,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
         workers: workerListResult.workers,
         filter: _currentFilter,
         hasMore: workerListResult.hasNextPage,
-        currentPage: 1,
       )),
     );
   }
@@ -84,8 +81,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
 
     final result = await _workerRepository.getNearbyWorkers(
       filter: _currentFilter,
-      page: 1,
-      perPage: _perPage,
     );
 
     result.fold(
@@ -94,7 +89,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
         workers: workerListResult.workers,
         filter: _currentFilter,
         hasMore: workerListResult.hasNextPage,
-        currentPage: 1,
       )),
     );
   }
@@ -112,8 +106,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
 
     final result = await _workerRepository.getNearbyWorkers(
       filter: _currentFilter,
-      page: 1,
-      perPage: _perPage,
     );
 
     result.fold(
@@ -122,7 +114,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
         workers: workerListResult.workers,
         filter: _currentFilter,
         hasMore: workerListResult.hasNextPage,
-        currentPage: 1,
       )),
     );
   }
@@ -148,8 +139,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
 
     final result = await _workerRepository.getNearbyWorkers(
       filter: _currentFilter,
-      page: 1,
-      perPage: _perPage,
     );
 
     result.fold(
@@ -158,7 +147,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
         workers: workerListResult.workers,
         filter: _currentFilter,
         hasMore: workerListResult.hasNextPage,
-        currentPage: 1,
       )),
     );
   }
@@ -181,7 +169,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
     final result = await _workerRepository.getNearbyWorkers(
       filter: _currentFilter,
       page: nextPage,
-      perPage: _perPage,
     );
 
     result.fold(
@@ -190,7 +177,6 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
         workers: [...currentState.workers, ...workerListResult.workers],
         filter: _currentFilter,
         hasMore: workerListResult.hasNextPage,
-        isLoadingMore: false,
         currentPage: nextPage,
       )),
     );

@@ -1,6 +1,6 @@
-import 'package:injectable/injectable.dart' hide Order;
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart' hide Order;
 
 import '../../../../core/constants/enums.dart';
 import '../../../../core/error/failures.dart';

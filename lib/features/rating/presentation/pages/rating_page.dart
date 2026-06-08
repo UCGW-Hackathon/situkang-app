@@ -10,10 +10,7 @@ import '../bloc/rating_bloc.dart';
 /// Validates: Requirements 13.1-13.6
 class RatingPage extends StatefulWidget {
   const RatingPage({
-    super.key,
-    required this.orderId,
-    required this.workerId,
-    required this.workerName,
+    required this.orderId, required this.workerId, required this.workerName, super.key,
     this.workerAvatarUrl,
   });
 
@@ -100,12 +97,11 @@ class _RatingPageState extends State<RatingPage> {
           return SingleChildScrollView(
             padding: AppSpacing.pagePadding,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildWorkerInfo(),
                 const SizedBox(height: AppSpacing.lg),
                 
-                Text(
+                const Text(
                   'Bagaimana hasil kerja tukang?',
                   style: AppTypography.h5,
                   textAlign: TextAlign.center,
@@ -188,7 +184,7 @@ class _RatingPageState extends State<RatingPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Apa yang Anda sukai?', style: AppTypography.label),
+        const Text('Apa yang Anda sukai?', style: AppTypography.label),
         const SizedBox(height: AppSpacing.sm),
         Wrap(
           spacing: AppSpacing.sm,
@@ -228,18 +224,18 @@ class _RatingPageState extends State<RatingPage> {
           children: [
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.successLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.check_circle,
                 size: AppSizing.iconXxl,
                 color: AppColors.success,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text('Penilaian Terkirim', style: AppTypography.h4),
+            const Text('Penilaian Terkirim', style: AppTypography.h4),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Terima kasih telah memberikan penilaian untuk ${widget.workerName}.',

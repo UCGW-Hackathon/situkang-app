@@ -1,5 +1,5 @@
-import 'package:injectable/injectable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../auth/domain/entities/user.dart';
 import '../../domain/repositories/profile_repository.dart';

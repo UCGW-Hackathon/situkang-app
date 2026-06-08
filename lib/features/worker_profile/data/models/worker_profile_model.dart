@@ -17,29 +17,35 @@ class WorkerServiceModel extends WorkerService {
   factory WorkerServiceModel.fromJson(Map<String, dynamic> json) =>
       _$WorkerServiceModelFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$WorkerServiceModelToJson(this);
 }
 
 @JsonSerializable()
 class WorkerProfileModel extends WorkerProfile {
+
+  factory WorkerProfileModel.fromJson(Map<String, dynamic> json) {
+    if (json['joined_at'] == null) {
+      json['joined_at'] = DateTime.now().toIso8601String();
+    }
+    return _$WorkerProfileModelFromJson(json);
+  }
+  
   const WorkerProfileModel({
-    required super.id,
-    required super.name,
+    @JsonKey(name: 'worker_id') required super.id,
+    @JsonKey(name: 'full_name') required super.name,
+    @JsonKey(name: 'phone') required super.phoneNumber, 
+    @JsonKey(name: 'verification_status') required super.verificationStatus, 
+    @JsonKey(name: 'joined_at') required super.joinedAt, 
     @JsonKey(name: 'avatar_url') super.avatarUrl,
-    @JsonKey(name: 'cover_url') super.coverUrl,
-    @JsonKey(name: 'phone_number') required super.phoneNumber,
+    @JsonKey(name: 'cover_photo_url') super.coverUrl,
     super.bio,
-    @JsonKey(name: 'verification_status') required super.verificationStatus,
     @JsonKey(name: 'verification_reason') super.verificationReason,
     this.servicesModel = const [],
-    @JsonKey(name: 'joined_at') required super.joinedAt,
   }) : super(services: servicesModel);
 
   @JsonKey(name: 'services')
   final List<WorkerServiceModel> servicesModel;
-
-  factory WorkerProfileModel.fromJson(Map<String, dynamic> json) =>
-      _$WorkerProfileModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$WorkerProfileModelToJson(this);
 }

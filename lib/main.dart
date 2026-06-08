@@ -36,7 +36,7 @@ void main() async {
   }
   
   // Initialize date formatting for ID locale
-  await initializeDateFormatting('id_ID', null);
+  await initializeDateFormatting('id_ID');
   
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

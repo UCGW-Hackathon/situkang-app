@@ -11,11 +11,11 @@ class ArticleModel extends Article {
     required super.title,
     required super.category,
     required super.excerpt,
-    super.body,
     @JsonKey(name: 'read_time') required super.readTime,
     required super.author,
     @JsonKey(defaultValue: []) required super.tags,
     @JsonKey(name: 'created_at') required super.createdAt,
+    super.body,
   });
 
   factory ArticleModel.fromJson(Map<String, dynamic> json) =>

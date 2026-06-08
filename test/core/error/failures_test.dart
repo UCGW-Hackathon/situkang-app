@@ -157,7 +157,7 @@ void main() {
 
   group('Result type', () {
     test('Result<T> can represent success (Right)', () {
-      final Result<String> result = const Right('success data');
+      const Result<String> result = Right('success data');
 
       expect(result.isRight(), isTrue);
       expect(result.isLeft(), isFalse);
@@ -168,7 +168,7 @@ void main() {
     });
 
     test('Result<T> can represent failure (Left)', () {
-      final Result<String> result = const Left(NetworkFailure());
+      const Result<String> result = Left(NetworkFailure());
 
       expect(result.isLeft(), isTrue);
       expect(result.isRight(), isFalse);
@@ -179,7 +179,7 @@ void main() {
     });
 
     test('Result<T> works with complex types', () {
-      final Result<List<int>> result = const Right([1, 2, 3]);
+      const Result<List<int>> result = Right([1, 2, 3]);
 
       result.fold(
         (failure) => fail('Should not be Left'),
@@ -188,7 +188,7 @@ void main() {
     });
 
     test('Result<T> failure preserves Failure details', () {
-      final Result<int> result = const Left(
+      const Result<int> result = Left(
         ServerFailure('Not found', statusCode: 404, errorCode: 'NOT_FOUND'),
       );
 

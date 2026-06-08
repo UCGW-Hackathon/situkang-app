@@ -25,8 +25,7 @@ class QueuedAction {
     required this.id,
     required this.method,
     required this.path,
-    this.data,
-    required this.createdAt,
+    required this.createdAt, this.data,
     this.retryCount = 0,
   });
 

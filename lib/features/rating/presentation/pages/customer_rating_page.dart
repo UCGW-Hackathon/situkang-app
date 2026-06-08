@@ -8,9 +8,7 @@ import '../bloc/worker_rating_bloc.dart';
 
 class CustomerRatingPage extends StatefulWidget {
   const CustomerRatingPage({
-    super.key,
-    required this.orderId,
-    required this.customerName,
+    required this.orderId, required this.customerName, super.key,
   });
 
   final String orderId;
@@ -103,7 +101,7 @@ class _CustomerRatingPageState extends State<CustomerRatingPage> {
                 children: [
                   const Icon(Icons.check_circle, size: 64, color: AppColors.success),
                   const SizedBox(height: AppSpacing.md),
-                  Text(
+                  const Text(
                     'Anda sudah memberikan penilaian',
                     style: AppTypography.h6,
                     textAlign: TextAlign.center,
@@ -124,13 +122,13 @@ class _CustomerRatingPageState extends State<CustomerRatingPage> {
                             );
                           }),
                         ),
-                        if (rating.tags != null && rating.tags!.isNotEmpty) ...[
+                        if (rating.tags.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.md),
                           Wrap(
                             spacing: AppSpacing.sm,
                             runSpacing: AppSpacing.sm,
                             alignment: WrapAlignment.center,
-                            children: rating.tags!.map((tag) {
+                            children: rating.tags.map((tag) {
                               return Chip(
                                 label: Text(tag, style: const TextStyle(fontSize: 12)),
                                 backgroundColor: AppColors.primaryContainer,
@@ -200,7 +198,7 @@ class _CustomerRatingPageState extends State<CustomerRatingPage> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                     
-                    Text('Apa yang Anda sukai? (Opsional)', style: AppTypography.label),
+                    const Text('Apa yang Anda sukai? (Opsional)', style: AppTypography.label),
                     const SizedBox(height: AppSpacing.sm),
                     Wrap(
                       spacing: AppSpacing.sm,
@@ -244,9 +242,9 @@ class _CustomerRatingPageState extends State<CustomerRatingPage> {
               ),
               
               if (isSubmitting)
-                Container(
+                const ColoredBox(
                   color: Colors.black12,
-                  child: const Center(child: LoadingIndicator()),
+                  child: Center(child: LoadingIndicator()),
                 ),
             ],
           );

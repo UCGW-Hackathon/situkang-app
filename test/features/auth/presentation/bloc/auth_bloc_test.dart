@@ -66,7 +66,7 @@ void main() {
     email: 'john@example.com',
     phone: '+6281234567890',
     role: UserRole.user,
-    createdAt: DateTime(2024, 1, 1),
+    createdAt: DateTime(2024),
   );
 
   const tToken = Token(

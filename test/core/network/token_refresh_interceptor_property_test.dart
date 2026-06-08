@@ -22,12 +22,12 @@ class FakeDioException extends mocktail.Fake implements DioException {}
 
 /// In-memory token storage for tracking token state across operations.
 class InMemoryTokenStorage implements TokenStorage {
-  String? _accessToken;
-  String? _refreshToken;
 
   InMemoryTokenStorage({String? accessToken, String? refreshToken})
       : _accessToken = accessToken,
         _refreshToken = refreshToken;
+  String? _accessToken;
+  String? _refreshToken;
 
   String? get currentAccessToken => _accessToken;
   String? get currentRefreshToken => _refreshToken;
@@ -80,8 +80,8 @@ void main() {
           accessToken: 'old_access_token',
           refreshToken: 'old_refresh_token',
         );
-        int refreshCallCount = 0;
-        bool authLostCalled = false;
+        var refreshCallCount = 0;
+        var authLostCalled = false;
 
         final interceptor = TokenRefreshInterceptor(
           tokenStorage: tokenStorage,
@@ -116,7 +116,7 @@ void main() {
         final handlers = <MockErrorInterceptorHandler>[];
         final futures = <Future<void>>[];
 
-        for (int i = 0; i < concurrentCount; i++) {
+        for (var i = 0; i < concurrentCount; i++) {
           final handler = MockErrorInterceptorHandler();
           handlers.add(handler);
 
@@ -158,7 +158,7 @@ void main() {
                 'For $concurrentCount concurrent 401s, exactly 1 refresh should be attempted');
 
         // Property: all requests are resolved (retried successfully)
-        for (int i = 0; i < concurrentCount; i++) {
+        for (var i = 0; i < concurrentCount; i++) {
           mocktail.verify(() => handlers[i].resolve(mocktail.any())).called(1);
         }
 
@@ -180,7 +180,7 @@ void main() {
           accessToken: 'old_access_token',
           refreshToken: 'old_refresh_token',
         );
-        bool authLostCalled = false;
+        var authLostCalled = false;
 
         final interceptor = TokenRefreshInterceptor(
           tokenStorage: tokenStorage,
@@ -201,7 +201,7 @@ void main() {
         final handlers = <MockErrorInterceptorHandler>[];
         final futures = <Future<void>>[];
 
-        for (int i = 0; i < concurrentCount; i++) {
+        for (var i = 0; i < concurrentCount; i++) {
           final handler = MockErrorInterceptorHandler();
           handlers.add(handler);
 
@@ -235,7 +235,7 @@ void main() {
         await Future.wait(futures);
 
         // Property: all requests are rejected
-        for (int i = 0; i < concurrentCount; i++) {
+        for (var i = 0; i < concurrentCount; i++) {
           mocktail.verify(() => handlers[i].reject(mocktail.any())).called(1);
         }
 
@@ -263,7 +263,7 @@ void main() {
           accessToken: 'access',
           refreshToken: 'refresh',
         );
-        bool authLostCalled = false;
+        var authLostCalled = false;
 
         final interceptor = TokenRefreshInterceptor(
           tokenStorage: tokenStorage,
@@ -316,7 +316,7 @@ void main() {
   // After a successful refresh, the stored tokens are different from the
   // previous ones (token rotation). The old refresh token is no longer usable.
   group('Property 4: Token Rotation Integrity', () {
-    final tokenChars =
+    const tokenChars =
         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-';
 
     Glados2<String, String>(
@@ -328,7 +328,7 @@ void main() {
         // Ensure new tokens are different from old ones
         final newAccessToken = 'new_access_$newTokenSuffix';
         final newRefreshToken = 'new_refresh_$newTokenSuffix';
-        final oldAccessToken = 'old_access_token';
+        const oldAccessToken = 'old_access_token';
 
         final mockRefreshDio = MockDio();
         final tokenStorage = InMemoryTokenStorage(

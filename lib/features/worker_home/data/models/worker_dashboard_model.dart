@@ -6,6 +6,25 @@ part 'worker_dashboard_model.g.dart';
 
 @JsonSerializable()
 class WorkerDashboardModel extends WorkerDashboard {
+
+  factory WorkerDashboardModel.fromEntity(WorkerDashboard entity) {
+    return WorkerDashboardModel(
+      earningsToday: entity.earningsToday,
+      earningsWeek: entity.earningsWeek,
+      earningsMonth: entity.earningsMonth,
+      walletBalance: entity.walletBalance,
+      acceptanceRate: entity.acceptanceRate,
+      averageRating: entity.averageRating,
+      jobsCompleted: entity.jobsCompleted,
+      incomingOrderCount: entity.incomingOrderCount,
+      isAvailable: entity.isAvailable,
+      activeOrderId: entity.activeOrderId,
+      activeOrderTitle: entity.activeOrderTitle,
+      activeOrderStatus: entity.activeOrderStatus,
+      activeOrderCustomerName: entity.activeOrderCustomerName,
+      activeOrderStartTime: entity.activeOrderStartTime,
+    );
+  }
   const WorkerDashboardModel({
     @JsonKey(name: 'earnings_today') required super.earningsToday,
     @JsonKey(name: 'earnings_week') required super.earningsWeek,
@@ -27,23 +46,4 @@ class WorkerDashboardModel extends WorkerDashboard {
       _$WorkerDashboardModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$WorkerDashboardModelToJson(this);
-
-  factory WorkerDashboardModel.fromEntity(WorkerDashboard entity) {
-    return WorkerDashboardModel(
-      earningsToday: entity.earningsToday,
-      earningsWeek: entity.earningsWeek,
-      earningsMonth: entity.earningsMonth,
-      walletBalance: entity.walletBalance,
-      acceptanceRate: entity.acceptanceRate,
-      averageRating: entity.averageRating,
-      jobsCompleted: entity.jobsCompleted,
-      incomingOrderCount: entity.incomingOrderCount,
-      isAvailable: entity.isAvailable,
-      activeOrderId: entity.activeOrderId,
-      activeOrderTitle: entity.activeOrderTitle,
-      activeOrderStatus: entity.activeOrderStatus,
-      activeOrderCustomerName: entity.activeOrderCustomerName,
-      activeOrderStartTime: entity.activeOrderStartTime,
-    );
-  }
 }

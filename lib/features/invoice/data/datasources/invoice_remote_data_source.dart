@@ -1,10 +1,9 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
 import '../models/invoice_model.dart';
@@ -54,8 +53,8 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
       ApiEndpoints.orderPayment(orderId),
       data: {
         'payment_method': 'bank_transfer',
-        'payment_proof_url': 'https://xryz-gcw-situkang.hf.space/v1/proofs/proof_${orderId}.jpg',
-        'transaction_proof_url': 'https://xryz-gcw-situkang.hf.space/v1/proofs/proof_${orderId}.jpg',
+        'payment_proof_url': 'https://xryz-gcw-situkang.hf.space/v1/proofs/proof_$orderId.jpg',
+        'transaction_proof_url': 'https://xryz-gcw-situkang.hf.space/v1/proofs/proof_$orderId.jpg',
       },
     );
     // Refetch the updated invoice

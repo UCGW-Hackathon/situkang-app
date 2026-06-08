@@ -1,6 +1,6 @@
-import 'package:situkang_app/core/error/result.dart';
 import 'package:dartz/dartz.dart' hide Order;
 import 'package:injectable/injectable.dart' hide Order;
+import 'package:situkang_app/core/error/result.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../orders/domain/entities/order.dart';

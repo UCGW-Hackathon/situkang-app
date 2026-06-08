@@ -10,8 +10,7 @@ import '../../../../core/widgets/widgets.dart';
 /// Validates: Requirement 9.6
 class WorkerInfoCard extends StatelessWidget {
   const WorkerInfoCard({
-    super.key,
-    required this.name,
+    required this.name, super.key,
     this.avatarUrl,
     this.specialization,
     this.rating,
@@ -68,7 +67,7 @@ class WorkerInfoCard extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.star,
                       size: AppSizing.iconSm,
                       color: AppColors.ratingStar,

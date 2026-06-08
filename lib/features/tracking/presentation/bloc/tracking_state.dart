@@ -27,9 +27,7 @@ class TrackingInitial extends TrackingState {
 class TrackingActive extends TrackingState {
   /// Creates a [TrackingActive] state.
   const TrackingActive({
-    this.workerLocation,
-    required this.status,
-    required this.timeline,
+    required this.status, required this.timeline, this.workerLocation,
     this.etaMinutes,
   });
 

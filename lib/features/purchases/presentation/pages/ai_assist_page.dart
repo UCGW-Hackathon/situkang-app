@@ -8,8 +8,7 @@ import '../bloc/worker_purchase_bloc.dart';
 
 class AiAssistPage extends StatefulWidget {
   const AiAssistPage({
-    super.key,
-    required this.orderId,
+    required this.orderId, super.key,
   });
 
   final String orderId;
@@ -82,10 +81,10 @@ class _AiAssistPageState extends State<AiAssistPage> {
                         color: AppColors.primaryContainer,
                         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
                       ),
-                      child: Row(
+                      child: const Row(
                         children: [
-                          const Icon(Icons.auto_awesome, color: AppColors.primary),
-                          const SizedBox(width: AppSpacing.md),
+                          Icon(Icons.auto_awesome, color: AppColors.primary),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
                               'Ketik saja barang yang kamu beli secara bebas, AI kami akan merapikannya menjadi daftar belanja otomatis.',
@@ -115,7 +114,7 @@ class _AiAssistPageState extends State<AiAssistPage> {
                 ),
               ),
               if (isProcessing)
-                Container(
+                ColoredBox(
                   color: Colors.black12,
                   child: Center(
                     child: Column(

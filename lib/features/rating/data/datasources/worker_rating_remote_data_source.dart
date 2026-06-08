@@ -32,7 +32,7 @@ class WorkerRatingRemoteDataSourceImpl implements WorkerRatingRemoteDataSource {
       '/worker/orders/$orderId/rating',
       data: {
         'rating': rating,
-        if (comment != null) 'comment': comment,
+        'comment': ?comment,
         'tags': tags,
       },
     );

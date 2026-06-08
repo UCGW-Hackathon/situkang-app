@@ -152,7 +152,7 @@ void main() {
   // **Validates: Requirements 5.5**
   group('Property 9: Worker Search Filter Correctness', () {
     Glados2(
-      any.searchableWorkerList(minLength: 0, maxLength: 15),
+      any.searchableWorkerList(maxLength: 15),
       any.choose(_sampleKeywords),
     ).test(
       'all matching workers are included in results (no false exclusions)',
@@ -179,7 +179,7 @@ void main() {
     );
 
     Glados2(
-      any.searchableWorkerList(minLength: 0, maxLength: 15),
+      any.searchableWorkerList(maxLength: 15),
       any.choose(_sampleKeywords),
     ).test(
       'no non-matching workers are included in results (no false inclusions)',
@@ -205,7 +205,7 @@ void main() {
     );
 
     Glados2(
-      any.searchableWorkerList(minLength: 0, maxLength: 15),
+      any.searchableWorkerList(maxLength: 15),
       any.choose(_sampleKeywords),
     ).test(
       'result count equals number of matching workers in input',
@@ -226,7 +226,7 @@ void main() {
       },
     );
 
-    Glados(any.searchableWorkerList(minLength: 0, maxLength: 15)).test(
+    Glados(any.searchableWorkerList(maxLength: 15)).test(
       'search is case-insensitive (uppercase keyword matches lowercase content)',
       (workers) {
         // Pick a keyword that exists in some worker's data
@@ -253,7 +253,7 @@ void main() {
       },
     );
 
-    Glados(any.searchableWorkerList(minLength: 0, maxLength: 15)).test(
+    Glados(any.searchableWorkerList(maxLength: 15)).test(
       'null or empty keyword returns all workers unchanged',
       (workers) {
         final resultsNull = WorkerListUtils.filterBySearch(workers, null);

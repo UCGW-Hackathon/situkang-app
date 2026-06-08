@@ -26,8 +26,8 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Future<HomeDataModel> getHomeData() async {
-    double latitude = -6.2; // Jakarta fallback
-    double longitude = 106.8;
+    var latitude = -6.2; // Jakarta fallback
+    var longitude = 106.8;
 
     try {
       final permission = await Geolocator.checkPermission();

@@ -1,7 +1,7 @@
-import 'package:situkang_app/core/error/result.dart';
 import 'dart:io';
 
-import '../../../../core/error/failures.dart';
+import 'package:situkang_app/core/error/result.dart';
+
 import '../entities/invoice.dart';
 
 /// Repository interface for invoice and payment operations.

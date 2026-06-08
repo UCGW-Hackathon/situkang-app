@@ -11,8 +11,7 @@ import '../bloc/worker_purchase_bloc.dart';
 
 class ReceiptScanPage extends StatefulWidget {
   const ReceiptScanPage({
-    super.key,
-    required this.orderId,
+    required this.orderId, super.key,
   });
 
   final String orderId;
@@ -95,10 +94,10 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
                         color: AppColors.accent.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
                       ),
-                      child: Row(
+                      child: const Row(
                         children: [
-                          const Icon(Icons.document_scanner, color: AppColors.accent),
-                          const SizedBox(width: AppSpacing.md),
+                          Icon(Icons.document_scanner, color: AppColors.accent),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
                               'Foto nota belanjamu, dan AI akan otomatis membaca nama barang serta harganya.',
@@ -128,7 +127,7 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
                         decoration: BoxDecoration(
                           color: AppColors.surfaceVariant,
                           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                          border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -174,7 +173,7 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
                 ),
               ),
               if (isProcessing)
-                Container(
+                ColoredBox(
                   color: Colors.black12,
                   child: Center(
                     child: Column(

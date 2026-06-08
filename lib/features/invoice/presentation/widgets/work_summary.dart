@@ -29,7 +29,7 @@ class WorkSummary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Ringkasan Pekerjaan', style: AppTypography.h5),
+        const Text('Ringkasan Pekerjaan', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
@@ -39,7 +39,7 @@ class WorkSummary extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.auto_awesome,
                       size: AppSizing.iconSm,
                       color: AppColors.accent,
@@ -76,7 +76,7 @@ class WorkSummary extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.notes,
                       size: AppSizing.iconSm,
                       color: AppColors.textSecondary,

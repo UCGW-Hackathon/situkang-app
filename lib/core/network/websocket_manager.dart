@@ -10,9 +10,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:web_socket_channel/web_socket_channel.dart';
-
 import 'package:injectable/injectable.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../constants/app_constants.dart';
 import 'websocket_events.dart';
@@ -208,7 +207,7 @@ class WebSocketManagerImpl implements WebSocketManager {
 
       connection.subscription =
           connection.webSocketChannel!.stream.listen(
-        (data) => _handleMessage(data),
+        _handleMessage,
         onError: (Object error) => _handleError(connection, error),
         onDone: () => _handleDone(connection),
       );

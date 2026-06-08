@@ -34,8 +34,8 @@ class MarkAllNotificationsAsRead extends NotificationEvent {}
 class FetchUnreadCount extends NotificationEvent {}
 
 class NewNotificationEvent extends NotificationEvent {
-  final NotificationEntity notification;
   const NewNotificationEvent(this.notification);
+  final NotificationEntity notification;
   @override
   List<Object?> get props => [notification];
 }

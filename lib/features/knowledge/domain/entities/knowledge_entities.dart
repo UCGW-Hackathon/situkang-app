@@ -6,11 +6,11 @@ class Article extends Equatable {
     required this.title,
     required this.category, // 'faq', 'guide', 'tips', 'safety', 'payment'
     required this.excerpt,
-    this.body,
     required this.readTime, // in minutes
     required this.author,
     required this.tags,
     required this.createdAt,
+    this.body,
   });
 
   final String id;

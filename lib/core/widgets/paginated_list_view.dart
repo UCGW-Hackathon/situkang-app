@@ -10,10 +10,7 @@ import 'loading_indicator.dart';
 class PaginatedListView extends StatefulWidget {
   /// Creates a [PaginatedListView].
   const PaginatedListView({
-    super.key,
-    required this.itemCount,
-    required this.itemBuilder,
-    required this.onLoadMore,
+    required this.itemCount, required this.itemBuilder, required this.onLoadMore, super.key,
     this.hasMore = true,
     this.isLoadingMore = false,
     this.scrollThreshold = 200.0,

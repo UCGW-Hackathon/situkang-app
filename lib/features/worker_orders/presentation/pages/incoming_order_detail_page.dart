@@ -10,9 +10,7 @@ import '../bloc/incoming_order_bloc.dart';
 
 class IncomingOrderDetailPage extends StatefulWidget {
   const IncomingOrderDetailPage({
-    super.key,
-    required this.order,
-    required this.remainingSeconds,
+    required this.order, required this.remainingSeconds, super.key,
   });
 
   final Order order;
@@ -79,19 +77,19 @@ class _IncomingOrderDetailPageState extends State<IncomingOrderDetailPage> {
             Text(widget.order.serviceName ?? 'Jasa Tukang', style: AppTypography.caption),
             const SizedBox(height: AppSpacing.md),
 
-            Row(
+            const Row(
               children: [
-                const Icon(Icons.person),
-                const SizedBox(width: AppSpacing.sm),
+                Icon(Icons.person),
+                SizedBox(width: AppSpacing.sm),
                 Text('Pelanggan', style: AppTypography.bodyMedium),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Row(
+            const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.location_on, color: AppColors.error),
-                const SizedBox(width: AppSpacing.sm),
+                Icon(Icons.location_on, color: AppColors.error),
+                SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text('Lokasi Pelanggan', style: AppTypography.bodyMedium),
                 ),
@@ -102,7 +100,7 @@ class _IncomingOrderDetailPageState extends State<IncomingOrderDetailPage> {
             const Divider(),
             const SizedBox(height: AppSpacing.lg),
             
-            Text('Deskripsi Keluhan', style: AppTypography.h6),
+            const Text('Deskripsi Keluhan', style: AppTypography.h6),
             const SizedBox(height: AppSpacing.sm),
             Text(widget.order.title),
             
@@ -114,7 +112,7 @@ class _IncomingOrderDetailPageState extends State<IncomingOrderDetailPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Estimasi Biaya', style: AppTypography.bodyMedium),
+                    const Text('Estimasi Biaya', style: AppTypography.bodyMedium),
                     Text(
                       'Rp${formatter.format(widget.order.totalPrice)}',
                       style: AppTypography.h6.copyWith(color: AppColors.primary),
@@ -125,7 +123,7 @@ class _IncomingOrderDetailPageState extends State<IncomingOrderDetailPage> {
               const SizedBox(height: AppSpacing.lg),
             ],
 
-            Text('Estimasi Waktu Tiba', style: AppTypography.h6),
+            const Text('Estimasi Waktu Tiba', style: AppTypography.h6),
             const SizedBox(height: AppSpacing.sm),
             Row(
               children: [

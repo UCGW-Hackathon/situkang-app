@@ -6,7 +6,6 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/purchase.dart';
-import '../../domain/entities/purchase_summary.dart';
 import '../../domain/entities/risk_flag.dart';
 import '../bloc/purchase_bloc.dart';
 import '../widgets/purchase_summary_card.dart';
@@ -19,8 +18,7 @@ import '../widgets/purchase_summary_card.dart';
 /// Validates: Requirements 10.1-10.10
 class PurchaseListPage extends StatefulWidget {
   const PurchaseListPage({
-    super.key,
-    required this.orderId,
+    required this.orderId, super.key,
   });
 
   /// The order ID to fetch purchases for.
@@ -175,7 +173,7 @@ class _PurchaseListPageState extends State<PurchaseListPage> {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
         child: Column(
           children: [
-            Icon(
+            const Icon(
               Icons.shopping_cart_outlined,
               size: AppSizing.iconXxl,
               color: AppColors.textDisabled,
@@ -186,7 +184,7 @@ class _PurchaseListPageState extends State<PurchaseListPage> {
               style: AppTypography.h6.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
+            const Text(
               'Pembelian material dari tukang akan muncul di sini',
               style: AppTypography.bodySmall,
               textAlign: TextAlign.center,
@@ -493,7 +491,7 @@ class _PurchaseItemCard extends StatelessWidget {
               if (purchase.riskFlags.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.sm),
                 ...purchase.riskFlags.map(
-                  (flag) => _buildRiskFlag(flag),
+                  _buildRiskFlag,
                 ),
               ],
 
@@ -509,7 +507,7 @@ class _PurchaseItemCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.receipt_outlined,
                       size: AppSizing.iconSm,
                       color: AppColors.primary,
@@ -539,7 +537,7 @@ class _PurchaseItemCard extends StatelessWidget {
           // Loading overlay for individual item
           if (isLoading)
             Positioned.fill(
-              child: Container(
+              child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: AppColors.surface.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -579,7 +577,7 @@ class _PurchaseItemCard extends StatelessWidget {
 
     return Row(
       children: [
-        Text('AI Confidence: ', style: AppTypography.caption),
+        const Text('AI Confidence: ', style: AppTypography.caption),
         Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppSizing.radiusXs),
@@ -609,7 +607,7 @@ class _PurchaseItemCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
+          const Icon(
             Icons.warning_amber,
             size: AppSizing.iconSm,
             color: AppColors.warning,
@@ -640,7 +638,7 @@ class _PurchaseItemCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.help_outline,
                 size: AppSizing.iconSm,
                 color: AppColors.info,

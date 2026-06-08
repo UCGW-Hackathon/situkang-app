@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -23,9 +22,7 @@ import '../widgets/typing_indicator.dart';
 /// Validates: Requirements 11.1-11.11
 class WorkerChatPage extends StatefulWidget {
   const WorkerChatPage({
-    super.key,
-    required this.orderId,
-    required this.currentUserId,
+    required this.orderId, required this.currentUserId, super.key,
     this.customerName = 'Pelanggan',
     this.customerAvatarUrl,
     this.isCustomerOnline = false,
@@ -206,7 +203,7 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.chat_bubble_outline,
               size: AppSizing.iconXxl,
               color: AppColors.textDisabled,
@@ -333,13 +330,13 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
             top: AppSpacing.sm,
             bottom: MediaQuery.of(context).viewPadding.bottom + AppSpacing.sm,
           ),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.surface,
             boxShadow: [
               BoxShadow(
                 color: AppColors.shadow,
                 blurRadius: 4,
-                offset: const Offset(0, -2),
+                offset: Offset(0, -2),
               ),
             ],
           ),

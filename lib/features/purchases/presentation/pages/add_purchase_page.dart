@@ -13,8 +13,7 @@ import 'receipt_scan_page.dart';
 
 class AddPurchasePage extends StatefulWidget {
   const AddPurchasePage({
-    super.key,
-    required this.orderId,
+    required this.orderId, super.key,
   });
 
   final String orderId;
@@ -68,7 +67,7 @@ class _AddPurchasePageState extends State<AddPurchasePage> {
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       final quantity = int.tryParse(_quantityController.text) ?? 1;
-      final unitPriceText = _unitPriceController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      final unitPriceText = _unitPriceController.text.replaceAll(RegExp('[^0-9]'), '');
       final unitPrice = int.tryParse(unitPriceText) ?? 0;
       final totalPrice = quantity * unitPrice;
 
@@ -131,7 +130,7 @@ class _AddPurchasePageState extends State<AddPurchasePage> {
                       const Divider(),
                       const SizedBox(height: AppSpacing.lg),
                       
-                      Text('Input Manual', style: AppTypography.h6),
+                      const Text('Input Manual', style: AppTypography.h6),
                       const SizedBox(height: AppSpacing.md),
                       
                       AppTextField(
@@ -148,7 +147,7 @@ class _AddPurchasePageState extends State<AddPurchasePage> {
                       const SizedBox(height: AppSpacing.md),
                       
                       DropdownButtonFormField<String>(
-                        value: _selectedCategory,
+                        initialValue: _selectedCategory,
                         decoration: const InputDecoration(
                           labelText: 'Kategori',
                           border: OutlineInputBorder(),
@@ -216,7 +215,7 @@ class _AddPurchasePageState extends State<AddPurchasePage> {
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       
-                      Text('Foto Nota / Struk', style: AppTypography.label),
+                      const Text('Foto Nota / Struk', style: AppTypography.label),
                       const SizedBox(height: AppSpacing.sm),
                       
                       GestureDetector(
@@ -258,9 +257,9 @@ class _AddPurchasePageState extends State<AddPurchasePage> {
                 ),
               ),
               if (isLoading)
-                Container(
+                const ColoredBox(
                   color: Colors.black12,
-                  child: const Center(child: LoadingIndicator()),
+                  child: Center(child: LoadingIndicator()),
                 ),
             ],
           );
@@ -273,7 +272,7 @@ class _AddPurchasePageState extends State<AddPurchasePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Alat Pintar', style: AppTypography.h6),
+        const Text('Alat Pintar', style: AppTypography.h6),
         const SizedBox(height: AppSpacing.sm),
         Row(
           children: [

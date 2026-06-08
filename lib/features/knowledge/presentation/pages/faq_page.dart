@@ -44,7 +44,7 @@ class _FaqPageState extends State<FaqPage> {
           }
 
           // Group by category
-          final Map<String, List<Faq>> groupedFaqs = {};
+          final groupedFaqs = <String, List<Faq>>{};
           for (final faq in state.faqs) {
             if (!groupedFaqs.containsKey(faq.category)) {
               groupedFaqs[faq.category] = [];
@@ -69,7 +69,7 @@ class _FaqPageState extends State<FaqPage> {
                       style: AppTypography.h6.copyWith(color: AppColors.primary),
                     ),
                   ),
-                  ...categoryFaqs.map((faq) => _buildFaqItem(faq)),
+                  ...categoryFaqs.map(_buildFaqItem),
                 ],
               );
             },

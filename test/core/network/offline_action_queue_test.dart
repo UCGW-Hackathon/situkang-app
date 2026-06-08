@@ -127,7 +127,7 @@ void main() {
     });
 
     test('equality is based on id', () {
-      final action1 = _createAction(id: 'same-id', method: 'POST');
+      final action1 = _createAction(id: 'same-id');
       final action2 = _createAction(id: 'same-id', method: 'GET');
 
       expect(action1, equals(action2));
@@ -167,7 +167,7 @@ void main() {
       // Add one more — should evict the oldest (action-0)
       await queue.enqueue(_createAction(
         id: 'action-new',
-        createdAt: DateTime(2024, 1, 1, 1, 0),
+        createdAt: DateTime(2024, 1, 1, 1),
       ));
 
       expect(queue.pendingCount, equals(AppConstants.maxOfflineQueueSize));
@@ -203,7 +203,7 @@ void main() {
     test('returns actions in FIFO order (oldest first)', () async {
       await queue.enqueue(_createAction(
         id: 'oldest',
-        createdAt: DateTime(2024, 1, 1),
+        createdAt: DateTime(2024),
       ));
       await queue.enqueue(_createAction(
         id: 'middle',
@@ -226,7 +226,7 @@ void main() {
     test('processes actions in FIFO order', () async {
       final executionOrder = <String>[];
 
-      when(() => mockApiClient.post<dynamic>('/path-1', data: null))
+      when(() => mockApiClient.post<dynamic>('/path-1'))
           .thenAnswer((_) async {
         executionOrder.add('action-1');
         return Response(
@@ -234,7 +234,7 @@ void main() {
           statusCode: 200,
         );
       });
-      when(() => mockApiClient.post<dynamic>('/path-2', data: null))
+      when(() => mockApiClient.post<dynamic>('/path-2'))
           .thenAnswer((_) async {
         executionOrder.add('action-2');
         return Response(
@@ -242,7 +242,7 @@ void main() {
           statusCode: 200,
         );
       });
-      when(() => mockApiClient.post<dynamic>('/path-3', data: null))
+      when(() => mockApiClient.post<dynamic>('/path-3'))
           .thenAnswer((_) async {
         executionOrder.add('action-3');
         return Response(
@@ -254,7 +254,7 @@ void main() {
       await queue.enqueue(_createAction(
         id: 'action-1',
         path: '/path-1',
-        createdAt: DateTime(2024, 1, 1),
+        createdAt: DateTime(2024),
       ));
       await queue.enqueue(_createAction(
         id: 'action-2',
@@ -280,14 +280,14 @@ void main() {
                 statusCode: 200,
               ));
 
-      await queue.enqueue(_createAction(id: 'success-action', method: 'GET', path: '/test'));
+      await queue.enqueue(_createAction(id: 'success-action', method: 'GET'));
       await queue.processQueue();
 
       expect(queue.pendingCount, equals(0));
     });
 
     test('increments retry count on failure', () async {
-      when(() => mockApiClient.post<dynamic>('/fail', data: null))
+      when(() => mockApiClient.post<dynamic>('/fail'))
           .thenThrow(DioException(
         requestOptions: RequestOptions(path: '/fail'),
         type: DioExceptionType.connectionTimeout,
@@ -296,7 +296,6 @@ void main() {
       await queue.enqueue(_createAction(
         id: 'fail-action',
         path: '/fail',
-        retryCount: 0,
       ));
 
       await queue.processQueue();
@@ -308,7 +307,7 @@ void main() {
     });
 
     test('removes action and notifies on permanent failure (3 retries exhausted)', () async {
-      when(() => mockApiClient.post<dynamic>('/fail', data: null))
+      when(() => mockApiClient.post<dynamic>('/fail'))
           .thenThrow(DioException(
         requestOptions: RequestOptions(path: '/fail'),
         type: DioExceptionType.connectionTimeout,
@@ -333,7 +332,7 @@ void main() {
     test('stops processing when connectivity is lost mid-queue', () async {
       var callCount = 0;
 
-      when(() => mockApiClient.post<dynamic>('/path-1', data: null))
+      when(() => mockApiClient.post<dynamic>('/path-1'))
           .thenAnswer((_) async {
         callCount++;
         // Simulate connectivity loss after first action
@@ -347,7 +346,7 @@ void main() {
       await queue.enqueue(_createAction(
         id: 'a1',
         path: '/path-1',
-        createdAt: DateTime(2024, 1, 1),
+        createdAt: DateTime(2024),
       ));
       await queue.enqueue(_createAction(
         id: 'a2',
@@ -374,7 +373,7 @@ void main() {
                 requestOptions: RequestOptions(path: '/put-path'),
                 statusCode: 200,
               ));
-      when(() => mockApiClient.patch<dynamic>('/patch-path', data: null))
+      when(() => mockApiClient.patch<dynamic>('/patch-path'))
           .thenAnswer((_) async => Response(
                 requestOptions: RequestOptions(path: '/patch-path'),
                 statusCode: 200,
@@ -389,7 +388,7 @@ void main() {
         id: 'get-1',
         method: 'GET',
         path: '/get-path',
-        createdAt: DateTime(2024, 1, 1),
+        createdAt: DateTime(2024),
       ));
       await queue.enqueue(_createAction(
         id: 'put-1',
@@ -415,7 +414,7 @@ void main() {
 
       verify(() => mockApiClient.get<dynamic>('/get-path')).called(1);
       verify(() => mockApiClient.put<dynamic>('/put-path', data: {'key': 'val'})).called(1);
-      verify(() => mockApiClient.patch<dynamic>('/patch-path', data: null)).called(1);
+      verify(() => mockApiClient.patch<dynamic>('/patch-path')).called(1);
       verify(() => mockApiClient.delete<dynamic>('/delete-path')).called(1);
       expect(queue.pendingCount, equals(0));
     });
@@ -423,7 +422,7 @@ void main() {
     test('does not process concurrently (re-entrant guard)', () async {
       final completer = Completer<Response<dynamic>>();
 
-      when(() => mockApiClient.post<dynamic>('/slow', data: null))
+      when(() => mockApiClient.post<dynamic>('/slow'))
           .thenAnswer((_) => completer.future);
 
       await queue.enqueue(_createAction(id: 'slow-action', path: '/slow'));
@@ -443,7 +442,7 @@ void main() {
       await secondProcess;
 
       // Should only have been called once
-      verify(() => mockApiClient.post<dynamic>('/slow', data: null)).called(1);
+      verify(() => mockApiClient.post<dynamic>('/slow')).called(1);
     });
   });
 
@@ -495,7 +494,7 @@ void main() {
 
   group('OfflineActionQueue - connectivity listener', () {
     test('processes queue when connectivity is restored', () async {
-      when(() => mockApiClient.post<dynamic>('/auto', data: null))
+      when(() => mockApiClient.post<dynamic>('/auto'))
           .thenAnswer((_) async => Response(
                 requestOptions: RequestOptions(path: '/auto'),
                 statusCode: 200,
@@ -540,7 +539,7 @@ void main() {
       // Enqueue actions
       await queue.enqueue(_createAction(
         id: 'persistent-1',
-        createdAt: DateTime(2024, 1, 1),
+        createdAt: DateTime(2024),
       ));
       await queue.enqueue(_createAction(
         id: 'persistent-2',

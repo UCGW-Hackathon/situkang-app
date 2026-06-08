@@ -159,7 +159,7 @@ class _WorkerStatisticsPageState extends State<WorkerStatisticsPage> {
         ),
         const SizedBox(height: AppSpacing.xxl),
         
-        Text('Grafik Pendapatan', style: AppTypography.h6),
+        const Text('Grafik Pendapatan', style: AppTypography.h6),
         const SizedBox(height: AppSpacing.md),
         
         // Placeholder for chart

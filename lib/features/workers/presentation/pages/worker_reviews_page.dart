@@ -174,7 +174,6 @@ class _RatingDistributionSection extends StatelessWidget {
     return Padding(
       padding: AppSpacing.pagePadding,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Average rating display
           Column(

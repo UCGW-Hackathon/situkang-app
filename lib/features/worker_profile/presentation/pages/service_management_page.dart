@@ -8,8 +8,7 @@ import '../bloc/worker_profile_bloc.dart';
 
 class ServiceManagementPage extends StatefulWidget {
   const ServiceManagementPage({
-    super.key,
-    required this.services,
+    required this.services, super.key,
   });
 
   final List<WorkerService> services;
@@ -22,7 +21,7 @@ class _ServiceManagementPageState extends State<ServiceManagementPage> {
   void _showAddServiceDialog() {
     final nameController = TextEditingController();
     final priceController = TextEditingController();
-    String unit = 'jam';
+    var unit = 'jam';
     
     showDialog(
       context: context,
@@ -48,7 +47,7 @@ class _ServiceManagementPageState extends State<ServiceManagementPage> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   DropdownButtonFormField<String>(
-                    value: unit,
+                    initialValue: unit,
                     decoration: const InputDecoration(
                       labelText: 'Satuan',
                       border: OutlineInputBorder(),
@@ -139,15 +138,14 @@ class _ServiceManagementPageState extends State<ServiceManagementPage> {
         builder: (context, state) {
           final isLoading = state is WorkerProfileActionLoading;
           
-          List<WorkerService> currentServices = widget.services;
+          var currentServices = widget.services;
           if (state is WorkerProfileLoaded) {
             currentServices = state.profile.services;
           }
 
           return Stack(
             children: [
-              currentServices.isEmpty
-                  ? Center(
+              if (currentServices.isEmpty) Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -161,8 +159,7 @@ class _ServiceManagementPageState extends State<ServiceManagementPage> {
                           ),
                         ],
                       ),
-                    )
-                  : ListView.builder(
+                    ) else ListView.builder(
                       padding: AppSpacing.pagePadding,
                       itemCount: currentServices.length,
                       itemBuilder: (context, index) {
@@ -183,9 +180,9 @@ class _ServiceManagementPageState extends State<ServiceManagementPage> {
                     ),
               
               if (isLoading)
-                Container(
+                const ColoredBox(
                   color: Colors.black12,
-                  child: const Center(child: LoadingIndicator()),
+                  child: Center(child: LoadingIndicator()),
                 ),
             ],
           );

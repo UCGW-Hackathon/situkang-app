@@ -9,8 +9,7 @@ import 'app_button.dart';
 class AppErrorWidget extends StatelessWidget {
   /// Creates an [AppErrorWidget].
   const AppErrorWidget({
-    super.key,
-    required this.message,
+    required this.message, super.key,
     this.onRetry,
     this.icon = Icons.error_outline,
     this.iconColor,

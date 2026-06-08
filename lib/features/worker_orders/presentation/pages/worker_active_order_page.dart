@@ -1,4 +1,3 @@
-import '../../../../core/constants/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,8 +9,7 @@ import '../bloc/worker_order_bloc.dart';
 
 class WorkerActiveOrderPage extends StatefulWidget {
   const WorkerActiveOrderPage({
-    super.key,
-    required this.order,
+    required this.order, super.key,
   });
 
   final Order order;
@@ -171,13 +169,13 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
                       _buildLocationSharingIndicator(),
                     
                     const SizedBox(height: AppSpacing.md),
-                    Text('Status Pekerjaan', style: AppTypography.h6),
+                    const Text('Status Pekerjaan', style: AppTypography.h6),
                     const SizedBox(height: AppSpacing.md),
                     
                     _buildStatusTracker(),
                     const SizedBox(height: AppSpacing.xl),
                     
-                    Text('Aksi', style: AppTypography.h6),
+                    const Text('Aksi', style: AppTypography.h6),
                     const SizedBox(height: AppSpacing.md),
                     
                     if (_currentStatus == 'in_progress') ...[
@@ -211,9 +209,9 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
                 ),
               ),
               if (isLoading)
-                Container(
+                const ColoredBox(
                   color: Colors.black12,
-                  child: const Center(child: LoadingIndicator()),
+                  child: Center(child: LoadingIndicator()),
                 ),
             ],
           );
@@ -235,18 +233,18 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.person, color: AppColors.textSecondary, size: 20),
-              const SizedBox(width: AppSpacing.sm),
+              Icon(Icons.person, color: AppColors.textSecondary, size: 20),
+              SizedBox(width: AppSpacing.sm),
               Text('Pelanggan', style: AppTypography.bodyMedium),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.location_on, color: AppColors.error, size: 20),
-              const SizedBox(width: AppSpacing.sm),
+              Icon(Icons.location_on, color: AppColors.error, size: 20),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text('Lokasi Pelanggan', style: AppTypography.bodyMedium),
               ),
@@ -257,7 +255,7 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
             children: [
               const Icon(Icons.phone, color: AppColors.success, size: 20),
               const SizedBox(width: AppSpacing.sm),
-              Text('08123456789', style: AppTypography.bodyMedium),
+              const Text('08123456789', style: AppTypography.bodyMedium),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.chat),
@@ -319,7 +317,7 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
       {'key': 'completed', 'label': 'Selesai'},
     ];
 
-    int currentIndex = steps.indexWhere((s) => s['key'] == _currentStatus);
+    var currentIndex = steps.indexWhere((s) => s['key'] == _currentStatus);
     if (currentIndex == -1) currentIndex = 0; // Default if not found
 
     return Column(

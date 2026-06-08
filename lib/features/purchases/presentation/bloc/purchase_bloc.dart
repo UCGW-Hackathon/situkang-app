@@ -1,8 +1,8 @@
-import 'package:injectable/injectable.dart';
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/enums.dart';
 import '../../../../core/error/failures.dart';
@@ -369,11 +369,11 @@ class PurchaseBloc extends Bloc<PurchaseEvent, PurchaseState> {
     List<Purchase> purchases,
     PurchaseSummary originalSummary,
   ) {
-    int approvedCost = 0;
-    int pendingCost = 0;
-    int rejectedCost = 0;
-    int needsClarificationCost = 0;
-    int totalCost = 0;
+    var approvedCost = 0;
+    var pendingCost = 0;
+    var rejectedCost = 0;
+    var needsClarificationCost = 0;
+    var totalCost = 0;
 
     for (final purchase in purchases) {
       totalCost += purchase.totalPrice;

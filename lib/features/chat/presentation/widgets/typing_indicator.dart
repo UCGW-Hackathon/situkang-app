@@ -9,8 +9,7 @@ import '../../../../core/theme/theme.dart';
 /// Validates: Requirement 11.5
 class TypingIndicator extends StatefulWidget {
   const TypingIndicator({
-    super.key,
-    required this.name,
+    required this.name, super.key,
   });
 
   /// The name of the person who is typing.
@@ -49,11 +48,11 @@ class _TypingIndicatorState extends State<TypingIndicator>
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadow,
             blurRadius: 2,
-            offset: const Offset(0, 1),
+            offset: Offset(0, 1),
           ),
         ],
       ),
@@ -77,7 +76,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
                       child: Container(
                         width: 6,
                         height: 6,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: AppColors.textSecondary,
                           shape: BoxShape.circle,
                         ),

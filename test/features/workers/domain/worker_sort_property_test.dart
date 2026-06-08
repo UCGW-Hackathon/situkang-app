@@ -50,7 +50,7 @@ void main() {
   // ─── Property 8: Worker List Sort Correctness ──────────────────────────────
   // **Validates: Requirements 5.4**
   group('Property 8: Worker List Sort Correctness', () {
-    Glados(any.workerProfileList(minLength: 0, maxLength: 20)).test(
+    Glados(any.workerProfileList(maxLength: 20)).test(
       'sort by distance produces ascending order (smaller distance first)',
       (workers) {
         final sorted = WorkerListUtils.sortWorkers(
@@ -59,7 +59,7 @@ void main() {
         );
 
         // Verify ascending order for distance
-        for (int i = 0; i < sorted.length - 1; i++) {
+        for (var i = 0; i < sorted.length - 1; i++) {
           final currentDistance = sorted[i].distance ?? double.infinity;
           final nextDistance = sorted[i + 1].distance ?? double.infinity;
           expect(
@@ -72,7 +72,7 @@ void main() {
       },
     );
 
-    Glados(any.workerProfileList(minLength: 0, maxLength: 20)).test(
+    Glados(any.workerProfileList(maxLength: 20)).test(
       'sort by price produces ascending order (lower price first)',
       (workers) {
         final sorted = WorkerListUtils.sortWorkers(
@@ -81,7 +81,7 @@ void main() {
         );
 
         // Verify ascending order for price
-        for (int i = 0; i < sorted.length - 1; i++) {
+        for (var i = 0; i < sorted.length - 1; i++) {
           final currentPrice = sorted[i].basePrice ?? 0;
           final nextPrice = sorted[i + 1].basePrice ?? 0;
           expect(
@@ -94,7 +94,7 @@ void main() {
       },
     );
 
-    Glados(any.workerProfileList(minLength: 0, maxLength: 20)).test(
+    Glados(any.workerProfileList(maxLength: 20)).test(
       'sort by rating produces descending order (higher rating first)',
       (workers) {
         final sorted = WorkerListUtils.sortWorkers(
@@ -103,7 +103,7 @@ void main() {
         );
 
         // Verify descending order for rating
-        for (int i = 0; i < sorted.length - 1; i++) {
+        for (var i = 0; i < sorted.length - 1; i++) {
           final currentRating = sorted[i].ratingAvg;
           final nextRating = sorted[i + 1].ratingAvg;
           expect(
@@ -116,7 +116,7 @@ void main() {
       },
     );
 
-    Glados(any.workerProfileList(minLength: 0, maxLength: 20)).test(
+    Glados(any.workerProfileList(maxLength: 20)).test(
       'sort by completedJobs produces descending order (more jobs first)',
       (workers) {
         final sorted = WorkerListUtils.sortWorkers(
@@ -125,7 +125,7 @@ void main() {
         );
 
         // Verify descending order for completedJobs
-        for (int i = 0; i < sorted.length - 1; i++) {
+        for (var i = 0; i < sorted.length - 1; i++) {
           final currentJobs = sorted[i].completedJobs;
           final nextJobs = sorted[i + 1].completedJobs;
           expect(
@@ -138,7 +138,7 @@ void main() {
       },
     );
 
-    Glados(any.workerProfileList(minLength: 0, maxLength: 20)).test(
+    Glados(any.workerProfileList(maxLength: 20)).test(
       'sort preserves all elements (no workers lost or duplicated)',
       (workers) {
         for (final sortBy in WorkerSortBy.values) {

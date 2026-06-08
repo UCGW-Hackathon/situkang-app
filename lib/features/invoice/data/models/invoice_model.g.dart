@@ -40,12 +40,12 @@ InvoiceModel _$InvoiceModelFromJson(Map<String, dynamic> json) => InvoiceModel(
   discount: (json['discount'] as num).toInt(),
   grandTotal: (json['grand_total'] as num).toInt(),
   statusStr: json['status'] as String,
-  paymentMethodStr: json['payment_method'] as String?,
   itemModels: (json['items'] as List<dynamic>)
       .map((e) => InvoiceLineItemModel.fromJson(e as Map<String, dynamic>))
       .toList(),
   createdAt: DateTime.parse(json['created_at'] as String),
   dueDate: DateTime.parse(json['due_date'] as String),
+  paymentMethodStr: json['payment_method'] as String?,
   paidAt: json['paid_at'] == null
       ? null
       : DateTime.parse(json['paid_at'] as String),

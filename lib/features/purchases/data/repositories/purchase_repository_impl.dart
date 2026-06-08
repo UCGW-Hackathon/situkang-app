@@ -1,6 +1,6 @@
-import 'package:injectable/injectable.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';

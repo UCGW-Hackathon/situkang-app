@@ -10,8 +10,7 @@ import '../bloc/wallet_bloc.dart';
 
 class WithdrawalPage extends StatefulWidget {
   const WithdrawalPage({
-    super.key,
-    required this.availableBalance,
+    required this.availableBalance, super.key,
   });
 
   final int availableBalance;
@@ -105,7 +104,7 @@ class _WithdrawalPageState extends State<WithdrawalPage> {
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       
-                      Text('Nominal Penarikan', style: AppTypography.label),
+                      const Text('Nominal Penarikan', style: AppTypography.label),
                       const SizedBox(height: AppSpacing.sm),
                       AppTextField(
                         controller: _amountController,
@@ -146,7 +145,7 @@ class _WithdrawalPageState extends State<WithdrawalPage> {
                       const Divider(),
                       const SizedBox(height: AppSpacing.xl),
                       
-                      Text('Informasi Rekening', style: AppTypography.h6),
+                      const Text('Informasi Rekening', style: AppTypography.h6),
                       const SizedBox(height: AppSpacing.md),
                       
                       AppTextField(
@@ -195,9 +194,9 @@ class _WithdrawalPageState extends State<WithdrawalPage> {
                 ),
               ),
               if (isLoading)
-                Container(
+                const ColoredBox(
                   color: Colors.black12,
-                  child: const Center(child: LoadingIndicator()),
+                  child: Center(child: LoadingIndicator()),
                 ),
             ],
           );

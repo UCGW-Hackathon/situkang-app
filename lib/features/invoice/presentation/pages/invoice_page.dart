@@ -19,8 +19,7 @@ import '../widgets/work_summary.dart';
 /// Validates: Requirements 12.1-12.8
 class InvoicePage extends StatefulWidget {
   const InvoicePage({
-    super.key,
-    required this.orderId,
+    required this.orderId, super.key,
   });
 
   /// The order ID associated with this invoice.
@@ -142,7 +141,7 @@ class _InvoicePageState extends State<InvoicePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.receipt_long_outlined,
               size: AppSizing.iconXxl,
               color: AppColors.textDisabled,
@@ -153,7 +152,7 @@ class _InvoicePageState extends State<InvoicePage> {
               style: AppTypography.h6.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
+            const Text(
               'Tagihan akan muncul setelah tukang menyelesaikan pekerjaannya.',
               style: AppTypography.bodySmall,
               textAlign: TextAlign.center,
@@ -226,7 +225,7 @@ class _InvoicePageState extends State<InvoicePage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Status Tagihan',
                 style: AppTypography.caption,
               ),
@@ -255,7 +254,7 @@ class _InvoicePageState extends State<InvoicePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Rincian Tagihan', style: AppTypography.h5),
+        const Text('Rincian Tagihan', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
@@ -265,7 +264,7 @@ class _InvoicePageState extends State<InvoicePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('No. Invoice', style: AppTypography.caption),
+                  const Text('No. Invoice', style: AppTypography.caption),
                   Text(
                     invoice.invoiceNumber,
                     style: AppTypography.label,
@@ -276,7 +275,7 @@ class _InvoicePageState extends State<InvoicePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Tanggal', style: AppTypography.caption),
+                  const Text('Tanggal', style: AppTypography.caption),
                   Text(
                     DateFormat('dd MMM yyyy').format(invoice.createdAt),
                     style: AppTypography.label,
@@ -289,7 +288,7 @@ class _InvoicePageState extends State<InvoicePage> {
 
               // Items
               if (invoice.items.isNotEmpty) ...[
-                Text('Material & Item', style: AppTypography.label),
+                const Text('Material & Item', style: AppTypography.label),
                 const SizedBox(height: AppSpacing.xs),
                 ...invoice.items.map((item) => Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
@@ -369,7 +368,7 @@ class _InvoicePageState extends State<InvoicePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Total Pembayaran', style: AppTypography.h6),
+                  const Text('Total Pembayaran', style: AppTypography.h6),
                   Text(
                     'Rp${formatter.format(invoice.grandTotal)}',
                     style: AppTypography.priceLarge.copyWith(
@@ -407,7 +406,7 @@ class _InvoicePageState extends State<InvoicePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bukti Pembayaran', style: AppTypography.h5),
+        const Text('Bukti Pembayaran', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
@@ -435,7 +434,7 @@ class _InvoicePageState extends State<InvoicePage> {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              Text(
+              const Text(
                 'Format JPG/PNG, maksimal 5MB',
                 style: AppTypography.caption,
               ),
@@ -490,13 +489,13 @@ class _InvoicePageState extends State<InvoicePage> {
         top: AppSpacing.md,
         bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
         boxShadow: [
           BoxShadow(
             color: AppColors.shadow,
             blurRadius: 4,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
           ),
         ],
       ),

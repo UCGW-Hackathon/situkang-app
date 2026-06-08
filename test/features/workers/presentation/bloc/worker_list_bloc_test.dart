@@ -75,7 +75,7 @@ void main() {
     ),
   );
 
-  final tEmptyResult = const WorkerListResult(
+  const tEmptyResult = WorkerListResult(
     workers: [],
     paginationMeta: PaginationMeta(
       currentPage: 1,
@@ -123,14 +123,11 @@ void main() {
             workers: tWorkers,
             filter: const WorkerFilter(),
             hasMore: true,
-            currentPage: 1,
           ),
         ],
         verify: (_) {
           verify(() => mockRepository.getNearbyWorkers(
                 filter: const WorkerFilter(),
-                page: 1,
-                perPage: 10,
               )).called(1);
         },
       );
@@ -161,7 +158,7 @@ void main() {
                 filter: any(named: 'filter'),
                 page: any(named: 'page'),
                 perPage: any(named: 'perPage'),
-              )).thenAnswer((_) async => Right(tEmptyResult));
+              )).thenAnswer((_) async => const Right(tEmptyResult));
           return bloc;
         },
         act: (bloc) => bloc.add(const FetchWorkers()),
@@ -171,7 +168,6 @@ void main() {
             workers: [],
             filter: WorkerFilter(),
             hasMore: false,
-            currentPage: 1,
           ),
         ],
       );
@@ -220,14 +216,11 @@ void main() {
             workers: tWorkers,
             filter: const WorkerFilter(categoryId: 'listrik'),
             hasMore: true,
-            currentPage: 1,
           ),
         ],
         verify: (_) {
           verify(() => mockRepository.getNearbyWorkers(
                 filter: const WorkerFilter(categoryId: 'listrik'),
-                page: 1,
-                perPage: 10,
               )).called(1);
         },
       );
@@ -251,7 +244,6 @@ void main() {
             workers: tWorkers,
             filter: const WorkerFilter(minRating: 4.0),
             hasMore: true,
-            currentPage: 1,
           ),
         ],
       );
@@ -277,14 +269,11 @@ void main() {
             workers: tWorkers,
             filter: const WorkerFilter(sortBy: WorkerSortBy.rating),
             hasMore: true,
-            currentPage: 1,
           ),
         ],
         verify: (_) {
           verify(() => mockRepository.getNearbyWorkers(
                 filter: const WorkerFilter(sortBy: WorkerSortBy.rating),
-                page: 1,
-                perPage: 10,
               )).called(1);
         },
       );
@@ -308,7 +297,6 @@ void main() {
             workers: tWorkers,
             filter: const WorkerFilter(sortBy: WorkerSortBy.price),
             hasMore: true,
-            currentPage: 1,
           ),
         ],
       );
@@ -332,7 +320,6 @@ void main() {
             workers: tWorkers,
             filter: const WorkerFilter(sortBy: WorkerSortBy.completedJobs),
             hasMore: true,
-            currentPage: 1,
           ),
         ],
       );
@@ -358,14 +345,11 @@ void main() {
             workers: tWorkers,
             filter: const WorkerFilter(searchKeyword: 'listrik'),
             hasMore: true,
-            currentPage: 1,
           ),
         ],
         verify: (_) {
           verify(() => mockRepository.getNearbyWorkers(
                 filter: const WorkerFilter(searchKeyword: 'listrik'),
-                page: 1,
-                perPage: 10,
               )).called(1);
         },
       );
@@ -389,7 +373,6 @@ void main() {
             workers: tWorkers,
             filter: const WorkerFilter(),
             hasMore: true,
-            currentPage: 1,
           ),
         ],
       );
@@ -401,13 +384,10 @@ void main() {
         build: () {
           when(() => mockRepository.getNearbyWorkers(
                 filter: any(named: 'filter'),
-                page: 1,
-                perPage: 10,
               )).thenAnswer((_) async => Right(tWorkerListResult));
           when(() => mockRepository.getNearbyWorkers(
                 filter: any(named: 'filter'),
                 page: 2,
-                perPage: 10,
               )).thenAnswer((_) async => Right(tWorkerListResultPage2));
           return bloc;
         },
@@ -415,7 +395,6 @@ void main() {
           workers: tWorkers,
           filter: const WorkerFilter(),
           hasMore: true,
-          currentPage: 1,
         ),
         act: (bloc) => bloc.add(const LoadMore()),
         expect: () => [
@@ -424,13 +403,11 @@ void main() {
             filter: const WorkerFilter(),
             hasMore: true,
             isLoadingMore: true,
-            currentPage: 1,
           ),
           WorkerListLoaded(
             workers: [...tWorkers, ...tWorkerListResultPage2.workers],
             filter: const WorkerFilter(),
             hasMore: true,
-            isLoadingMore: false,
             currentPage: 2,
           ),
         ],
@@ -457,7 +434,6 @@ void main() {
           filter: const WorkerFilter(),
           hasMore: true,
           isLoadingMore: true,
-          currentPage: 1,
         ),
         act: (bloc) => bloc.add(const LoadMore()),
         expect: () => <WorkerListState>[],
@@ -476,7 +452,6 @@ void main() {
           when(() => mockRepository.getNearbyWorkers(
                 filter: any(named: 'filter'),
                 page: 2,
-                perPage: 10,
               )).thenAnswer(
             (_) async => const Left(NetworkFailure()),
           );
@@ -486,7 +461,6 @@ void main() {
           workers: tWorkers,
           filter: const WorkerFilter(),
           hasMore: true,
-          currentPage: 1,
         ),
         act: (bloc) => bloc.add(const LoadMore()),
         expect: () => [
@@ -495,14 +469,11 @@ void main() {
             filter: const WorkerFilter(),
             hasMore: true,
             isLoadingMore: true,
-            currentPage: 1,
           ),
           WorkerListLoaded(
             workers: tWorkers,
             filter: const WorkerFilter(),
             hasMore: true,
-            isLoadingMore: false,
-            currentPage: 1,
           ),
         ],
       );
@@ -513,7 +484,6 @@ void main() {
           when(() => mockRepository.getNearbyWorkers(
                 filter: any(named: 'filter'),
                 page: 3,
-                perPage: 10,
               )).thenAnswer((_) async => Right(tLastPageResult));
           return bloc;
         },
@@ -540,7 +510,6 @@ void main() {
             ],
             filter: const WorkerFilter(),
             hasMore: false,
-            isLoadingMore: false,
             currentPage: 3,
           ),
         ],

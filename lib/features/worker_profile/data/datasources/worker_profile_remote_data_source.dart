@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
-import '../../../../core/constants/enums.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
 import '../models/worker_profile_model.dart';
@@ -41,8 +40,8 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
     final response = await apiClient.put<Map<String, dynamic>>(
       ApiEndpoints.workerProfile,
       data: {
-        if (name != null) 'full_name': name,
-        if (bio != null) 'bio': bio,
+        'full_name': ?name,
+        'bio': ?bio,
       },
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
@@ -74,7 +73,7 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
     required List<String> certificatePaths,
     String? selfiePath,
   }) async {
-    final Map<String, dynamic> formMap = {
+    final formMap = <String, dynamic>{
       'ktp': await MultipartFile.fromFile(ktpPath),
     };
 
@@ -82,7 +81,7 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
       formMap['selfie'] = await MultipartFile.fromFile(selfiePath);
     }
 
-    final List<MultipartFile> certFiles = [];
+    final certFiles = <MultipartFile>[];
     for (final path in certificatePaths) {
       certFiles.add(await MultipartFile.fromFile(path));
     }

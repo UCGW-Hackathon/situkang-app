@@ -1,9 +1,9 @@
-import 'package:injectable/injectable.dart';
 import 'dart:async';
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';

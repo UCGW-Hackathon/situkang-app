@@ -8,8 +8,7 @@ import '../bloc/knowledge_bloc.dart';
 
 class ArticleDetailPage extends StatefulWidget {
   const ArticleDetailPage({
-    super.key,
-    required this.articleId,
+    required this.articleId, super.key,
   });
 
   final String articleId;
@@ -82,10 +81,10 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 12,
                       backgroundColor: AppColors.surfaceVariant,
-                      child: const Icon(Icons.person, size: 16, color: AppColors.textSecondary),
+                      child: Icon(Icons.person, size: 16, color: AppColors.textSecondary),
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(article.author, style: AppTypography.caption),
@@ -121,7 +120,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                     runSpacing: AppSpacing.sm,
                     children: article.tags.map((tag) {
                       return Chip(
-                        label: Text(tag.toString(), style: const TextStyle(fontSize: 12)),
+                        label: Text(tag, style: const TextStyle(fontSize: 12)),
                         backgroundColor: AppColors.surfaceVariant,
                       );
                     }).toList(),

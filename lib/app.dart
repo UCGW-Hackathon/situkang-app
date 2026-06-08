@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'core/di/injection.dart';
 import 'core/constants/enums.dart';
+import 'core/di/injection.dart';
 import 'core/network/connectivity_manager.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/theme.dart';
@@ -21,7 +21,7 @@ class SitukangApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => getIt<AuthBloc>()..add(AuthCheckRequested())),
+        BlocProvider(create: (_) => getIt<AuthBloc>()..add(const AuthCheckRequested())),
         BlocProvider(create: (_) => getIt<NotificationBloc>()),
         BlocProvider(create: (_) => getIt<KnowledgeBloc>()),
         BlocProvider(create: (_) => getIt<FaqBloc>()),

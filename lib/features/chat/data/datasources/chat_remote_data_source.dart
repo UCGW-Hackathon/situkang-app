@@ -1,7 +1,7 @@
-import 'package:injectable/injectable.dart';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
@@ -124,7 +124,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
         image.path,
         filename: image.path.split('/').last,
       ),
-      if (caption case final c?) 'caption': c,
+      'caption': ?caption,
     });
 
     final response = await apiClient.upload<Map<String, dynamic>>(

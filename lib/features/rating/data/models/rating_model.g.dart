@@ -12,11 +12,11 @@ RatingModel _$RatingModelFromJson(Map<String, dynamic> json) => RatingModel(
   workerId: json['worker_id'] as String,
   userId: json['user_id'] as String,
   score: (json['score'] as num).toInt(),
+  createdAt: DateTime.parse(json['created_at'] as String),
   comment: json['comment'] as String?,
   tags:
       (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
-  createdAt: DateTime.parse(json['created_at'] as String),
 );
 
 Map<String, dynamic> _$RatingModelToJson(RatingModel instance) =>

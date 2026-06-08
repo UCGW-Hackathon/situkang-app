@@ -1,5 +1,5 @@
-import 'package:injectable/injectable.dart';
 import 'package:equatable/equatable.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/result.dart';
 import '../repositories/auth_repository.dart';

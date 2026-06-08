@@ -49,7 +49,7 @@ class ProfilePage extends StatelessWidget {
             email: 'budi.santoso@gmail.com',
             phone: '081234567890',
             role: UserRole.user,
-            createdAt: DateTime(2025, 1, 1),
+            createdAt: DateTime(2025),
             address: 'Jl. Merdeka No. 12',
           );
 

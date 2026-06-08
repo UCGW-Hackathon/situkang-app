@@ -8,7 +8,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/worker_profile.dart';
 import '../bloc/worker_profile_bloc.dart';
 import 'service_management_page.dart';
-import 'verification_page.dart';
+import 'complete_identity_page.dart';
 
 class WorkerProfilePage extends StatefulWidget {
   const WorkerProfilePage({super.key});
@@ -48,7 +48,7 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
       case VerificationStatus.unverified:
       default:
         color = AppColors.textSecondary;
-        text = 'Belum Terverifikasi';
+        text = 'Profil Belum Lengkap';
         icon = Icons.info_outline;
         break;
     }
@@ -104,21 +104,57 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
             profile = state.profile;
           }
 
-          // Fallback to mock worker profile if null
-          profile ??= WorkerProfile(
-            id: 'mock-worker-id',
-            name: 'Asep Tukang Kayu',
-            avatarUrl: null,
-            coverUrl: null,
-            phoneNumber: '085712345678',
-            bio: 'Ahli kayu, cat dinding, bocoran rumah, perbaikan atap, dsb. Berpengalaman 10 tahun.',
-            verificationStatus: VerificationStatus.verified,
-            services: const [
-              WorkerService(id: 's1', name: 'Servis AC', basePrice: 150000, priceUnit: 'unit'),
-              WorkerService(id: 's2', name: 'Pengecatan Tembok', basePrice: 50000, priceUnit: 'm2'),
-            ],
-            joinedAt: DateTime(2025, 1, 1),
-          );
+          if (isLoading || profile == null) {
+            return ShimmerLoader(
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Stack(
+                      alignment: Alignment.bottomCenter,
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Skeleton(height: 150, width: double.infinity, borderRadius: 0),
+                        Positioned(
+                          bottom: -40,
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundColor: AppColors.background,
+                            child: const Skeleton(width: 92, height: 92, shape: BoxShape.circle),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 50),
+                    Padding(
+                      padding: AppSpacing.pagePadding,
+                      child: Column(
+                        children: [
+                          const Skeleton(height: 24, width: 150),
+                          const SizedBox(height: AppSpacing.xs),
+                          const Skeleton(height: 20, width: 120),
+                          const SizedBox(height: AppSpacing.xl),
+                          const Skeleton(height: 14, width: double.infinity),
+                          const SizedBox(height: AppSpacing.xs),
+                          const Skeleton(height: 14, width: 250),
+                          const SizedBox(height: AppSpacing.xl),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Skeleton(height: 24, width: 120),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          const Skeleton(height: 80, width: double.infinity),
+                          const SizedBox(height: AppSpacing.sm),
+                          const Skeleton(height: 80, width: double.infinity),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
 
           return RefreshIndicator(
             onRefresh: () async {
@@ -129,7 +165,6 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (isLoading) const LinearProgressIndicator(),
                   // Cover & Avatar
                   Stack(
                     alignment: Alignment.bottomCenter,
@@ -186,33 +221,33 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                   Padding(
                     padding: AppSpacing.pagePadding,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(profile.name, style: AppTypography.h5),
                         const SizedBox(height: AppSpacing.xs),
                         _buildVerificationBadge(profile.verificationStatus),
                         const SizedBox(height: AppSpacing.md),
                         
-                        if (profile.verificationStatus == VerificationStatus.unverified || 
-                            profile.verificationStatus == VerificationStatus.rejected) ...[
+                        if ((profile.verificationStatus == VerificationStatus.unverified || 
+                            profile.verificationStatus == VerificationStatus.rejected) &&
+                            (profile.bio == null || profile.bio!.trim().isEmpty)) ...[
                           AppCard(
                             color: AppColors.warning.withValues(alpha: 0.1),
                             child: Column(
                               children: [
                                 Text(
                                   profile.verificationStatus == VerificationStatus.rejected
-                                      ? 'Verifikasi Ditolak: ${profile.verificationReason ?? 'Data tidak valid'}'
-                                      : 'Verifikasi akun Anda agar dapat menerima pesanan.',
+                                      ? 'Pengajuan Ditolak: ${profile.verificationReason ?? 'Data tidak valid'}'
+                                      : 'Lengkapi identitas dan layanan utama Anda agar dapat menerima pesanan.',
                                   style: AppTypography.bodySmall,
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                                 AppButton(
-                                  text: 'Mulai Verifikasi',
+                                  text: 'Lengkapi Identitas',
                                   onPressed: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (_) => const VerificationPage(),
+                                        builder: (_) => CompleteIdentityPage(profile: profile),
                                       ),
                                     );
                                   },
@@ -243,7 +278,7 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Layanan Saya', style: AppTypography.h6),
+                            const Text('Layanan Saya', style: AppTypography.h6),
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).push(
@@ -267,7 +302,7 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: profile.services.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
                             itemBuilder: (context, index) {
                               final service = profile!.services[index];
                               return AppCard(
@@ -303,6 +338,7 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 80), // Padding for bottom navigation
                 ],
               ),
             ),

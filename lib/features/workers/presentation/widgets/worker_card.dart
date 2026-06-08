@@ -53,7 +53,7 @@ class WorkerCard extends StatelessWidget {
               ? CachedNetworkImageProvider(worker.avatarUrl!)
               : null,
           child: worker.avatarUrl == null
-              ? Icon(
+              ? const Icon(
                   Icons.person,
                   size: AppSizing.iconLg,
                   color: AppColors.textDisabled,
@@ -116,8 +116,8 @@ class WorkerCard extends StatelessWidget {
           ),
         ),
         if (worker.isVerified)
-          Padding(
-            padding: const EdgeInsets.only(left: AppSpacing.xs),
+          const Padding(
+            padding: EdgeInsets.only(left: AppSpacing.xs),
             child: Icon(
               Icons.verified,
               size: AppSizing.iconSm,
@@ -154,7 +154,7 @@ class WorkerCard extends StatelessWidget {
   Widget _buildStatsRow() {
     return Row(
       children: [
-        Icon(
+        const Icon(
           Icons.work_outline,
           size: AppSizing.iconXs,
           color: AppColors.textSecondary,
@@ -166,7 +166,7 @@ class WorkerCard extends StatelessWidget {
         ),
         if (worker.distance != null) ...[
           const SizedBox(width: AppSpacing.sm),
-          Icon(
+          const Icon(
             Icons.location_on_outlined,
             size: AppSizing.iconXs,
             color: AppColors.textSecondary,

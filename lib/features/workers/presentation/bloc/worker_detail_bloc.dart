@@ -1,6 +1,6 @@
-import 'package:injectable/injectable.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/worker_profile.dart';
@@ -54,7 +54,6 @@ class WorkerDetailBloc extends Bloc<WorkerDetailEvent, WorkerDetailState> {
     if (event.preloadedWorker != null) {
       emit(WorkerDetailLoaded(
         worker: event.preloadedWorker!,
-        recentReviews: const [],
       ));
     } else {
       emit(const WorkerDetailLoading());
@@ -69,7 +68,6 @@ class WorkerDetailBloc extends Bloc<WorkerDetailEvent, WorkerDetailState> {
           // Keep showing the preloaded data — just silently swallow the error
           emit(WorkerDetailLoaded(
             worker: event.preloadedWorker!,
-            recentReviews: const [],
           ));
         } else {
           emit(WorkerDetailError(failure: failure));
@@ -96,8 +94,6 @@ class WorkerDetailBloc extends Bloc<WorkerDetailEvent, WorkerDetailState> {
 
     final result = await _workerRepository.getWorkerReviews(
       event.workerId,
-      page: 1,
-      perPage: _reviewsPerPage,
     );
 
     result.fold(
@@ -106,8 +102,6 @@ class WorkerDetailBloc extends Bloc<WorkerDetailEvent, WorkerDetailState> {
         reviews: reviews,
         workerId: event.workerId,
         hasMore: reviews.length >= _reviewsPerPage,
-        currentPage: 1,
-        starFilter: null,
       )),
     );
   }
@@ -129,7 +123,6 @@ class WorkerDetailBloc extends Bloc<WorkerDetailEvent, WorkerDetailState> {
     final result = await _workerRepository.getWorkerReviews(
       currentState.workerId,
       page: nextPage,
-      perPage: _reviewsPerPage,
     );
 
     result.fold(
@@ -159,8 +152,6 @@ class WorkerDetailBloc extends Bloc<WorkerDetailEvent, WorkerDetailState> {
 
     final result = await _workerRepository.getWorkerReviews(
       currentState.workerId,
-      page: 1,
-      perPage: _reviewsPerPage,
     );
 
     result.fold(
@@ -177,7 +168,6 @@ class WorkerDetailBloc extends Bloc<WorkerDetailEvent, WorkerDetailState> {
           reviews: filteredReviews,
           workerId: currentState.workerId,
           hasMore: reviews.length >= _reviewsPerPage,
-          currentPage: 1,
           starFilter: event.starRating,
           allReviews: reviews,
         ));

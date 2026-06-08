@@ -13,9 +13,7 @@ import '../../domain/entities/chat_message.dart';
 /// Validates: Requirements 11.1, 11.2, 11.3, 11.9
 class ChatBubble extends StatelessWidget {
   const ChatBubble({
-    super.key,
-    required this.message,
-    required this.isMe,
+    required this.message, required this.isMe, super.key,
     this.onRetry,
   });
 
@@ -64,11 +62,11 @@ class ChatBubble extends StatelessWidget {
                     isMe ? AppSizing.radiusXs : AppSizing.radiusMd,
                   ),
                 ),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: AppColors.shadow,
                     blurRadius: 2,
-                    offset: const Offset(0, 1),
+                    offset: Offset(0, 1),
                   ),
                 ],
               ),
@@ -112,7 +110,7 @@ class ChatBubble extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.refresh,
                               size: 12,
                               color: AppColors.error,
@@ -159,7 +157,7 @@ class ChatBubble extends StatelessWidget {
               width: 200,
               height: 200,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 width: 200,
                 height: 100,
                 color: AppColors.surfaceVariant,
@@ -243,7 +241,7 @@ class ChatBubble extends StatelessWidget {
           color: AppColors.onPrimary.withValues(alpha: 0.7),
         );
       case MessageDeliveryStatus.failed:
-        return Icon(
+        return const Icon(
           Icons.error_outline,
           size: 12,
           color: AppColors.error,

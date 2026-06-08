@@ -1,7 +1,5 @@
 import 'package:situkang_app/core/error/result.dart';
-import 'package:dartz/dartz.dart';
 
-import '../../../../core/error/failures.dart';
 import '../entities/rating.dart';
 
 abstract class WorkerRatingRepository {

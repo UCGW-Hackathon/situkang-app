@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
-import '../../../../core/constants/api_endpoints.dart';
 import '../../../invoice/data/models/invoice_model.dart';
 
 abstract class WorkerOrderRemoteDataSource {
@@ -39,7 +39,7 @@ class WorkerOrderRemoteDataSourceImpl implements WorkerOrderRemoteDataSource {
   Future<void> uploadProgressPhoto(String orderId, String filePath, String? caption) async {
     final formData = FormData.fromMap({
       'photo': await MultipartFile.fromFile(filePath),
-      if (caption != null) 'caption': caption,
+      'caption': ?caption,
     });
 
     await apiClient.upload<Map<String, dynamic>>(
@@ -60,7 +60,7 @@ class WorkerOrderRemoteDataSourceImpl implements WorkerOrderRemoteDataSource {
       data: {
         'item_name': itemName,
         'cost': cost,
-        if (description != null) 'description': description,
+        'description': ?description,
       },
     );
   }
@@ -70,7 +70,7 @@ class WorkerOrderRemoteDataSourceImpl implements WorkerOrderRemoteDataSource {
     final invoiceResponse = await apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.workerOrderGenerateInvoice(orderId),
       data: {
-        if (workerNotes != null) 'worker_notes': workerNotes,
+        'worker_notes': ?workerNotes,
       },
     );
 

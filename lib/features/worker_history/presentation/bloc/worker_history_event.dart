@@ -12,10 +12,10 @@ class FetchWorkerHistory extends WorkerHistoryEvent {}
 class LoadMoreWorkerHistory extends WorkerHistoryEvent {}
 
 class FilterWorkerHistory extends WorkerHistoryEvent {
-  const FilterWorkerHistory(this.filter);
+  const FilterWorkerHistory(this.status);
 
-  final String filter;
+  final OrderStatus? status;
 
   @override
-  List<Object?> get props => [filter];
+  List<Object?> get props => [status];
 }

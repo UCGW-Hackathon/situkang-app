@@ -23,7 +23,27 @@ class WorkerHomeRemoteDataSourceImpl implements WorkerHomeRemoteDataSource {
     );
     final apiResponse = ApiResponse<WorkerDashboardModel>.fromJson(
       response.data!,
-      fromJsonT: (json) => WorkerDashboardModel.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) {
+        final data = json as Map<String, dynamic>;
+        final summary = data['worker_summary'] as Map<String, dynamic>? ?? {};
+        
+        return WorkerDashboardModel.fromJson({
+          'earnings_today': 0,
+          'earnings_week': 0,
+          'earnings_month': 0,
+          'wallet_balance': summary['balance'] ?? 0,
+          'acceptance_rate': 1.0,
+          'average_rating': (summary['rating'] ?? 0).toDouble(),
+          'jobs_completed': summary['completed_jobs'] ?? 0,
+          'incoming_order_count': data['incoming_orders_count'] ?? 0,
+          'is_available': summary['is_available'] ?? false,
+          'active_order_id': null,
+          'active_order_title': null,
+          'active_order_status': null,
+          'active_order_customer_name': null,
+          'active_order_start_time': null,
+        });
+      },
     );
     return apiResponse.data!;
   }

@@ -32,11 +32,16 @@ class WorkerHomeBloc extends Bloc<WorkerHomeEvent, WorkerHomeState> {
     );
   }
 
+  bool _isToggling = false;
+
   Future<void> _onToggleAvailability(
     ToggleAvailability event,
     Emitter<WorkerHomeState> emit,
   ) async {
     if (state is! WorkerHomeLoaded) return;
+    if (_isToggling) return; // Prevent spamming
+    
+    _isToggling = true;
     final currentState = state as WorkerHomeLoaded;
 
     // Optimistic update
@@ -64,5 +69,7 @@ class WorkerHomeBloc extends Bloc<WorkerHomeEvent, WorkerHomeState> {
         ));
       },
     );
+    
+    _isToggling = false;
   }
 }

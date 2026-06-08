@@ -6,7 +6,6 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/order_detail.dart';
-import '../../domain/entities/order.dart';
 import '../bloc/order_bloc.dart';
 
 /// Page displaying full order detail information.
@@ -17,7 +16,7 @@ import '../bloc/order_bloc.dart';
 ///
 /// Validates: Requirements 8.3, 8.4, 8.5, 8.6
 class OrderDetailPage extends StatelessWidget {
-  const OrderDetailPage({super.key, required this.orderId});
+  const OrderDetailPage({required this.orderId, super.key});
 
   /// The ID of the order to display.
   final String orderId;
@@ -166,7 +165,7 @@ class OrderDetailPage extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.priority_high,
                     size: AppSizing.iconXs,
                     color: AppColors.error,
@@ -191,7 +190,7 @@ class OrderDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Informasi Pesanan', style: AppTypography.h5),
+        const Text('Informasi Pesanan', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
@@ -236,7 +235,7 @@ class OrderDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tukang', style: AppTypography.h5),
+        const Text('Tukang', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Row(
@@ -261,7 +260,7 @@ class OrderDetailPage extends StatelessWidget {
                           child: Text(worker.fullName, style: AppTypography.h6),
                         ),
                         if (worker.isVerified)
-                          Icon(
+                          const Icon(
                             Icons.verified,
                             color: AppColors.primary,
                             size: AppSizing.iconSm,
@@ -305,7 +304,7 @@ class OrderDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Lokasi', style: AppTypography.h5),
+        const Text('Lokasi', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
@@ -314,7 +313,7 @@ class OrderDetailPage extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.location_on_outlined,
                     color: AppColors.primary,
                     size: AppSizing.iconMd,
@@ -349,7 +348,7 @@ class OrderDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Jadwal Preferensi', style: AppTypography.h5),
+        const Text('Jadwal Preferensi', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
@@ -382,7 +381,7 @@ class OrderDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Rincian Biaya', style: AppTypography.h5),
+        const Text('Rincian Biaya', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
@@ -419,7 +418,7 @@ class OrderDetailPage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total', style: AppTypography.h6),
+                    const Text('Total', style: AppTypography.h6),
                     Text(
                       'Rp${formatter.format(order.grandTotal)}',
                       style: AppTypography.priceLarge,
@@ -438,14 +437,14 @@ class OrderDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Foto', style: AppTypography.h5),
+        const Text('Foto', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         SizedBox(
           height: AppSizing.thumbnailLg,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: order.photos.length,
-            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
             itemBuilder: (context, index) {
               return ClipRRect(
                 borderRadius: BorderRadius.circular(AppSizing.radiusSm),
@@ -454,7 +453,7 @@ class OrderDetailPage extends StatelessWidget {
                   width: AppSizing.thumbnailLg,
                   height: AppSizing.thumbnailLg,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     width: AppSizing.thumbnailLg,
                     height: AppSizing.thumbnailLg,
                     color: AppColors.surfaceVariant,
@@ -473,7 +472,7 @@ class OrderDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Catatan', style: AppTypography.h5),
+        const Text('Catatan', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Text(order.notes!, style: AppTypography.bodyMedium),
@@ -488,7 +487,7 @@ class OrderDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Timeline', style: AppTypography.h5),
+        const Text('Timeline', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
@@ -589,7 +588,7 @@ class OrderDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Ringkasan Pembelian', style: AppTypography.h5),
+        const Text('Ringkasan Pembelian', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
@@ -814,12 +813,12 @@ class _OrderDetailSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShimmerLoader(
+    return const ShimmerLoader(
       child: SingleChildScrollView(
         padding: AppSpacing.pagePadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Skeleton(height: 80, width: double.infinity, borderRadius: 16),
             SizedBox(height: AppSpacing.formSectionSpacing),
             Skeleton(height: 24, width: 150),

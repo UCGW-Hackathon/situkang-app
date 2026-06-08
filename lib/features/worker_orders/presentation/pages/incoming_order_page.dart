@@ -83,7 +83,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                 children: [
                   const Icon(Icons.timer_off, size: 64, color: AppColors.error),
                   const SizedBox(height: AppSpacing.md),
-                  Text('Pesanan telah kedaluwarsa', style: AppTypography.h6),
+                  const Text('Pesanan telah kedaluwarsa', style: AppTypography.h6),
                   const SizedBox(height: AppSpacing.lg),
                   AppButton(
                     text: 'Kembali',
@@ -108,7 +108,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
 
   Widget _buildPendingOrder(BuildContext context, Order order, int remainingSeconds) {
     final formatter = NumberFormat('#,###', 'id');
-    final double progress = remainingSeconds / 30.0;
+    final progress = remainingSeconds / 30.0;
     
     return SingleChildScrollView(
       padding: AppSpacing.pagePadding,
@@ -141,7 +141,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
           ),
           const SizedBox(height: AppSpacing.xl),
           
-          Text('Pesanan Baru!', style: AppTypography.h5, textAlign: TextAlign.center),
+          const Text('Pesanan Baru!', style: AppTypography.h5, textAlign: TextAlign.center),
           const SizedBox(height: AppSpacing.lg),
           
           AppCard(
@@ -179,18 +179,18 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                 const SizedBox(height: AppSpacing.md),
                 const Divider(),
                 const SizedBox(height: AppSpacing.md),
-                Row(
+                const Row(
                   children: [
-                    const Icon(Icons.person, color: AppColors.textSecondary, size: 20),
-                    const SizedBox(width: AppSpacing.sm),
+                    Icon(Icons.person, color: AppColors.textSecondary, size: 20),
+                    SizedBox(width: AppSpacing.sm),
                     Text('Pelanggan', style: AppTypography.bodyMedium),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Row(
+                const Row(
                   children: [
-                    const Icon(Icons.location_on,  size: 20),
-                    const SizedBox(width: AppSpacing.sm),
+                    Icon(Icons.location_on,  size: 20),
+                    SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         'Lokasi Pelanggan',

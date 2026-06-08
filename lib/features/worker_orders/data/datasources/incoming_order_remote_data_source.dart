@@ -3,7 +3,6 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_response.dart';
 import '../../../orders/data/models/order_model.dart';
-import '../../../orders/domain/entities/order.dart';
 
 abstract class IncomingOrderRemoteDataSource {
   Future<List<OrderModel>> getIncomingOrders();

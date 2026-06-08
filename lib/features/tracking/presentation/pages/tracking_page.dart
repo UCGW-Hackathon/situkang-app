@@ -18,8 +18,7 @@ import '../widgets/worker_info_card.dart';
 /// Validates: Requirements 9.1-9.9
 class TrackingPage extends StatefulWidget {
   const TrackingPage({
-    super.key,
-    required this.orderId,
+    required this.orderId, super.key,
     this.workerName,
     this.workerAvatarUrl,
     this.workerSpecialization,
@@ -189,7 +188,7 @@ class _TrackingPageState extends State<TrackingPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.map_outlined,
                   size: AppSizing.iconXxl,
                   color: AppColors.textDisabled,
@@ -225,11 +224,11 @@ class _TrackingPageState extends State<TrackingPage> {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(AppSizing.radiusFull),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: AppColors.shadow,
                     blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    offset: Offset(0, 2),
                   ),
                 ],
               ),
@@ -377,18 +376,18 @@ class _TrackingPageState extends State<TrackingPage> {
         children: [
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.successLight,
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.check_circle,
               size: AppSizing.iconXxl,
               color: AppColors.success,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text('Pesanan Selesai!', style: AppTypography.h3),
+          const Text('Pesanan Selesai!', style: AppTypography.h3),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Pekerjaan telah diselesaikan oleh tukang.',

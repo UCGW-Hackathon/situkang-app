@@ -9,9 +9,7 @@ import '../../../../core/widgets/widgets.dart';
 /// Provides options for cash, bank transfer, and e-wallet.
 class PaymentMethodSelector extends StatelessWidget {
   const PaymentMethodSelector({
-    super.key,
-    required this.selectedMethod,
-    required this.onMethodSelected,
+    required this.selectedMethod, required this.onMethodSelected, super.key,
   });
 
   /// The currently selected payment method.
@@ -25,7 +23,7 @@ class PaymentMethodSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Metode Pembayaran', style: AppTypography.h5),
+        const Text('Metode Pembayaran', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
           padding: EdgeInsets.zero,

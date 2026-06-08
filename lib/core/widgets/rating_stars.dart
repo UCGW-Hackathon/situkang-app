@@ -9,8 +9,7 @@ import '../theme/theme.dart';
 class RatingStars extends StatelessWidget {
   /// Creates a [RatingStars] widget in display mode (read-only).
   const RatingStars({
-    super.key,
-    required this.rating,
+    required this.rating, super.key,
     this.size = 20.0,
     this.color,
     this.emptyColor,
@@ -20,9 +19,7 @@ class RatingStars extends StatelessWidget {
 
   /// Creates a [RatingStars] widget in input mode (tappable).
   const RatingStars.input({
-    super.key,
-    required this.rating,
-    required this.onRatingChanged,
+    required this.rating, required this.onRatingChanged, super.key,
     this.size = 36.0,
     this.color,
     this.emptyColor,

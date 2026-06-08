@@ -1,6 +1,6 @@
-import 'package:situkang_app/core/error/result.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
+import 'package:situkang_app/core/error/result.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/rating.dart';

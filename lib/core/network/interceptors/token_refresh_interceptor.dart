@@ -81,7 +81,6 @@ class TokenRefreshInterceptor extends Interceptor {
           DioException(
             requestOptions: err.requestOptions,
             error: e,
-            type: DioExceptionType.unknown,
           ),
         );
       }
@@ -133,7 +132,6 @@ class TokenRefreshInterceptor extends Interceptor {
       final dioError = DioException(
         requestOptions: err.requestOptions,
         error: e,
-        type: DioExceptionType.unknown,
       );
       _rejectAllPending(dioError);
       return handler.reject(dioError);
@@ -152,7 +150,6 @@ class TokenRefreshInterceptor extends Interceptor {
     if (refreshToken == null || refreshToken.isEmpty) {
       throw DioException(
         requestOptions: RequestOptions(path: ApiEndpoints.authRefresh),
-        type: DioExceptionType.unknown,
         error: 'No refresh token available',
       );
     }
@@ -166,7 +163,6 @@ class TokenRefreshInterceptor extends Interceptor {
     if (data == null) {
       throw DioException(
         requestOptions: RequestOptions(path: ApiEndpoints.authRefresh),
-        type: DioExceptionType.unknown,
         error: 'Empty response from refresh endpoint',
       );
     }
@@ -179,7 +175,6 @@ class TokenRefreshInterceptor extends Interceptor {
     if (newAccessToken == null || newRefreshToken == null) {
       throw DioException(
         requestOptions: RequestOptions(path: ApiEndpoints.authRefresh),
-        type: DioExceptionType.unknown,
         error: 'Invalid token response format',
       );
     }

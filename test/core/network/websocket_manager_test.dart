@@ -19,6 +19,7 @@ class FakeWebSocketChannel extends Fake implements WebSocketChannel {
 
   final StreamController<dynamic> _incomingController =
       StreamController<dynamic>.broadcast();
+  @override
   final FakeWebSocketSink sink = FakeWebSocketSink();
   final bool shouldFailReady;
   bool _isClosed = false;
@@ -394,7 +395,7 @@ void main() {
       fakeChannel = FakeWebSocketChannel(shouldFailReady: true);
       createdChannels.add(fakeChannel);
 
-      int connectAttempts = 0;
+      var connectAttempts = 0;
       manager = WebSocketManagerImpl(
         baseUrl: 'wss://test.example.com/ws',
         channelFactory: (uri, token) {

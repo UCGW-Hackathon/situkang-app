@@ -7,7 +7,7 @@ class WorkerHistoryState extends Equatable {
     this.status = WorkerHistoryStatus.initial,
     this.orders = const <Order>[],
     this.hasReachedMax = false,
-    this.filter = 'completed',
+    this.statusFilter,
     this.page = 1,
     this.failure,
   });
@@ -15,7 +15,7 @@ class WorkerHistoryState extends Equatable {
   final WorkerHistoryStatus status;
   final List<Order> orders;
   final bool hasReachedMax;
-  final String filter;
+  final OrderStatus? statusFilter;
   final int page;
   final Failure? failure;
 
@@ -23,7 +23,8 @@ class WorkerHistoryState extends Equatable {
     WorkerHistoryStatus? status,
     List<Order>? orders,
     bool? hasReachedMax,
-    String? filter,
+    OrderStatus? statusFilter,
+    bool clearStatusFilter = false,
     int? page,
     Failure? failure,
   }) {
@@ -31,7 +32,7 @@ class WorkerHistoryState extends Equatable {
       status: status ?? this.status,
       orders: orders ?? this.orders,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
-      filter: filter ?? this.filter,
+      statusFilter: clearStatusFilter ? null : (statusFilter ?? this.statusFilter),
       page: page ?? this.page,
       failure: failure, // null by default when copying
     );
@@ -42,7 +43,7 @@ class WorkerHistoryState extends Equatable {
         status,
         orders,
         hasReachedMax,
-        filter,
+        statusFilter,
         page,
         failure,
       ];
