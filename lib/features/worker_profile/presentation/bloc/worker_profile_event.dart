@@ -22,6 +22,25 @@ class UpdateWorkerProfile extends WorkerProfileEvent {
   List<Object?> get props => [name, bio];
 }
 
+class UpdateFullWorkerProfile extends WorkerProfileEvent {
+  const UpdateFullWorkerProfile({
+    required this.name,
+    required this.bio,
+    required this.serviceName,
+    required this.serviceBasePrice,
+    required this.servicePriceUnit,
+  });
+
+  final String name;
+  final String bio;
+  final String serviceName;
+  final int serviceBasePrice;
+  final String servicePriceUnit;
+
+  @override
+  List<Object?> get props => [name, bio, serviceName, serviceBasePrice, servicePriceUnit];
+}
+
 class UploadCoverPhoto extends WorkerProfileEvent {
   const UploadCoverPhoto(this.filePath);
 

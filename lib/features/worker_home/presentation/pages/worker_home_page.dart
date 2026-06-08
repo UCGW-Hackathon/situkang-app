@@ -286,7 +286,7 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
           icon: Icons.history,
           title: 'Riwayat',
           subtitle: '12 Selesai bulan ini',
-          onTap: () => context.push('/worker/history'),
+          onTap: () => context.go('/worker/orders'),
         ),
         _buildGridItem(
           icon: Icons.support_agent,

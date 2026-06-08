@@ -24,6 +24,7 @@ import '../../features/wallet/presentation/pages/wallet_page.dart';
 import '../../features/worker_history/presentation/pages/worker_history_page.dart';
 import '../../features/worker_home/presentation/bloc/worker_home_bloc.dart';
 import '../../features/worker_home/presentation/pages/worker_home_page.dart';
+import '../../features/worker_history/presentation/bloc/worker_history_bloc.dart';
 import '../../features/worker_orders/presentation/bloc/incoming_order_bloc.dart';
 import '../../features/worker_orders/presentation/bloc/worker_order_bloc.dart';
 import '../../features/worker_orders/presentation/pages/incoming_order_page.dart';
@@ -191,7 +192,10 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
             builder: (context, state) {
               final order = state.extra;
               if (order is! Order) {
-                return const IncomingOrderPage();
+                return BlocProvider(
+                  create: (_) => getIt<WorkerHistoryBloc>(),
+                  child: const WorkerHistoryPage(),
+                );
               }
 
               return BlocProvider(
@@ -229,10 +233,6 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
       GoRoute(
         path: '/help',
         builder: (context, state) => const HelpCenterPage(),
-      ),
-      GoRoute(
-        path: '/worker/history',
-        builder: (context, state) => const WorkerHistoryPage(),
       ),
       GoRoute(
         path: '/worker/wallet',

@@ -37,12 +37,13 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
 
   @override
   Future<WorkerProfileModel> updateWorkerProfile(String? name, String? bio) async {
+    final Map<String, dynamic> data = {};
+    if (name != null) data['full_name'] = name;
+    if (bio != null) data['bio'] = bio;
+
     final response = await apiClient.put<Map<String, dynamic>>(
       ApiEndpoints.workerProfile,
-      data: {
-        'full_name': ?name,
-        'bio': ?bio,
-      },
+      data: data,
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,
@@ -95,10 +96,10 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
 
   @override
   Future<WorkerProfileModel> addService(String name, int basePrice, String priceUnit) async {
-    final response = await apiClient.post<Map<String, dynamic>>(
-      '/worker/profile/services',
+    final response = await apiClient.put<Map<String, dynamic>>(
+      ApiEndpoints.workerProfile,
       data: {
-        'name': name,
+        'specialization': name,
         'base_price': basePrice,
         'price_unit': priceUnit,
       },
@@ -112,8 +113,13 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
 
   @override
   Future<WorkerProfileModel> removeService(String serviceId) async {
-    final response = await apiClient.delete<Map<String, dynamic>>(
-      '/worker/profile/services/$serviceId',
+    final response = await apiClient.put<Map<String, dynamic>>(
+      ApiEndpoints.workerProfile,
+      data: {
+        'specialization': '',
+        'base_price': 0,
+        'price_unit': '',
+      },
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,

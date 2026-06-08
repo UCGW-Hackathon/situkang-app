@@ -28,6 +28,20 @@ class WorkerProfileModel extends WorkerProfile {
     if (json['joined_at'] == null) {
       json['joined_at'] = DateTime.now().toIso8601String();
     }
+    
+    // Map specialization to services if services is empty
+    if ((json['services'] == null || (json['services'] as List).isEmpty) &&
+        json['specialization'] != null && json['base_price'] != null && json['price_unit'] != null) {
+      json['services'] = [
+        {
+          'id': 'service_1',
+          'name': json['specialization'],
+          'base_price': json['base_price'],
+          'price_unit': json['price_unit'],
+        }
+      ];
+    }
+    
     return _$WorkerProfileModelFromJson(json);
   }
   

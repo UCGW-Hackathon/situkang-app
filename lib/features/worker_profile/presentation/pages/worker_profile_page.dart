@@ -7,8 +7,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/worker_profile.dart';
 import '../bloc/worker_profile_bloc.dart';
-import 'service_management_page.dart';
-import 'complete_identity_page.dart';
+import 'edit_worker_profile_page.dart';
 
 class WorkerProfilePage extends StatefulWidget {
   const WorkerProfilePage({super.key});
@@ -80,7 +79,14 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fitur pengaturan sedang dalam pengembangan')));
+              final state = context.read<WorkerProfileBloc>().state;
+              if (state is WorkerProfileLoaded) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EditWorkerProfilePage(profile: state.profile),
+                  ),
+                );
+              }
             },
           ),
         ],
@@ -183,7 +189,13 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                               : null,
                         ),
                         child: profile.coverUrl == null
-                            ? const Icon(Icons.image, size: 48, color: AppColors.textSecondary)
+                            ? const Align(
+                                alignment: Alignment.center,
+                                child: Padding(
+                                  padding: EdgeInsets.only(bottom: 40.0),
+                                  child: Icon(Icons.image, size: 48, color: AppColors.textSecondary),
+                                ),
+                              )
                             : null,
                       ),
                       Positioned(
@@ -247,7 +259,7 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                                   onPressed: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (_) => CompleteIdentityPage(profile: profile),
+                                        builder: (_) => EditWorkerProfilePage(profile: profile!),
                                       ),
                                     );
                                   },
@@ -279,16 +291,6 @@ class _WorkerProfilePageState extends State<WorkerProfilePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Layanan Saya', style: AppTypography.h6),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => ServiceManagementPage(services: profile!.services),
-                                  ),
-                                );
-                              },
-                              child: const Text('Kelola'),
-                            ),
                           ],
                         ),
                         if (profile.services.isEmpty)
