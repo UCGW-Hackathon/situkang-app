@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> {
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state is HomeLoading) {
-            return const LoadingIndicator(message: 'Memuat beranda...');
+            return const _HomeSkeleton();
           }
 
           if (state is HomeError) {
@@ -413,7 +413,7 @@ class _CategoriesSection extends StatelessWidget {
               crossAxisCount: 4,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 0.95,
+              childAspectRatio: 0.85,
             ),
             itemBuilder: (context, index) {
               return _CategoryTile(category: visible[index]);
@@ -727,7 +727,7 @@ class _FeaturedWorkersSection extends StatelessWidget {
     return Column(
       children: [
         _SectionHeader(
-          title: 'Tukang Unggulan Terdekat',
+          title: 'Tukang Terdekat',
           action: 'Lihat Semua',
           onAction: () => context.push('/workers'),
         ),
@@ -752,7 +752,10 @@ class _WorkerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => context.push('/workers/${worker.id}'),
+      onTap: () => context.push(
+        '/workers/${worker.id}',
+        extra: worker.toWorkerProfile(),
+      ),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -819,7 +822,8 @@ class _WorkerCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       const Icon(Icons.location_on, color: _teal, size: 14),
                       const SizedBox(width: 2),
@@ -951,3 +955,126 @@ class _Avatar extends StatelessWidget {
     );
   }
 }
+
+class _HomeSkeleton extends StatelessWidget {
+  const _HomeSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoader(
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                child: Row(
+                  children: [
+                    const Skeleton(width: 48, height: 48, shape: BoxShape.circle),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Skeleton(height: 12, width: 100),
+                          SizedBox(height: 4),
+                          Skeleton(height: 16, width: 150),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Skeleton(width: 20, height: 20, shape: BoxShape.circle),
+                    const SizedBox(width: 4),
+                    const Expanded(
+                      flex: 6,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Skeleton(height: 12, width: 80),
+                          SizedBox(height: 4),
+                          Skeleton(height: 14, width: 120),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
+                child: Skeleton(height: 54, width: double.infinity, borderRadius: 12),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Skeleton(height: 18, width: 120),
+                        Skeleton(height: 14, width: 80),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: 8,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 0.85,
+                      ),
+                      itemBuilder: (context, index) {
+                        return const Skeleton(borderRadius: 12);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 24),
+                child: SizedBox(
+                  height: 170,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: 2,
+                    itemBuilder: (context, index) {
+                      return const Padding(
+                        padding: EdgeInsets.only(right: 12),
+                        child: Skeleton(width: 280, height: 170, borderRadius: 16),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 80),
+                child: Column(
+                  children: [
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Skeleton(height: 18, width: 180),
+                        Skeleton(height: 14, width: 80),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ...List.generate(3, (index) => const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Skeleton(height: 120, width: double.infinity, borderRadius: 14),
+                    )),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+

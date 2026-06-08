@@ -29,12 +29,17 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
 
   @override
   Future<HomeDataModel?> getCachedHomeData() async {
-    final cachedData = await cacheManager.get<Map<String, dynamic>>(
+    final cachedData = await cacheManager.get<dynamic>(
       _homeCacheKey,
     );
 
     if (cachedData == null) return null;
-    return HomeDataModel.fromJson(cachedData);
+    try {
+      final map = Map<String, dynamic>.from(cachedData as Map);
+      return HomeDataModel.fromJson(map);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

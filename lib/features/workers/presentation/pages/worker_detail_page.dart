@@ -1,72 +1,49 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/worker_profile.dart';
 import '../../domain/entities/worker_review.dart';
-import '../../domain/entities/worker_service.dart';
 import '../bloc/worker_detail_bloc.dart';
 
-/// Page displaying the full detail of a worker's profile.
-///
-/// Shows cover photo, worker info, services list, recent reviews,
-/// and a fixed bottom bar with booking fee and booking button.
-///
-/// Validates:
-/// - Requirement 6.1: Full worker profile info
-/// - Requirement 6.2: Services list with name, icon, base price, price unit
-/// - Requirement 6.3: Up to 3 recent reviews
-/// - Requirement 6.4: Booking fee (Rp2.000) in fixed bottom section
-/// - Requirement 6.6: Booking action button navigates to order creation
-/// - Requirement 6.7: Error state with retry
-/// - Requirement 6.8: Empty reviews state
-class WorkerDetailPage extends StatelessWidget {
-  /// Creates a [WorkerDetailPage].
-  const WorkerDetailPage({
-    required this.workerId,
-    super.key,
-    this.onBookNow,
-    this.onViewAllReviews,
-  });
+class WorkerDetailPage extends StatefulWidget {
+  const WorkerDetailPage({required this.workerId, super.key});
 
-  /// The ID of the worker to display.
   final String workerId;
 
-  /// Callback when the "Pesan Sekarang" button is tapped.
-  final ValueChanged<WorkerProfile>? onBookNow;
+  @override
+  State<WorkerDetailPage> createState() => _WorkerDetailPageState();
+}
 
-  /// Callback when "Lihat Semua Ulasan" is tapped.
-  final VoidCallback? onViewAllReviews;
+class _WorkerDetailPageState extends State<WorkerDetailPage> {
+  void _onBookNow(WorkerProfile worker) {
+    context.push(
+      '/workers/${worker.id}/order',
+      extra: {
+        'workerProfile': worker,
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: BlocBuilder<WorkerDetailBloc, WorkerDetailState>(
         builder: (context, state) {
           return switch (state) {
-            WorkerDetailInitial() => const LoadingIndicator(
-                message: 'Memuat profil...',
-              ),
-            WorkerDetailLoading() => const LoadingIndicator(
-                message: 'Memuat profil...',
-              ),
-            WorkerDetailLoaded(:final worker, :final recentReviews) =>
-              _WorkerDetailContent(
-                worker: worker,
-                recentReviews: recentReviews,
-                onBookNow: onBookNow,
-                onViewAllReviews: onViewAllReviews,
-              ),
+            WorkerDetailInitial() || WorkerDetailLoading() => const _WorkerDetailSkeleton(),
+            WorkerDetailLoaded(:final worker, :final recentReviews) => _buildContent(worker, recentReviews),
             WorkerDetailError(:final failure) => AppErrorWidget(
                 message: failure.message,
-                onRetry: () => context
-                    .read<WorkerDetailBloc>()
-                    .add(FetchWorkerDetail(workerId: workerId)),
+                onRetry: () => context.read<WorkerDetailBloc>().add(FetchWorkerDetail(workerId: widget.workerId)),
               ),
-            // Handle reviews states gracefully on detail page
             WorkerReviewsLoading() => const LoadingIndicator(),
             WorkerReviewsLoaded() => const SizedBox.shrink(),
             WorkerReviewsError() => const SizedBox.shrink(),
@@ -75,578 +52,322 @@ class WorkerDetailPage extends StatelessWidget {
       ),
     );
   }
-}
 
-class _WorkerDetailContent extends StatelessWidget {
-  const _WorkerDetailContent({
-    required this.worker,
-    required this.recentReviews,
-    this.onBookNow,
-    this.onViewAllReviews,
-  });
-
-  final WorkerProfile worker;
-  final List<WorkerReview> recentReviews;
-  final ValueChanged<WorkerProfile>? onBookNow;
-  final VoidCallback? onViewAllReviews;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildContent(WorkerProfile worker, List<WorkerReview> recentReviews) {
     return Column(
       children: [
         Expanded(
           child: CustomScrollView(
             slivers: [
-              // Cover photo with back button
-              _CoverPhotoSection(worker: worker),
-              // Worker info section
+              _buildCoverPhoto(worker),
               SliverToBoxAdapter(
-                child: _WorkerInfoSection(worker: worker),
-              ),
-              // Services section
-              SliverToBoxAdapter(
-                child: _ServicesSection(services: worker.services),
-              ),
-              // Reviews section
-              SliverToBoxAdapter(
-                child: _ReviewsSection(
-                  reviews: recentReviews,
-                  totalReviews: worker.totalReviews,
-                  onViewAll: onViewAllReviews,
-                ),
-              ),
-              // Bottom padding
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.lg),
-              ),
-            ],
-          ),
-        ),
-        // Fixed bottom bar with booking fee and button
-        _BookingBottomBar(
-          worker: worker,
-          bookingFee: worker.bookingFee,
-          onBookNow: onBookNow,
-        ),
-      ],
-    );
-  }
-}
-
-/// Cover photo section with a back button overlay.
-class _CoverPhotoSection extends StatelessWidget {
-  const _CoverPhotoSection({required this.worker});
-
-  final WorkerProfile worker;
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: AppSizing.coverPhotoHeight,
-      pinned: true,
-      backgroundColor: AppColors.primary,
-      leading: IconButton(
-        icon: const CircleAvatar(
-          backgroundColor: Colors.black26,
-          child: Icon(Icons.arrow_back, color: Colors.white),
-        ),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: worker.coverPhotoUrl != null
-            ? CachedNetworkImage(
-                imageUrl: worker.coverPhotoUrl!,
-                fit: BoxFit.cover,
-                placeholder: (_, _) => const ColoredBox(
-                  color: AppColors.primaryLight,
-                ),
-                errorWidget: (_, _, _) => const ColoredBox(
-                  color: AppColors.primaryLight,
-                  child: Icon(
-                    Icons.image_not_supported,
-                    color: Colors.white54,
-                    size: AppSizing.iconXl,
-                  ),
-                ),
-              )
-            : const ColoredBox(
-                color: AppColors.primaryLight,
-                child: Icon(
-                  Icons.person,
-                  color: Colors.white54,
-                  size: AppSizing.iconXl,
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-/// Worker info section showing name, avatar, specialization, stats, etc.
-class _WorkerInfoSection extends StatelessWidget {
-  const _WorkerInfoSection({required this.worker});
-
-  final WorkerProfile worker;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: AppSpacing.pagePadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Avatar and name row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Avatar
-              CircleAvatar(
-                radius: AppSizing.avatarLg / 2,
-                backgroundColor: AppColors.border,
-                backgroundImage: worker.avatarUrl != null
-                    ? CachedNetworkImageProvider(worker.avatarUrl!)
-                    : null,
-                child: worker.avatarUrl == null
-                    ? const Icon(Icons.person, size: AppSizing.iconLg)
-                    : null,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              // Name and specialization
-              Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            worker.fullName,
-                            style: AppTypography.h5,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (worker.isVerified) ...[
-                          const SizedBox(width: AppSpacing.xs),
-                          const Icon(
-                            Icons.verified,
-                            color: AppColors.primary,
-                            size: AppSizing.iconMd,
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (worker.specialization != null) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        worker.specialization!,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                    const SizedBox(height: AppSpacing.md),
+                    _buildWorkerInfoCard(worker),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildSkillsAndServices(worker),
+                    const SizedBox(height: AppSpacing.lg),
+                    if (recentReviews.isNotEmpty) _buildReviewsSnippet(recentReviews.first, worker.totalReviews),
+                    const SizedBox(height: 60),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          // Stats row: rating, reviews, jobs, distance
-          _StatsRow(worker: worker),
-          // Bio
-          if (worker.bio != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              worker.bio!,
-              style: AppTypography.bodyMedium,
-            ),
-          ],
-          // Member since
-          if (worker.memberSince != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Bergabung sejak ${DateFormat('MMMM yyyy', 'id').format(worker.memberSince!)}',
-              style: AppTypography.caption,
-            ),
-          ],
-          const Divider(height: AppSpacing.xl),
-        ],
-      ),
-    );
-  }
-}
-
-/// Stats row showing rating, total reviews, completed jobs, and distance.
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.worker});
-
-  final WorkerProfile worker;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // Rating
-        _StatItem(
-          icon: Icons.star,
-          iconColor: AppColors.ratingStar,
-          value: worker.ratingAvg.toStringAsFixed(1),
-          label: 'Rating',
         ),
-        const SizedBox(width: AppSpacing.lg),
-        // Total reviews
-        _StatItem(
-          icon: Icons.rate_review_outlined,
-          iconColor: AppColors.secondary,
-          value: '${worker.totalReviews}',
-          label: 'Ulasan',
-        ),
-        const SizedBox(width: AppSpacing.lg),
-        // Completed jobs
-        _StatItem(
-          icon: Icons.check_circle_outline,
-          iconColor: AppColors.success,
-          value: '${worker.completedJobs}',
-          label: 'Selesai',
-        ),
-        if (worker.distance != null) ...[
-          const SizedBox(width: AppSpacing.lg),
-          _StatItem(
-            icon: Icons.location_on_outlined,
-            iconColor: AppColors.info,
-            value: '${worker.distance!.toStringAsFixed(1)} km',
-            label: 'Jarak',
-          ),
-        ],
+        _buildBottomBar(worker),
       ],
     );
   }
-}
 
-class _StatItem extends StatelessWidget {
-  const _StatItem({
-    required this.icon,
-    required this.iconColor,
-    required this.value,
-    required this.label,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: iconColor, size: AppSizing.iconMd),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          value,
-          style: AppTypography.label.copyWith(fontWeight: FontWeight.w700),
-        ),
-        Text(label, style: AppTypography.caption),
-      ],
-    );
-  }
-}
-
-/// Services section showing the worker's offered services.
-class _ServicesSection extends StatelessWidget {
-  const _ServicesSection({required this.services});
-
-  final List<WorkerService> services;
-
-  @override
-  Widget build(BuildContext context) {
-    if (services.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: AppSpacing.pageHorizontalPadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Layanan', style: AppTypography.h6),
-          const SizedBox(height: AppSpacing.sm),
-          ...services.map((service) => _ServiceItem(service: service)),
-          const Divider(height: AppSpacing.xl),
-        ],
-      ),
-    );
-  }
-}
-
-class _ServiceItem extends StatelessWidget {
-  const _ServiceItem({required this.service});
-
-  final WorkerService service;
-
-  @override
-  Widget build(BuildContext context) {
-    final priceText = service.basePrice != null
-        ? 'Rp${NumberFormat('#,###', 'id').format(service.basePrice)}'
-        : '-';
-    final unitText = service.priceUnit ?? '';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Row(
-        children: [
-          // Service icon
-          Container(
-            width: AppSizing.thumbnailSm,
-            height: AppSizing.thumbnailSm,
-            decoration: BoxDecoration(
-              color: AppColors.primaryContainer,
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            ),
-            child: service.iconUrl != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-                    child: CachedNetworkImage(
-                      imageUrl: service.iconUrl!,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, _, _) => const Icon(
-                        Icons.build,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  )
-                : const Icon(Icons.build, color: AppColors.primary),
+  Widget _buildCoverPhoto(WorkerProfile worker) {
+    return SliverAppBar(
+      expandedHeight: 240,
+      pinned: true,
+      backgroundColor: AppColors.primary,
+      leading: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: CircleAvatar(
+          backgroundColor: Colors.white.withOpacity(0.3),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
           ),
-          const SizedBox(width: AppSpacing.md),
-          // Service name
-          Expanded(
-            child: Text(
-              service.name,
-              style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w500,
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.white.withOpacity(0.3),
+            child: IconButton(
+              icon: const Icon(Icons.favorite_border, color: Colors.white),
+              onPressed: () {},
+            ),
+          ),
+        ),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        background: worker.coverPhotoUrl != null || worker.avatarUrl != null
+            ? CachedNetworkImage(
+                imageUrl: worker.coverPhotoUrl ?? worker.avatarUrl!,
+                fit: BoxFit.cover,
+                errorWidget: (_, _, _) => const ColoredBox(
+                  color: AppColors.primaryLight,
+                  child: Icon(Icons.person, color: Colors.white54, size: 80),
+                ),
+              )
+            : const ColoredBox(
+                color: AppColors.primaryLight,
+                child: Icon(Icons.person, color: Colors.white54, size: 80),
               ),
-            ),
-          ),
-          // Price
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(priceText, style: AppTypography.priceSmall),
-              if (unitText.isNotEmpty)
-                Text(unitText, style: AppTypography.caption),
-            ],
-          ),
-        ],
       ),
     );
   }
-}
 
-/// Reviews section showing up to 3 recent reviews.
-class _ReviewsSection extends StatelessWidget {
-  const _ReviewsSection({
-    required this.reviews,
-    required this.totalReviews,
-    this.onViewAll,
-  });
-
-  final List<WorkerReview> reviews;
-  final int totalReviews;
-  final VoidCallback? onViewAll;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: AppSpacing.pageHorizontalPadding,
+  Widget _buildWorkerInfoCard(WorkerProfile worker) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Ulasan ($totalReviews)', style: AppTypography.h6),
-              if (totalReviews > 3)
-                TextButton(
-                  onPressed: onViewAll,
-                  child: const Text('Lihat Semua Ulasan'),
+              Expanded(
+                child: Text(
+                  worker.fullName,
+                  style: AppTypography.h4,
+                ),
+              ),
+              if (worker.isVerified)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.successLight.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.verified, color: AppColors.success, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Terverifikasi',
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
             ],
           ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            worker.specialization ?? 'Spesialis',
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.primary),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Divider(),
           const SizedBox(height: AppSpacing.sm),
-          if (reviews.isEmpty)
-            const _EmptyReviewsWidget()
-          else
-            ...reviews.map((review) => _ReviewItem(review: review)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem(
+                icon: Icons.star,
+                iconColor: AppColors.ratingStar,
+                value: worker.ratingAvg.toStringAsFixed(1),
+                label: '${worker.totalReviews} Ulasan',
+              ),
+              Container(width: 1, height: 30, color: AppColors.border),
+              _buildStatItem(
+                icon: Icons.check_circle_outline,
+                iconColor: AppColors.primary,
+                value: '${worker.completedJobs}+',
+                label: 'Pesanan Selesai',
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
-}
 
-/// Empty state widget for when a worker has no reviews.
-///
-/// Validates: Requirement 6.8.
-class _EmptyReviewsWidget extends StatelessWidget {
-  const _EmptyReviewsWidget();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-      child: Center(
-        child: Column(
+  Widget _buildStatItem({
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required String label,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 24),
+        const SizedBox(width: 8),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
-              Icons.rate_review_outlined,
-              size: AppSizing.iconXl,
-              color: AppColors.textDisabled,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Belum ada ulasan',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
+            Text(value, style: AppTypography.h6),
+            Text(label, style: AppTypography.caption),
           ],
         ),
+      ],
+    );
+  }
+
+  Widget _buildSkillsAndServices(WorkerProfile worker) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Keahlian & Layanan', style: AppTypography.h6),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            worker.bio ?? 'Berpengalaman menangani berbagai masalah rumah tangga dengan standar keamanan tinggi.',
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: worker.services.map((service) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryContainer.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (service.iconUrl != null) ...[
+                      CachedNetworkImage(
+                        imageUrl: service.iconUrl!,
+                        width: 16,
+                        height: 16,
+                        errorWidget: (_, _, _) => const Icon(Icons.build, size: 16, color: AppColors.primary),
+                      ),
+                      const SizedBox(width: 6),
+                    ] else ...[
+                      const Icon(Icons.build, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      service.name,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
-}
 
-/// A single review item card.
-class _ReviewItem extends StatelessWidget {
-  const _ReviewItem({required this.review});
-
-  final WorkerReview review;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: AppCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Reviewer info row
-            Row(
+  Widget _buildReviewsSnippet(WorkerReview review, int totalReviews) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primaryContainer.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            backgroundColor: AppColors.primaryContainer,
+            radius: 20,
+            child: const Text('"', style: TextStyle(fontSize: 24, color: AppColors.primary, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: AppSizing.avatarSm / 2,
-                  backgroundColor: AppColors.border,
-                  backgroundImage: review.reviewerAvatarUrl != null
-                      ? CachedNetworkImageProvider(review.reviewerAvatarUrl!)
-                      : null,
-                  child: review.reviewerAvatarUrl == null
-                      ? const Icon(Icons.person, size: AppSizing.iconSm)
-                      : null,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        review.reviewerName,
-                        style: AppTypography.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (review.reviewerLocation != null)
-                        Text(
-                          review.reviewerLocation!,
-                          style: AppTypography.caption,
-                        ),
-                    ],
-                  ),
-                ),
-                // Date
+                RatingStars(rating: review.rating.toDouble(), size: 14),
+                const SizedBox(height: 8),
                 Text(
-                  DateFormat('dd MMM yyyy', 'id').format(review.date),
+                  '"${review.comment ?? 'Sangat memuaskan.'}"',
+                  style: AppTypography.bodyMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '— ${review.reviewerName}, ${review.reviewerLocation ?? 'Indonesia'}',
                   style: AppTypography.caption,
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            // Rating stars
-            RatingStars(rating: review.rating.toDouble(), size: 16),
-            // Comment
-            if (review.comment != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                review.comment!,
-                style: AppTypography.bodyMedium,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-}
 
-/// Fixed bottom bar with booking fee and "Pesan Sekarang" button.
-///
-/// Validates: Requirement 6.4 (booking fee Rp2.000 visible without scrolling).
-class _BookingBottomBar extends StatelessWidget {
-  const _BookingBottomBar({
-    required this.worker,
-    required this.bookingFee,
-    this.onBookNow,
-  });
-
-  final WorkerProfile worker;
-  final int bookingFee;
-  final ValueChanged<WorkerProfile>? onBookNow;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildBottomBar(WorkerProfile worker) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.pagePaddingHorizontal,
-        vertical: AppSpacing.sm,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: const Border(
-          top: BorderSide(color: AppColors.border),
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 8,
-            offset: Offset(0, -2),
-          ),
-        ],
+        border: const Border(top: BorderSide(color: AppColors.border)),
+        boxShadow: const [BoxShadow(color: AppColors.shadow, blurRadius: 10, offset: Offset(0, -2))],
       ),
       child: SafeArea(
         top: false,
         child: Row(
           children: [
-            // Booking fee info
             Expanded(
+              flex: 1,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text('Booking Fee', style: AppTypography.caption),
                   Text(
-                    'Biaya Booking',
-                    style: AppTypography.caption,
-                  ),
-                  Text(
-                    'Rp${NumberFormat('#,###', 'id').format(bookingFee)}',
+                    'Rp${NumberFormat('#,###', 'id').format(worker.bookingFee)}',
                     style: AppTypography.priceMedium,
                   ),
                 ],
               ),
             ),
-            // Book now button
-            SizedBox(
-              width: 160,
-              child: AppButton(
-                text: 'Pesan Sekarang',
-                onPressed: onBookNow == null ? null : () => onBookNow!(worker),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF006C84), // Deep teal
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () => _onBookNow(worker),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Pesan Tukang', style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(width: 8),
+                    Icon(Icons.arrow_forward, size: 18),
+                  ],
+                ),
               ),
             ),
           ],
@@ -655,3 +376,112 @@ class _BookingBottomBar extends StatelessWidget {
     );
   }
 }
+
+class _WorkerDetailSkeleton extends StatelessWidget {
+  const _WorkerDetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoader(
+      child: Column(
+        children: [
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                const SliverAppBar(
+                  expandedHeight: 300,
+                  pinned: true,
+                  backgroundColor: AppColors.primaryLight,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Skeleton(height: 300, width: double.infinity, borderRadius: 0),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Transform.translate(
+                    offset: const Offset(0, -30),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: const [
+                                  Skeleton(height: 24, width: 150),
+                                  Skeleton(height: 24, width: 80, borderRadius: 12),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              const Skeleton(height: 16, width: 100),
+                              const SizedBox(height: 16),
+                              const Divider(),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: const [
+                                  Skeleton(height: 40, width: 80),
+                                  Skeleton(height: 40, width: 80),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Skeleton(height: 20, width: 150),
+                              const SizedBox(height: 8),
+                              const Skeleton(height: 14, width: double.infinity),
+                              const SizedBox(height: 4),
+                              const Skeleton(height: 14, width: 250),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: const [
+                                  Skeleton(height: 30, width: 100, borderRadius: 8),
+                                  SizedBox(width: 8),
+                                  Skeleton(height: 30, width: 120, borderRadius: 8),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 60),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            color: Colors.white,
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: const [
+                  Expanded(flex: 1, child: Skeleton(height: 40)),
+                  SizedBox(width: 16),
+                  Expanded(flex: 2, child: Skeleton(height: 48, borderRadius: 8)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+

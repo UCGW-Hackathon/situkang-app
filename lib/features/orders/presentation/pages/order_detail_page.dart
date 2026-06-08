@@ -49,7 +49,7 @@ class OrderDetailPage extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is OrderLoading) {
-            return const LoadingIndicator();
+            return const _OrderDetailSkeleton();
           }
 
           if (state is OrderError) {
@@ -804,7 +804,38 @@ class OrderDetailPage extends StatelessWidget {
       case OrderStatus.cancelled:
         return 'Pesanan Dibatalkan';
       case OrderStatus.rejected:
-        return 'Pesanan Ditolak';
+        return 'Ditolak';
     }
+  }
+}
+
+class _OrderDetailSkeleton extends StatelessWidget {
+  const _OrderDetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoader(
+      child: SingleChildScrollView(
+        padding: AppSpacing.pagePadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Skeleton(height: 80, width: double.infinity, borderRadius: 16),
+            SizedBox(height: AppSpacing.formSectionSpacing),
+            Skeleton(height: 24, width: 150),
+            SizedBox(height: AppSpacing.sm),
+            Skeleton(height: 180, width: double.infinity, borderRadius: 16),
+            SizedBox(height: AppSpacing.formSectionSpacing),
+            Skeleton(height: 24, width: 100),
+            SizedBox(height: AppSpacing.sm),
+            Skeleton(height: 120, width: double.infinity, borderRadius: 16),
+            SizedBox(height: AppSpacing.formSectionSpacing),
+            Skeleton(height: 24, width: 80),
+            SizedBox(height: AppSpacing.sm),
+            Skeleton(height: 100, width: double.infinity, borderRadius: 16),
+          ],
+        ),
+      ),
+    );
   }
 }

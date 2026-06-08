@@ -47,15 +47,20 @@ class WorkerLocalDataSourceImpl implements WorkerLocalDataSource {
   @override
   Future<List<WorkerProfileModel>?> getCachedNearbyWorkers(
       String cacheKey) async {
-    final cachedData = await cacheManager.get<List<dynamic>>(
+    final cachedData = await cacheManager.get<dynamic>(
       '$_nearbyWorkersPrefix$cacheKey',
     );
 
     if (cachedData == null) return null;
-    return cachedData
-        .map((json) =>
-            WorkerProfileModel.fromJson(json as Map<String, dynamic>))
-        .toList();
+    try {
+      final list = cachedData as List<dynamic>;
+      return list
+          .map((json) =>
+              WorkerProfileModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .toList();
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -70,12 +75,17 @@ class WorkerLocalDataSourceImpl implements WorkerLocalDataSource {
 
   @override
   Future<WorkerProfileModel?> getCachedWorkerDetail(String workerId) async {
-    final cachedData = await cacheManager.get<Map<String, dynamic>>(
+    final cachedData = await cacheManager.get<dynamic>(
       '$_workerDetailPrefix$workerId',
     );
 
     if (cachedData == null) return null;
-    return WorkerProfileModel.fromJson(cachedData);
+    try {
+      final map = Map<String, dynamic>.from(cachedData as Map);
+      return WorkerProfileModel.fromJson(map);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

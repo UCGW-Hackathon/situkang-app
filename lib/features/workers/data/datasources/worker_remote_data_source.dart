@@ -28,7 +28,7 @@ abstract class WorkerRemoteDataSource {
   /// Calls `GET /workers/{workerId}`.
   /// Returns the worker model and the embedded top_reviews from the response.
   Future<(WorkerProfileModel, List<WorkerReviewModel>)> getWorkerDetail(
-      String workerId);
+      String workerId, {double? latitude, double? longitude});
 
   /// Fetches paginated reviews for a specific worker.
   ///
@@ -76,8 +76,7 @@ class WorkerRemoteDataSourceImpl implements WorkerRemoteDataSource {
       if (filter.maxDistance != null) {
         queryParams['radius_km'] = filter.maxDistance;
       }
-      queryParams['sort_by'] = filter.sortBy.value;
-      queryParams['sort_order'] = filter.sortBy.defaultSortOrder;
+      // sort_by and sort_order cause "invalid field" errors on the backend
     }
 
     // Use search endpoint if keyword is provided
@@ -122,9 +121,14 @@ class WorkerRemoteDataSourceImpl implements WorkerRemoteDataSource {
 
   @override
   Future<(WorkerProfileModel, List<WorkerReviewModel>)> getWorkerDetail(
-      String workerId) async {
+      String workerId, {double? latitude, double? longitude}) async {
+    final queryParams = <String, dynamic>{};
+    if (latitude != null) queryParams['latitude'] = latitude;
+    if (longitude != null) queryParams['longitude'] = longitude;
+
     final response = await apiClient.get<Map<String, dynamic>>(
       ApiEndpoints.workerDetail(workerId),
+      queryParams: queryParams.isNotEmpty ? queryParams : null,
     );
 
     final data = response.data!;

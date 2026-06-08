@@ -41,7 +41,7 @@ class ServiceListPage extends StatelessWidget {
       body: BlocBuilder<CategoriesBloc, CategoriesState>(
         builder: (context, state) {
           if (state is CategoriesLoading) {
-            return const LoadingIndicator(message: 'Memuat layanan...');
+            return const ListSkeleton();
           }
 
           if (state is CategoriesError) {

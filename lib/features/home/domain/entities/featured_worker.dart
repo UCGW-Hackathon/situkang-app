@@ -1,5 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/constants/enums.dart';
+import '../../../workers/domain/entities/worker_profile.dart';
+
 /// Represents a featured nearby worker displayed on the home screen.
 ///
 /// Up to 10 workers within a 10km radius, sorted by distance ascending.
@@ -40,6 +43,25 @@ class FeaturedWorker extends Equatable {
 
   /// Whether the worker is verified.
   final bool isVerified;
+
+  /// Converts this featured worker to a partial WorkerProfile.
+  WorkerProfile toWorkerProfile() {
+    return WorkerProfile(
+      id: id,
+      userId: id, // Fallback since userId is missing
+      fullName: name,
+      ratingAvg: rating,
+      totalReviews: 0,
+      completedJobs: completedJobs,
+      isAvailable: true,
+      avatarUrl: avatarUrl,
+      specialization: specialization,
+      distance: distance,
+      verificationStatus: isVerified
+          ? VerificationStatus.verified
+          : VerificationStatus.unverified,
+    );
+  }
 
   @override
   List<Object?> get props => [

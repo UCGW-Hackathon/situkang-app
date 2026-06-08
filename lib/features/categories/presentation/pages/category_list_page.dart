@@ -34,7 +34,7 @@ class CategoryListPage extends StatelessWidget {
       body: BlocBuilder<CategoriesBloc, CategoriesState>(
         builder: (context, state) {
           if (state is CategoriesLoading) {
-            return const LoadingIndicator(message: 'Memuat kategori...');
+            return const GridSkeleton();
           }
 
           if (state is CategoriesError) {

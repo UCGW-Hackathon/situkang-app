@@ -19,12 +19,12 @@ class FeaturedWorkerModel {
   /// Parses a [FeaturedWorkerModel] from a JSON map.
   factory FeaturedWorkerModel.fromJson(Map<String, dynamic> json) {
     return FeaturedWorkerModel(
-      workerId: json['worker_id'] as String,
-      fullName: json['full_name'] as String,
+      workerId: json['worker_id'] as String? ?? json['user_id'] as String? ?? json['id'] as String? ?? '',
+      fullName: json['full_name'] as String? ?? json['name'] as String? ?? '',
       specialization: json['specialization'] as String? ?? '',
       avatarUrl: json['avatar_url'] as String? ?? '',
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      distanceKm: (json['distance_km'] as num?)?.toDouble() ?? 0.0,
+      distanceKm: (json['distance_km'] as num?)?.toDouble() ?? (json['distance'] as num?)?.toDouble() ?? 0.0,
       completedJobs: json['completed_jobs'] as int? ?? 0,
       isVerified: json['is_verified'] as bool? ?? false,
     );

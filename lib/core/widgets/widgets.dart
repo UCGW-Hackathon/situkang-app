@@ -12,3 +12,4 @@ export 'image_picker_widget.dart';
 export 'loading_indicator.dart';
 export 'paginated_list_view.dart';
 export 'rating_stars.dart';
+export 'skeleton_loader.dart';

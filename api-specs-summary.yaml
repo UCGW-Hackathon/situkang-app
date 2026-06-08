@@ -1,0 +1,907 @@
+openapi: 3.0.0
+info:
+  title: SiTukang API
+  version: 1.0.0
+servers:
+  - url: https://xryz-gcw-situkang.hf.space/v1
+  - url: http://localhost:8080/v1
+security:
+  - BearerAuth: []
+
+paths:
+  # === AUTH & GENERAL ===
+  /auth/register:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [full_name, email, phone, password, password_confirmation, role]
+              properties:
+                full_name: { type: string }
+                email: { type: string, format: email }
+                phone: { type: string }
+                password: { type: string, format: password }
+                password_confirmation: { type: string, format: password }
+                role: { type: string, enum: [user, worker] }
+                latitude: { type: number }
+                longitude: { type: number }
+                address: { type: string }
+      responses:
+        '201': { content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
+        '409': { content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  /auth/login:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
+        '401': { content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+
+  /auth/refresh:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
+
+  /auth/logout:
+    post:
+      responses:
+        '200': { content: { application/json: { schema: { type: object, properties: { status: { type: string }, message: { type: string } } } } } }
+
+  /auth/forgot-password:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties: { email: { type: string, format: email } }
+      responses:
+        '200': { content: { application/json: { schema: { type: object } } } }
+
+  /auth/reset-password:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password, password_confirmation]
+              properties:
+                token: { type: string }
+                password: { type: string }
+                password_confirmation: { type: string }
+      responses:
+        '200': { content: { application/json: { schema: { type: object } } } }
+
+  # === USER PROFILE ===
+  /users/me:
+    get:
+      responses:
+        '200': { content: { application/json: { schema: { type: object, properties: { status: { type: string }, data: { $ref: '#/components/schemas/UserProfile' } } } } } }
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name: { type: string }
+                phone: { type: string }
+                address: { type: string }
+                latitude: { type: number }
+                longitude: { type: number }
+      responses:
+        '200': { content: { application/json: { schema: { type: object } } } }
+
+  /users/me/avatar:
+    put:
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [avatar]
+              properties: { avatar: { type: string, format: binary } }
+      responses:
+        '200': { content: { application/json: { schema: { type: object } } } }
+
+  /users/me/location:
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [latitude, longitude]
+              properties:
+                latitude: { type: number }
+                longitude: { type: number }
+                address: { type: string }
+      responses:
+        '200': { description: OK }
+
+  # === CUSTOMER (USER) ENDPOINTS ===
+  /home:
+    get:
+      parameters:
+        - { name: latitude, in: query, required: true, schema: { type: number } }
+        - { name: longitude, in: query, required: true, schema: { type: number } }
+      responses:
+        '200': { description: OK }
+
+  /categories:
+    get:
+      parameters:
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: per_page, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+
+  /categories/{category_id}/services:
+    get:
+      parameters:
+        - { name: category_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /workers/nearby:
+    get:
+      parameters:
+        - { name: latitude, in: query, required: true, schema: { type: number } }
+        - { name: longitude, in: query, required: true, schema: { type: number } }
+        - { name: radius_km, in: query, schema: { type: number } }
+        - { name: category_id, in: query, schema: { type: string } }
+        - { name: service_id, in: query, schema: { type: string } }
+        - { name: min_rating, in: query, schema: { type: number } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [distance, rating, price, completed_jobs] } }
+        - { name: sort_order, in: query, schema: { type: string, enum: [asc, desc] } }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: per_page, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+
+  /workers/search:
+    get:
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: latitude, in: query, required: true, schema: { type: number } }
+        - { name: longitude, in: query, required: true, schema: { type: number } }
+        - { name: radius_km, in: query, schema: { type: number } }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: per_page, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+
+  /workers/{worker_id}:
+    get:
+      parameters:
+        - { name: worker_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /workers/{worker_id}/reviews:
+    get:
+      parameters:
+        - { name: worker_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /workers/{worker_id}/services:
+    get:
+      parameters:
+        - { name: worker_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [worker_id, service_id, address, latitude, longitude, problem_description]
+              properties:
+                worker_id: { type: string }
+                service_id: { type: string }
+                address: { type: string }
+                latitude: { type: number }
+                longitude: { type: number }
+                urgency: { type: string, enum: [normal, urgent] }
+                problem_description: { type: string }
+                photos: { type: array, items: { type: string } }
+      responses:
+        '201': { description: OK }
+    get:
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: per_page, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}:
+    get:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/cancel:
+    post:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cancel_reason]
+              properties:
+                cancel_reason: { type: string, enum: [changed_mind, found_other_worker, too_long, other] }
+                notes: { type: string }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/tracking:
+    get:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/tracking/location:
+    get:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/purchases:
+    get:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/purchases/{purchase_id}:
+    get:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+        - { name: purchase_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/purchases/{purchase_id}/approve:
+    patch:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+        - { name: purchase_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/purchases/{purchase_id}/reject:
+    patch:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+        - { name: purchase_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reject_reason]
+              properties: { reject_reason: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/purchases/{purchase_id}/clarify:
+    patch:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+        - { name: purchase_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties: { question: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/purchases/bulk-approve:
+    patch:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purchase_ids]
+              properties: { purchase_ids: { type: array, items: { type: string } } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/chat/messages:
+    get:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+        - { name: before_id, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+    post:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message_type, content]
+              properties:
+                message_type: { type: string, enum: [text, image] }
+                content: { type: string }
+      responses:
+        '201': { description: OK }
+
+  /orders/{order_id}/chat/read:
+    patch:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /chats:
+    get:
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/rating:
+    post:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating, review_text]
+              properties:
+                rating: { type: integer, minimum: 1, maximum: 5 }
+                review_text: { type: string }
+                photos: { type: array, items: { type: string } }
+      responses:
+        '201': { description: OK }
+    get:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/invoice:
+    get:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /orders/{order_id}/payment:
+    post:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payment_method]
+              properties:
+                payment_method: { type: string, enum: [cash, bank_transfer, ewallet] }
+                transaction_proof_url: { type: string }
+      responses:
+        '200': { content: { application/json: { schema: { type: object } } } }
+
+  /orders/{order_id}/invoice/pdf:
+    get:
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  # === SANDBOX PAYMENT GATEWAY ===
+  /payments/sandbox-checkout:
+    get:
+      parameters:
+        - { name: payment_id, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /payments/sandbox-callback:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payment_id, status]
+              properties:
+                payment_id: { type: string }
+                status: { type: string, enum: [success, failed] }
+      responses:
+        '200': { content: { application/json: { schema: { type: object } } } }
+
+  # === KNOWLEDGE BASE ===
+  /knowledge/articles:
+    get:
+      security: []
+      responses:
+        '200': { description: OK }
+
+  /knowledge/articles/{id}:
+    get:
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /knowledge/faq:
+    get:
+      security: []
+      responses:
+        '200': { description: OK }
+
+  # === NOTIFICATIONS ===
+  /notifications:
+    get:
+      responses:
+        '200': { description: OK }
+
+  /notifications/{id}/read:
+    patch:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /notifications/read-all:
+    patch:
+      responses:
+        '200': { description: OK }
+
+  # === WORKER ENDPOINTS ===
+  /worker/profile:
+    get:
+      responses:
+        '200': { description: OK }
+    put:
+      responses:
+        '200': { description: OK }
+
+  /worker/profile/cover-photo:
+    put:
+      responses:
+        '200': { description: OK }
+
+  /worker/profile/verification:
+    post:
+      responses:
+        '201': { description: OK }
+    get:
+      responses:
+        '200': { description: OK }
+
+  /worker/home:
+    get:
+      responses:
+        '200': { description: OK }
+
+  /worker/availability:
+    patch:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_available]
+              properties: { is_available: { type: boolean } }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/incoming:
+    get:
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/incoming/{id}:
+    get:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/accept:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/reject:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reject_reason]
+              properties:
+                reject_reason: { type: string, enum: [busy, too_far, not_my_expertise, personal, other] }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders:
+    get:
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}:
+    get:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/status:
+    patch:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [on_the_way, arrived, in_progress, work_paused, completed] }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/generate-invoice:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '201': { description: OK }
+
+  /worker/orders/{id}/purchases:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PurchaseInput' }
+      responses:
+        '201': { description: OK }
+
+  /worker/orders/{id}/purchases/ai-process:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [raw_input]
+              properties: { raw_input: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/purchases/receipt-scan:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [receipt]
+              properties: { receipt: { type: string, format: binary } }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/purchases/{purchase_id}:
+    put:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: purchase_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PurchaseInput' }
+      responses:
+        '200': { description: OK }
+    delete:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: purchase_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/purchases/{purchase_id}/submit:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: purchase_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/purchases/bulk-submit:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purchase_ids]
+              properties: { purchase_ids: { type: array, items: { type: string } } }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/purchases/{purchase_id}/clarify-response:
+    patch:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: purchase_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [response]
+              properties:
+                response: { type: string }
+                updated_item_name: { type: string }
+                updated_reason: { type: string }
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/chat/messages:
+    get:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message_type, content]
+              properties:
+                message_type: { type: string, enum: [text, image] }
+                content: { type: string }
+      responses:
+        '201': { description: OK }
+
+  /worker/orders/{id}/chat/read:
+    patch:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /worker/chats:
+    get:
+      responses:
+        '200': { description: OK }
+
+  /worker/orders/{id}/customer-rating:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating, review_text]
+              properties:
+                rating: { type: integer, minimum: 1, maximum: 5 }
+                review_text: { type: string }
+      responses:
+        '201': { description: OK }
+    get:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /worker/history:
+    get:
+      responses:
+        '200': { description: OK }
+
+  /worker/statistics:
+    get:
+      parameters:
+        - { name: period, in: query, schema: { type: string, enum: [daily, weekly, monthly, yearly, all_time] } }
+      responses:
+        '200': { description: OK }
+
+  /worker/wallet:
+    get:
+      responses:
+        '200': { description: OK }
+
+  /worker/wallet/transactions:
+    get:
+      parameters:
+        - { name: type, in: query, schema: { type: string, enum: [earning, withdrawal, refund, bonus, fee] } }
+        - { name: status, in: query, schema: { type: string, enum: [pending, completed, failed, cancelled] } }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: per_page, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+
+  /worker/wallet/withdraw:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, bank_name, account_number, account_holder_name]
+              properties:
+                amount: { type: integer }
+                bank_name: { type: string }
+                account_number: { type: string }
+                account_holder_name: { type: string }
+                notes: { type: string }
+      responses:
+        '201': { description: OK }
+
+  /worker/location:
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [latitude, longitude]
+              properties:
+                latitude: { type: number }
+                longitude: { type: number }
+                heading: { type: number }
+                speed_kmh: { type: number }
+                accuracy_meters: { type: number }
+                order_id: { type: string }
+      responses:
+        '200': { description: OK }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        status: { type: string }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            user_id: { type: string }
+            full_name: { type: string }
+            email: { type: string }
+            phone: { type: string }
+            role: { type: string }
+            access_token: { type: string }
+            refresh_token: { type: string }
+            token_type: { type: string }
+            expires_in: { type: integer }
+
+    ErrorResponse:
+      type: object
+      properties:
+        status: { type: string }
+        message: { type: string }
+        error_code: { type: string }
+
+    UserProfile:
+      type: object
+      properties:
+        user_id: { type: string }
+        full_name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        role: { type: string }
+        avatar_url: { type: string }
+        address: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    PurchaseInput:
+      type: object
+      required: [item_name, category, quantity, unit, unit_price, total_price]
+      properties:
+        item_name: { type: string }
+        category: { type: string, enum: [material, alat, sparepart, bahan_bangunan, biaya_tambahan, lainnya] }
+        quantity: { type: number }
+        unit: { type: string }
+        unit_price: { type: integer }
+        total_price: { type: integer }
+        reason: { type: string }

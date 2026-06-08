@@ -7,6 +7,7 @@ import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/loading_indicator.dart';
+import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/paginated_list_view.dart';
 import '../../domain/entities/worker_filter.dart';
 import '../bloc/worker_list_bloc.dart';
@@ -242,9 +243,7 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
       builder: (context, state) {
         return switch (state) {
           WorkerListInitial() => const SizedBox.shrink(),
-          WorkerListLoading() => const LoadingIndicator(
-              message: 'Mencari tukang terdekat...',
-            ),
+          WorkerListLoading() => const _WorkerListSkeleton(),
           WorkerListLoaded() => _buildWorkerList(state),
           WorkerListError() => _buildErrorState(state),
         };
@@ -540,8 +539,60 @@ class _NearbyWorkersPageState extends State<NearbyWorkersPage> {
   /// Checks if a failure is related to location being unavailable.
   bool _isLocationError(Failure failure) {
     final message = failure.message.toLowerCase();
-    return message.contains('lokasi') ||
-        message.contains('location') ||
-        message.contains('gps');
+      return message.contains('lokasi') ||
+          message.contains('location') ||
+          message.contains('gps');
+    }
+  }
+
+class _WorkerListSkeleton extends StatelessWidget {
+  const _WorkerListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoader(
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        itemCount: 6,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Skeleton(width: 54, height: 54, shape: BoxShape.circle),
+                SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Skeleton(height: 16, width: 140),
+                      SizedBox(height: 6),
+                      Skeleton(height: 12, width: 80),
+                      SizedBox(height: 8),
+                      Skeleton(height: 10, width: 100),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Skeleton(height: 14, width: 40),
+                    SizedBox(height: 8),
+                    Skeleton(height: 12, width: 60),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 }
+

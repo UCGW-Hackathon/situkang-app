@@ -88,7 +88,7 @@ class WorkerRepositoryImpl implements WorkerRepository {
       String workerId) async {
     try {
       final (workerModel, topReviewModels) =
-          await remoteDataSource.getWorkerDetail(workerId);
+          await remoteDataSource.getWorkerDetail(workerId, latitude: latitude, longitude: longitude);
       // Cache the detail (worker only)
       await localDataSource.cacheWorkerDetail(workerModel);
       final worker = workerModel.toEntity();

@@ -132,22 +132,22 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
           final preloadedWorker = state.extra is WorkerProfile
               ? state.extra as WorkerProfile
               : null;
-          return BlocProvider(
-            create: (_) => getIt<WorkerDetailBloc>()
-              ..add(FetchWorkerDetail(
-                workerId: workerId,
-                preloadedWorker: preloadedWorker,
-              )),
+
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) => getIt<WorkerDetailBloc>()
+                  ..add(FetchWorkerDetail(
+                    workerId: workerId,
+                    preloadedWorker: preloadedWorker,
+                  )),
+              ),
+              BlocProvider(
+                create: (_) => getIt<OrderBloc>(),
+              ),
+            ],
             child: WorkerDetailPage(
               workerId: workerId,
-              onBookNow: (worker) => context.push(
-                '/workers/$workerId/order',
-                extra: {
-                  'workerName': worker.fullName,
-                  'workerAvatarUrl': worker.avatarUrl,
-                  'services': worker.services,
-                },
-              ),
             ),
           );
         },
@@ -156,35 +156,14 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
         path: '/workers/:id/order',
         builder: (context, state) {
           final workerId = state.pathParameters['id']!;
-          final worker = state.extra;
-          String workerName = 'Tukang';
-          String? workerAvatarUrl;
-          var services = const <OrderServiceOption>[];
-
-          if (worker is Map<String, dynamic>) {
-            workerName = worker['workerName'] as String? ?? workerName;
-            workerAvatarUrl = worker['workerAvatarUrl'] as String?;
-            final rawServices = worker['services'];
-            if (rawServices is List<WorkerService>) {
-              services = rawServices
-                  .map(
-                    (service) => OrderServiceOption(
-                      id: service.id,
-                      name: service.name,
-                      basePrice: service.basePrice,
-                    ),
-                  )
-                  .toList();
-            }
-          }
-
+          final extraMap = state.extra as Map<String, dynamic>? ?? {};
+          
           return BlocProvider(
             create: (_) => getIt<OrderBloc>(),
             child: OrderCreatePage(
               workerId: workerId,
-              workerName: workerName,
-              workerAvatarUrl: workerAvatarUrl,
-              services: services,
+              workerProfile: extraMap['workerProfile'] as WorkerProfile?,
+              selectedServiceId: extraMap['selectedServiceId'] as String?,
             ),
           );
         },

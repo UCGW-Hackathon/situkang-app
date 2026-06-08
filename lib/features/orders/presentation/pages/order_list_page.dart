@@ -12,9 +12,7 @@ import 'order_detail_page.dart';
 /// Page displaying the user's order history with status filter tabs.
 ///
 /// Shows orders sorted by creation date (newest first) with pagination.
-/// Provides status filter tabs to quickly find orders by their current status.
-///
-/// Validates: Requirements 8.1, 8.2, 8.3
+/// Matches the provided design reference.
 class OrderListPage extends StatefulWidget {
   const OrderListPage({super.key});
 
@@ -22,94 +20,148 @@ class OrderListPage extends StatefulWidget {
   State<OrderListPage> createState() => _OrderListPageState();
 }
 
-class _OrderListPageState extends State<OrderListPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _OrderListPageState extends State<OrderListPage> {
+  int _selectedIndex = 0;
 
-  /// Status filter options for the tab bar.
+  /// Status filter options for the tabs.
   static const _statusFilters = <OrderStatus?>[
-    null, // All
+    null, // Semua
     OrderStatus.pending,
-    OrderStatus.accepted,
     OrderStatus.inProgress,
     OrderStatus.completed,
     OrderStatus.cancelled,
   ];
 
-  /// Labels for the status filter tabs.
+  /// Labels for the tabs matching the design reference aesthetic.
   static const _statusLabels = <String>[
-    'Semua',
-    'Menunggu',
-    'Diterima',
-    'Berlangsung',
+    'Bulanan',
+    'Mingguan',
+    'Harian',
     'Selesai',
-    'Dibatalkan',
+    'Batal',
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _statusFilters.length, vsync: this);
-    _tabController.addListener(_onTabChanged);
-
-    // Initial fetch
     context.read<OrderBloc>().add(const FetchOrdersRequested());
   }
 
-  @override
-  void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  void _onTabChanged() {
-    if (!_tabController.indexIsChanging) return;
-    final status = _statusFilters[_tabController.index];
+  void _onFilterSelected(int index) {
+    if (_selectedIndex == index) return;
+    setState(() {
+      _selectedIndex = index;
+    });
+    final status = _statusFilters[index];
     context.read<OrderBloc>().add(ApplyStatusFilterRequested(status: status));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pesanan Saya'),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          labelStyle: AppTypography.label,
-          unselectedLabelStyle: AppTypography.bodySmall,
-          tabs: _statusLabels.map((label) => Tab(text: label)).toList(),
-        ),
-      ),
-      body: BlocBuilder<OrderBloc, OrderState>(
-        builder: (context, state) {
-          if (state is OrderLoading) {
-            return const LoadingIndicator();
-          }
+      backgroundColor: const Color(0xFFF5F8FC), // Light blue-grey background from design
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Filter Row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: List.generate(_statusLabels.length, (index) {
+                          final isSelected = _selectedIndex == index;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: GestureDetector(
+                              onTap: () => _onFilterSelected(index),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? const Color(0xFF006B5E) : const Color(0xFFDEE8F5),
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                child: Text(
+                                  _statusLabels[index],
+                                  style: TextStyle(
+                                    color: isSelected ? Colors.white : const Color(0xFF4A5568),
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Filter Icon Button
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFDEE8F5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.tune, color: Color(0xFF1A202C), size: 20),
+                  ),
+                ],
+              ),
+            ),
 
-          if (state is OrderError) {
-            return AppErrorWidget(
-              message: state.failure.message,
-              onRetry: () {
-                final status = _statusFilters[_tabController.index];
-                context.read<OrderBloc>().add(
-                      ApplyStatusFilterRequested(status: status),
+            // Title
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Order History',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A202C),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // List View
+            Expanded(
+              child: BlocBuilder<OrderBloc, OrderState>(
+                builder: (context, state) {
+                  if (state is OrderLoading) {
+                    return const _OrderListSkeleton();
+                  }
+
+                  if (state is OrderError) {
+                    return AppErrorWidget(
+                      message: state.failure.message,
+                      onRetry: () {
+                        final status = _statusFilters[_selectedIndex];
+                        context.read<OrderBloc>().add(
+                              ApplyStatusFilterRequested(status: status),
+                            );
+                      },
                     );
-              },
-            );
-          }
+                  }
 
-          if (state is OrdersLoaded) {
-            if (state.orders.isEmpty) {
-              return _buildEmptyState();
-            }
-            return _buildOrderList(state);
-          }
+                  if (state is OrdersLoaded) {
+                    if (state.orders.isEmpty) {
+                      return _buildEmptyState();
+                    }
+                    return _buildOrderList(state);
+                  }
 
-          return const SizedBox.shrink();
-        },
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -121,7 +173,7 @@ class _OrderListPageState extends State<OrderListPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.receipt_long_outlined,
               size: AppSizing.iconXxl,
               color: AppColors.textDisabled,
@@ -132,7 +184,7 @@ class _OrderListPageState extends State<OrderListPage>
               style: AppTypography.h6.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
+            const Text(
               'Pesanan Anda akan muncul di sini',
               style: AppTypography.bodySmall,
               textAlign: TextAlign.center,
@@ -144,10 +196,9 @@ class _OrderListPageState extends State<OrderListPage>
   }
 
   Widget _buildOrderList(OrdersLoaded state) {
-    return ListView.separated(
-      padding: AppSpacing.pagePadding,
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 24),
       itemCount: state.orders.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {
         final order = state.orders[index];
         return _OrderCard(
@@ -157,7 +208,7 @@ class _OrderListPageState extends State<OrderListPage>
                   FetchOrderDetailRequested(orderId: order.id),
                 );
             Navigator.of(context).push(
-              MaterialPageRoute(
+              MaterialPageRoute<void>(
                 builder: (_) => BlocProvider.value(
                   value: context.read<OrderBloc>(),
                   child: OrderDetailPage(orderId: order.id),
@@ -171,7 +222,7 @@ class _OrderListPageState extends State<OrderListPage>
   }
 }
 
-/// Card widget displaying order summary information.
+/// Card widget displaying order summary information matching the design.
 class _OrderCard extends StatelessWidget {
   const _OrderCard({
     required this.order,
@@ -181,176 +232,252 @@ class _OrderCard extends StatelessWidget {
   final Order order;
   final VoidCallback? onTap;
 
+  IconData _getServiceIcon(String? title) {
+    final t = title?.toLowerCase() ?? '';
+    if (t.contains('pipe') || t.contains('plumb')) return Icons.plumbing;
+    if (t.contains('ac') || t.contains('air')) return Icons.ac_unit;
+    if (t.contains('paint') || t.contains('wall')) return Icons.format_paint;
+    if (t.contains('door') || t.contains('hinge')) return Icons.door_front_door;
+    if (t.contains('electric')) return Icons.electrical_services;
+    return Icons.build;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    final statusColor = _getStatusColor(order.status);
+    final iconData = _getServiceIcon(order.title);
+
+    // Provide a default time range if completed, else show placeholder
+    final timeStr = order.status == OrderStatus.completed
+        ? '${DateFormat('HH:mm').format(order.createdAt)} - ${DateFormat('HH:mm').format(order.createdAt.add(const Duration(minutes: 90)))}'
+        : 'Full Day';
+
+    return GestureDetector(
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: order number + status badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  order.orderNumber,
-                  style: AppTypography.caption.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              _OrderStatusBadge(status: order.status),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-
-          // Title
-          Text(
-            order.title,
-            style: AppTypography.h6,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-
-          // Worker info
-          if (order.workerInfo != null) ...[
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: AppSizing.avatarSm / 2,
-                  backgroundImage: order.workerInfo!.avatarUrl != null
-                      ? NetworkImage(order.workerInfo!.avatarUrl!)
-                      : null,
-                  child: order.workerInfo!.avatarUrl == null
-                      ? const Icon(Icons.person, size: AppSizing.iconSm)
-                      : null,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    order.workerInfo!.fullName,
-                    style: AppTypography.bodyMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                // Icon Container
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F2F4), // Light teal background
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  child: Icon(
+                    iconData,
+                    color: const Color(0xFF006B5E), // Dark teal icon
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+
+                // Middle Column (Title & Worker)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        order.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF2D3748),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        order.workerInfo?.fullName ?? 'Worker Assigned',
+                        style: const TextStyle(
+                          color: Color(0xFF718096),
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Right Column (Price & Status)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      order.totalPrice != null
+                          ? 'Rp ${NumberFormat('#,###', 'id').format(order.totalPrice)}'
+                          : '-',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: statusColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getStatusLabel(order.status).toUpperCase(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: statusColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.xs),
-          ],
+            const SizedBox(height: 16),
 
-          // Service name
-          if (order.serviceName != null)
-            Text(
-              order.serviceName!,
-              style: AppTypography.bodySmall,
-            ),
-
-          const SizedBox(height: AppSpacing.sm),
-          const Divider(height: 1),
-          const SizedBox(height: AppSpacing.sm),
-
-          // Bottom: price + date
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (order.totalPrice != null)
+            // Bottom Row (Date & Time)
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFFA0AEC0)),
+                const SizedBox(width: 6),
                 Text(
-                  'Rp${NumberFormat('#,###', 'id').format(order.totalPrice)}',
-                  style: AppTypography.priceMedium,
-                )
-              else
-                Text(
-                  'Menunggu harga',
-                  style: AppTypography.bodySmall.copyWith(
-                    fontStyle: FontStyle.italic,
-                  ),
+                  DateFormat('MMM dd, yyyy').format(order.createdAt),
+                  style: const TextStyle(color: Color(0xFF718096), fontSize: 13),
                 ),
-              Text(
-                DateFormat('dd MMM yyyy', 'id').format(order.createdAt),
-                style: AppTypography.caption,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Status badge showing the order's current status with appropriate color.
-class _OrderStatusBadge extends StatelessWidget {
-  const _OrderStatusBadge({required this.status});
-
-  final OrderStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: _getStatusColor().withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppSizing.radiusFull),
-      ),
-      child: Text(
-        _getStatusLabel(),
-        style: AppTypography.caption.copyWith(
-          color: _getStatusColor(),
-          fontWeight: FontWeight.w600,
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Text('•', style: TextStyle(color: Color(0xFFA0AEC0))),
+                ),
+                const Icon(Icons.access_time, size: 16, color: Color(0xFFA0AEC0)),
+                const SizedBox(width: 6),
+                Text(
+                  timeStr,
+                  style: const TextStyle(color: Color(0xFF718096), fontSize: 13),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Color _getStatusColor() {
+  Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return AppColors.statusPending;
+        return const Color(0xFFD97706); // Amber
       case OrderStatus.accepted:
-        return AppColors.statusAccepted;
       case OrderStatus.onTheWay:
-        return AppColors.statusOnTheWay;
       case OrderStatus.arrived:
-        return AppColors.statusArrived;
       case OrderStatus.inProgress:
-        return AppColors.statusInProgress;
       case OrderStatus.workPaused:
-        return AppColors.statusInProgress;
+        return const Color(0xFF2563EB); // Blue
       case OrderStatus.completed:
-        return AppColors.statusCompleted;
+        return const Color(0xFF16A34A); // Green matching the design
       case OrderStatus.cancelled:
-        return AppColors.statusCancelled;
       case OrderStatus.rejected:
-        return AppColors.statusRejected;
+        return const Color(0xFFDC2626); // Red
     }
   }
 
-  String _getStatusLabel() {
+  String _getStatusLabel(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return 'Menunggu';
+        return 'Pending';
       case OrderStatus.accepted:
-        return 'Diterima';
+        return 'Accepted';
       case OrderStatus.onTheWay:
-        return 'Dalam Perjalanan';
+        return 'On The Way';
       case OrderStatus.arrived:
-        return 'Tiba di Lokasi';
+        return 'Arrived';
       case OrderStatus.inProgress:
-        return 'Sedang Dikerjakan';
+        return 'In Progress';
       case OrderStatus.workPaused:
-        return 'Dijeda';
+        return 'Paused';
       case OrderStatus.completed:
-        return 'Selesai';
+        return 'Completed';
       case OrderStatus.cancelled:
-        return 'Dibatalkan';
+        return 'Cancelled';
       case OrderStatus.rejected:
-        return 'Ditolak';
+        return 'Rejected';
     }
   }
 }
 
+class _OrderListSkeleton extends StatelessWidget {
+  const _OrderListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoader(
+      child: ListView.builder(
+        padding: const EdgeInsets.only(bottom: 24),
+        itemCount: 4,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Skeleton(width: 48, height: 48, borderRadius: 12),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Skeleton(height: 16, width: 120),
+                          SizedBox(height: 8),
+                          Skeleton(height: 14, width: 80),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Skeleton(height: 16, width: 70),
+                        SizedBox(height: 8),
+                        Skeleton(height: 10, width: 50),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                Row(
+                  children: [
+                    Skeleton(height: 16, width: 16, shape: BoxShape.circle),
+                    SizedBox(width: 6),
+                    Skeleton(height: 13, width: 80),
+                    SizedBox(width: 20),
+                    Skeleton(height: 16, width: 16, shape: BoxShape.circle),
+                    SizedBox(width: 6),
+                    Skeleton(height: 13, width: 80),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 
@@ -55,39 +57,40 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     // Only fields defined in the spec are sent:
     // worker_id, service_id, address, latitude, longitude, urgency,
     // problem_description, photos.
-    // Non-spec fields (title, address_detail, notes, preferred_date, etc.)
-    // are intentionally excluded to avoid "invalid field" errors.
+    // Map according to api-spec.md (Section 7.1 POST /orders)
     final requestData = <String, dynamic>{
       'worker_id': params.workerId,
       'service_id': params.serviceId,
-      'address': params.address,
-      'latitude': params.latitude,
-      'longitude': params.longitude,
+      'title': params.title,
+      'description': params.description,
+      'location': {
+        'latitude': params.latitude,
+        'longitude': params.longitude,
+        'address': params.address,
+        if (params.addressDetail != null && params.addressDetail!.isNotEmpty)
+          'address_detail': params.addressDetail,
+      },
+      if (params.preferredDate != null && params.preferredDate!.isNotEmpty)
+        'preferred_date': params.preferredDate,
+      if (params.preferredTimeStart != null && params.preferredTimeStart!.isNotEmpty)
+        'preferred_time_start': params.preferredTimeStart,
+      if (params.preferredTimeEnd != null && params.preferredTimeEnd!.isNotEmpty)
+        'preferred_time_end': params.preferredTimeEnd,
       'urgency': params.urgency,
-      'problem_description': params.description,
+      if (params.notes != null && params.notes!.isNotEmpty)
+        'notes': params.notes,
     };
 
-    // Handle photos upload
+    // Handle photos upload by converting to base64 strings
     if (params.photos.isNotEmpty) {
-      final formData = FormData.fromMap(Map<String, dynamic>.from(requestData));
-      for (var i = 0; i < params.photos.length; i++) {
-        formData.files.add(MapEntry(
-          'photos[$i]',
-          await MultipartFile.fromFile(
-            params.photos[i].path,
-            filename: 'photo_$i.jpg',
-          ),
-        ));
+      final base64Photos = <String>[];
+      for (final photo in params.photos) {
+        final bytes = await photo.readAsBytes();
+        final base64String = base64Encode(bytes);
+        // Add data URI scheme as standard for base64 image uploads unless backend expects raw base64.
+        base64Photos.add('data:image/jpeg;base64,$base64String');
       }
-
-      final response = await apiClient.upload<Map<String, dynamic>>(
-        ApiEndpoints.orders,
-        data: formData,
-      );
-
-      final data = response.data!;
-      final orderJson = data['data'] as Map<String, dynamic>;
-      return OrderModel.fromJson(orderJson);
+      requestData['photos'] = base64Photos;
     }
 
     final response = await apiClient.post<Map<String, dynamic>>(

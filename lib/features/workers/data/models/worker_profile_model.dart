@@ -53,8 +53,8 @@ class WorkerProfileModel {
     }
 
     return WorkerProfileModel(
-      workerId: json['worker_id'] as String? ?? '',
-      fullName: json['full_name'] as String? ?? '',
+      workerId: json['worker_id'] as String? ?? json['user_id'] as String? ?? json['id'] as String? ?? '',
+      fullName: json['full_name'] as String? ?? json['name'] as String? ?? '',
       avatarUrl: json['avatar_url'] as String?,
       coverPhotoUrl: json['cover_photo_url'] as String?,
       specialization: json['specialization'] as String?,
