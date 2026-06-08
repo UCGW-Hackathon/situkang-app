@@ -9,7 +9,7 @@ import '../bloc/worker_profile_bloc.dart';
 
 class CompleteIdentityPage extends StatefulWidget {
   final WorkerProfile? profile;
-  
+
   const CompleteIdentityPage({super.key, this.profile});
 
   @override
@@ -36,7 +36,7 @@ class _CompleteIdentityPageState extends State<CompleteIdentityPage> {
     super.initState();
     if (widget.profile != null) {
       _bioController.text = widget.profile?.bio ?? '';
-      
+
       // Note: we don't prepopulate services for MVP because they are not saved in the mock backend yet,
       // but if there are services, we could get the first one.
       if (widget.profile!.services.isNotEmpty) {
@@ -61,7 +61,7 @@ class _CompleteIdentityPageState extends State<CompleteIdentityPage> {
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       final basePrice = int.tryParse(_servicePriceController.text) ?? 0;
-      
+
       context.read<WorkerProfileBloc>().add(
         CompleteIdentity(
           bio: _bioController.text.trim(),
@@ -75,10 +75,13 @@ class _CompleteIdentityPageState extends State<CompleteIdentityPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomScrollPadding =
+        AppSizing.bottomNavHeight +
+        MediaQuery.paddingOf(context).bottom +
+        AppSpacing.xl;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Melengkapi Identitas Akun'),
-      ),
+      appBar: AppBar(title: const Text('Melengkapi Identitas Akun')),
       body: BlocConsumer<WorkerProfileBloc, WorkerProfileState>(
         listener: (context, state) {
           if (state is WorkerProfileError) {
@@ -91,7 +94,9 @@ class _CompleteIdentityPageState extends State<CompleteIdentityPage> {
           } else if (state is WorkerProfileVerificationSubmitted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Identitas berhasil dilengkapi! Anda sekarang dapat menerima pesanan.'),
+                content: Text(
+                  'Identitas berhasil dilengkapi! Anda sekarang dapat menerima pesanan.',
+                ),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -119,7 +124,12 @@ class _CompleteIdentityPageState extends State<CompleteIdentityPage> {
                               children: [
                                 Icon(Icons.info, color: AppColors.primary),
                                 SizedBox(width: AppSpacing.md),
-                                Expanded(child: Text('Lengkapi Profil Anda', style: AppTypography.h6)),
+                                Expanded(
+                                  child: Text(
+                                    'Lengkapi Profil Anda',
+                                    style: AppTypography.h6,
+                                  ),
+                                ),
                               ],
                             ),
                             SizedBox(height: AppSpacing.sm),
@@ -131,7 +141,10 @@ class _CompleteIdentityPageState extends State<CompleteIdentityPage> {
                       ),
                       const SizedBox(height: AppSpacing.xl),
 
-                      const Text('Deskripsi Diri (Bio)', style: AppTypography.h6),
+                      const Text(
+                        'Deskripsi Diri (Bio)',
+                        style: AppTypography.h6,
+                      ),
                       const SizedBox(height: AppSpacing.sm),
                       AppTextField(
                         controller: _bioController,
@@ -153,7 +166,7 @@ class _CompleteIdentityPageState extends State<CompleteIdentityPage> {
                         style: AppTypography.caption,
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      
+
                       AppTextField(
                         controller: _serviceNameController,
                         label: 'Nama Layanan',
@@ -166,7 +179,7 @@ class _CompleteIdentityPageState extends State<CompleteIdentityPage> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      
+
                       AppTextField(
                         controller: _servicePriceController,
                         label: 'Harga Dasar (Rp)',
@@ -206,10 +219,8 @@ class _CompleteIdentityPageState extends State<CompleteIdentityPage> {
                       ),
 
                       const SizedBox(height: AppSpacing.xxl),
-                      AppButton(
-                        text: 'Simpan Identitas',
-                        onPressed: _submit,
-                      ),
+                      AppButton(text: 'Simpan Identitas', onPressed: _submit),
+                      SizedBox(height: bottomScrollPadding),
                     ],
                   ),
                 ),

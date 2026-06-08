@@ -10,16 +10,14 @@ sealed class WorkerProfileEvent extends Equatable {
 class FetchWorkerProfile extends WorkerProfileEvent {}
 
 class UpdateWorkerProfile extends WorkerProfileEvent {
-  const UpdateWorkerProfile({
-    this.name,
-    this.bio,
-  });
+  const UpdateWorkerProfile({this.name, this.bio, this.specialization});
 
   final String? name;
   final String? bio;
+  final String? specialization;
 
   @override
-  List<Object?> get props => [name, bio];
+  List<Object?> get props => [name, bio, specialization];
 }
 
 class UploadCoverPhoto extends WorkerProfileEvent {
@@ -60,7 +58,12 @@ class CompleteIdentity extends WorkerProfileEvent {
   final String servicePriceUnit;
 
   @override
-  List<Object?> get props => [bio, serviceName, serviceBasePrice, servicePriceUnit];
+  List<Object?> get props => [
+    bio,
+    serviceName,
+    serviceBasePrice,
+    servicePriceUnit,
+  ];
 }
 
 class AddWorkerService extends WorkerProfileEvent {

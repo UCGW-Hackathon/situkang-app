@@ -29,9 +29,14 @@ class WorkerProfileRepositoryImpl implements WorkerProfileRepository {
   Future<Result<WorkerProfile>> updateWorkerProfile({
     String? name,
     String? bio,
+    String? specialization,
   }) async {
     try {
-      final profile = await remoteDataSource.updateWorkerProfile(name, bio);
+      final profile = await remoteDataSource.updateWorkerProfile(
+        name,
+        bio,
+        specialization,
+      );
       return Right(profile);
     } on Failure catch (e) {
       return Left(e);
@@ -79,7 +84,11 @@ class WorkerProfileRepositoryImpl implements WorkerProfileRepository {
     required String priceUnit,
   }) async {
     try {
-      final profile = await remoteDataSource.addService(name, basePrice, priceUnit);
+      final profile = await remoteDataSource.addService(
+        name,
+        basePrice,
+        priceUnit,
+      );
       return Right(profile);
     } on Failure catch (e) {
       return Left(e);

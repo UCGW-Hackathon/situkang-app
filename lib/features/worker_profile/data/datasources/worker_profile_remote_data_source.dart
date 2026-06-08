@@ -8,45 +8,70 @@ import '../models/worker_profile_model.dart';
 
 abstract class WorkerProfileRemoteDataSource {
   Future<WorkerProfileModel> getWorkerProfile();
-  Future<WorkerProfileModel> updateWorkerProfile(String? name, String? bio);
+  Future<WorkerProfileModel> updateWorkerProfile(
+    String? name,
+    String? bio,
+    String? specialization,
+  );
   Future<WorkerProfileModel> uploadCoverPhoto(String filePath);
   Future<void> submitVerification({
     required String ktpPath,
     required List<String> certificatePaths,
     String? selfiePath,
   });
-  Future<WorkerProfileModel> addService(String name, int basePrice, String priceUnit);
+  Future<WorkerProfileModel> addService(
+    String name,
+    int basePrice,
+    String priceUnit,
+  );
   Future<WorkerProfileModel> removeService(String serviceId);
 }
 
 @LazySingleton(as: WorkerProfileRemoteDataSource)
-class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource {
+class WorkerProfileRemoteDataSourceImpl
+    implements WorkerProfileRemoteDataSource {
   const WorkerProfileRemoteDataSourceImpl(this.apiClient);
 
   final ApiClient apiClient;
 
   @override
   Future<WorkerProfileModel> getWorkerProfile() async {
-    final response = await apiClient.get<Map<String, dynamic>>(ApiEndpoints.workerProfile);
+    final response = await apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.workerProfile,
+    );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,
-      fromJsonT: (json) => WorkerProfileModel.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) =>
+          WorkerProfileModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;
   }
 
   @override
-  Future<WorkerProfileModel> updateWorkerProfile(String? name, String? bio) async {
+  Future<WorkerProfileModel> updateWorkerProfile(
+    String? name,
+    String? bio,
+    String? specialization,
+  ) async {
+    final data = <String, dynamic>{};
+    if (name != null && name.trim().isNotEmpty) {
+      data['full_name'] = name.trim();
+    }
+    if (bio != null && bio.trim().isNotEmpty) {
+      data['bio'] = bio.trim();
+    }
+    if (specialization != null && specialization.trim().isNotEmpty) {
+      data['specialization'] = specialization.trim();
+    }
+
     final response = await apiClient.put<Map<String, dynamic>>(
       ApiEndpoints.workerProfile,
-      data: {
-        'full_name': ?name,
-        'bio': ?bio,
-      },
+      data: data,
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,
-      fromJsonT: (json) => WorkerProfileModel.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) =>
+          WorkerProfileModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;
   }
@@ -62,7 +87,8 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,
-      fromJsonT: (json) => WorkerProfileModel.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) =>
+          WorkerProfileModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;
   }
@@ -94,18 +120,19 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
   }
 
   @override
-  Future<WorkerProfileModel> addService(String name, int basePrice, String priceUnit) async {
+  Future<WorkerProfileModel> addService(
+    String name,
+    int basePrice,
+    String priceUnit,
+  ) async {
     final response = await apiClient.post<Map<String, dynamic>>(
       '/worker/profile/services',
-      data: {
-        'name': name,
-        'base_price': basePrice,
-        'price_unit': priceUnit,
-      },
+      data: {'name': name, 'base_price': basePrice, 'price_unit': priceUnit},
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,
-      fromJsonT: (json) => WorkerProfileModel.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) =>
+          WorkerProfileModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;
   }
@@ -117,7 +144,8 @@ class WorkerProfileRemoteDataSourceImpl implements WorkerProfileRemoteDataSource
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,
-      fromJsonT: (json) => WorkerProfileModel.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) =>
+          WorkerProfileModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;
   }

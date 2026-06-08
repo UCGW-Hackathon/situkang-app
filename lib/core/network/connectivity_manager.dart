@@ -72,16 +72,17 @@ class ConnectivityManagerImpl implements ConnectivityManager {
   /// Creates a [ConnectivityManagerImpl].
   ///
   /// [checkInterval] controls how often periodic checks run (default: 3 seconds).
-  /// [lookupHost] is the hostname used for DNS lookups (default: 'google.com').
+  /// [lookupHost] is the hostname used for DNS lookups.
   ConnectivityManagerImpl({
     Duration checkInterval = const Duration(seconds: 3),
-    String lookupHost = 'google.com',
-  })  : _checkInterval = checkInterval,
-        _lookupHost = lookupHost {
+    String lookupHost = 'xryz-gcw-situkang.hf.space',
+  }) : _checkInterval = checkInterval,
+       _lookupHost = lookupHost {
     _startPeriodicCheck();
   }
 
   @factoryMethod
+  // ignore: prefer_constructors_over_static_methods
   static ConnectivityManagerImpl create() => ConnectivityManagerImpl();
 
   final Duration _checkInterval;
@@ -142,9 +143,9 @@ class ConnectivityManagerImpl implements ConnectivityManager {
   /// or any other error.
   Future<ConnectivityStatus> _performCheck() async {
     try {
-      final result = await InternetAddress.lookup(_lookupHost).timeout(
-        const Duration(seconds: 2),
-      );
+      final result = await InternetAddress.lookup(
+        _lookupHost,
+      ).timeout(const Duration(seconds: 2));
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
         return ConnectivityStatus.online;
       }
@@ -153,7 +154,7 @@ class ConnectivityManagerImpl implements ConnectivityManager {
       return ConnectivityStatus.offline;
     } on TimeoutException {
       return ConnectivityStatus.offline;
-    } catch (_) {
+    } on Object {
       return ConnectivityStatus.offline;
     }
   }

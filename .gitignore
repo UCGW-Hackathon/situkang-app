@@ -61,3 +61,6 @@ dev_config.json
 # Garbage / Executables
 *.exe
 api_mismatch_report.md
+
+# FVM Version Cache
+.fvm/

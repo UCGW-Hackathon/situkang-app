@@ -46,6 +46,7 @@ class WorkerProfileBloc extends Bloc<WorkerProfileEvent, WorkerProfileState> {
     final result = await repository.updateWorkerProfile(
       name: event.name,
       bio: event.bio,
+      specialization: event.specialization,
     );
 
     result.fold(
@@ -80,13 +81,10 @@ class WorkerProfileBloc extends Bloc<WorkerProfileEvent, WorkerProfileState> {
       selfiePath: event.selfiePath,
     );
 
-    result.fold(
-      (failure) => emit(WorkerProfileError(failure)),
-      (_) {
-        emit(WorkerProfileVerificationSubmitted());
-        add(FetchWorkerProfile()); // Refresh profile to get updated status
-      },
-    );
+    result.fold((failure) => emit(WorkerProfileError(failure)), (_) {
+      emit(WorkerProfileVerificationSubmitted());
+      add(FetchWorkerProfile()); // Refresh profile to get updated status
+    });
   }
 
   Future<void> _onAddWorkerService(
@@ -127,27 +125,29 @@ class WorkerProfileBloc extends Bloc<WorkerProfileEvent, WorkerProfileState> {
   ) async {
     emit(WorkerProfileActionLoading());
 
-    // 1. Update Bio
-    final bioResult = await repository.updateWorkerProfile(bio: event.bio);
-    
+    // 1. Update bio and specialization label.
+    final bioResult = await repository.updateWorkerProfile(
+      bio: event.bio,
+      specialization: event.serviceName,
+    );
+
     await bioResult.fold(
       (failure) async {
         emit(WorkerProfileError(failure));
       },
       (profile) async {
-        // 2. Add Service (Wrapped in try-catch because endpoint might not exist in MVP backend)
-        try {
-          await repository.addService(
-            name: event.serviceName,
-            basePrice: event.serviceBasePrice,
-            priceUnit: event.servicePriceUnit,
-          );
-        } catch (e) {
-          // Ignore error for MVP to allow flow to continue
-        }
-        
-        emit(WorkerProfileVerificationSubmitted());
-        add(FetchWorkerProfile()); // Refresh profile
+        // 2. Add the primary service. Do not report success if this fails,
+        // because customers cannot create orders without a real service_id.
+        final serviceResult = await repository.addService(
+          name: event.serviceName,
+          basePrice: event.serviceBasePrice,
+          priceUnit: event.servicePriceUnit,
+        );
+
+        serviceResult.fold((failure) => emit(WorkerProfileError(failure)), (_) {
+          emit(WorkerProfileVerificationSubmitted());
+          add(FetchWorkerProfile()); // Refresh profile
+        });
       },
     );
   }

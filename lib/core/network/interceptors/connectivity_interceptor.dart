@@ -10,13 +10,23 @@ import '../connectivity_manager.dart';
 class ConnectivityInterceptor extends Interceptor {
   /// Creates a [ConnectivityInterceptor] with the given [connectivityManager].
   ConnectivityInterceptor({required ConnectivityManager connectivityManager})
-      : _connectivityManager = connectivityManager;
+    : _connectivityManager = connectivityManager;
 
   final ConnectivityManager _connectivityManager;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (!_connectivityManager.isOnline) {
+    if (_connectivityManager.isOnline) {
+      handler.next(options);
+      return;
+    }
+
+    _connectivityManager.checkConnectivity().then((status) {
+      if (status == ConnectivityStatus.online) {
+        handler.next(options);
+        return;
+      }
+
       handler.reject(
         DioException(
           requestOptions: options,
@@ -25,8 +35,6 @@ class ConnectivityInterceptor extends Interceptor {
           message: 'Tidak ada koneksi internet',
         ),
       );
-      return;
-    }
-    handler.next(options);
+    });
   }
 }

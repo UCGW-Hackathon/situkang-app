@@ -13,6 +13,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../workers/domain/entities/worker_profile.dart';
+import '../../../workers/domain/entities/worker_service.dart';
 import '../../domain/entities/create_order_params.dart';
 import '../bloc/order_bloc.dart';
 
@@ -36,20 +37,100 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _addressDetailController = TextEditingController();
-  
+
   final List<File> _photos = [];
   final ImagePicker _imagePicker = ImagePicker();
 
   final MapController _mapController = MapController();
-  LatLng _selectedLocation = const LatLng(-6.200000, 106.816666); // Default Jakarta
+  LatLng _selectedLocation = const LatLng(
+    -6.200000,
+    106.816666,
+  ); // Default Jakarta
   bool _isLoadingLocation = true;
   String? _selectedServiceId;
 
   @override
   void initState() {
     super.initState();
-    _selectedServiceId = widget.selectedServiceId ?? (widget.workerProfile?.services.isNotEmpty == true ? widget.workerProfile!.services.first.id : null);
+    _selectedServiceId = widget.selectedServiceId?.trim().isNotEmpty == true
+        ? widget.selectedServiceId
+        : _defaultServiceSelectionKey();
     _initCurrentLocation();
+  }
+
+  String? _defaultServiceSelectionKey() {
+    final services = widget.workerProfile?.services ?? const <WorkerService>[];
+    if (services.isEmpty) return null;
+    return _serviceSelectionKey(services.first, 0);
+  }
+
+  String _serviceSelectionKey(WorkerService service, int index) {
+    final serviceId = service.id.trim();
+    if (serviceId.isNotEmpty) return serviceId;
+    return 'service-$index';
+  }
+
+  bool _isUuid(String value) {
+    return RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(value);
+  }
+
+  WorkerService? _selectedService() {
+    final services = widget.workerProfile?.services ?? const <WorkerService>[];
+    if (services.isEmpty) return null;
+
+    final selectedKey = _selectedServiceId;
+    if (selectedKey == null) {
+      return services.length == 1 ? services.first : null;
+    }
+
+    for (var index = 0; index < services.length; index++) {
+      if (_serviceSelectionKey(services[index], index) == selectedKey) {
+        return services[index];
+      }
+    }
+
+    return services.length == 1 ? services.first : null;
+  }
+
+  String? _fallbackSpecialization() {
+    final specialization = widget.workerProfile?.specialization?.trim();
+    if (specialization != null && specialization.isNotEmpty) {
+      return specialization;
+    }
+
+    final selectedService = _selectedService();
+    final selectedServiceName = selectedService?.name.trim();
+    if (selectedServiceName != null && selectedServiceName.isNotEmpty) {
+      return selectedServiceName;
+    }
+
+    return null;
+  }
+
+  String? _effectiveServiceId() {
+    final selectedService = _selectedService();
+    final serviceId = selectedService?.id.trim();
+    if (serviceId != null && _isUuid(serviceId)) return serviceId;
+
+    final selectedServiceId = _selectedServiceId?.trim();
+    if (selectedServiceId != null && _isUuid(selectedServiceId)) {
+      return selectedServiceId;
+    }
+
+    return null;
+  }
+
+  void _showMissingServiceMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Layanan worker belum tersimpan. Lengkapi layanan worker terlebih dahulu.',
+        ),
+        backgroundColor: AppColors.error,
+      ),
+    );
   }
 
   Future<void> _initCurrentLocation() async {
@@ -59,20 +140,23 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         permission = await Geolocator.requestPermission();
       }
 
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         setState(() => _isLoadingLocation = false);
         return;
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
-      
+
       setState(() {
         _selectedLocation = LatLng(position.latitude, position.longitude);
         _isLoadingLocation = false;
       });
-      
+
       _mapController.move(_selectedLocation, 15);
     } catch (e) {
       setState(() => _isLoadingLocation = false);
@@ -90,22 +174,28 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
   void _onSubmit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    if (_selectedServiceId == null || widget.workerProfile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih layanan terlebih dahulu.'), backgroundColor: AppColors.error),
-      );
+    if (widget.workerProfile == null) {
+      _showMissingServiceMessage();
       return;
     }
 
-    final selectedService = widget.workerProfile!.services.firstWhere(
-      (s) => s.id == _selectedServiceId,
-      orElse: () => widget.workerProfile!.services.first,
-    );
+    final serviceId = _effectiveServiceId();
+    final selectedService = _selectedService();
+    final selectedServiceName = selectedService?.name.trim();
+    final serviceName =
+        selectedServiceName != null && selectedServiceName.isNotEmpty
+        ? selectedServiceName
+        : _fallbackSpecialization();
+
+    if (serviceId == null || serviceName == null) {
+      _showMissingServiceMessage();
+      return;
+    }
 
     final params = CreateOrderParams(
       workerId: widget.workerId,
-      serviceId: selectedService.id,
-      title: 'Pesanan: ${selectedService.name}',
+      serviceId: serviceId,
+      title: 'Pesanan: $serviceName',
       description: _descriptionController.text.trim(),
       latitude: _selectedLocation.latitude,
       longitude: _selectedLocation.longitude,
@@ -132,11 +222,15 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
           if (state is OrderCreated) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Pesanan berhasil! No: ${state.order.orderNumber}'),
+                content: Text(
+                  'Pesanan berhasil! No: ${state.order.orderNumber}',
+                ),
                 backgroundColor: AppColors.success,
               ),
             );
-            Navigator.of(context).pop(); // Go back to worker detail, or maybe orders list
+            Navigator.of(
+              context,
+            ).pop(); // Go back to worker detail, or maybe orders list
           } else if (state is OrderError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -178,14 +272,18 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
 
   Widget _buildSummaryCard() {
     if (widget.workerProfile == null) return const SizedBox.shrink();
-    
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -193,10 +291,12 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
           CircleAvatar(
             radius: 28,
             backgroundColor: AppColors.primaryLight,
-            backgroundImage: widget.workerProfile!.avatarUrl != null 
-                ? CachedNetworkImageProvider(widget.workerProfile!.avatarUrl!) 
+            backgroundImage: widget.workerProfile!.avatarUrl != null
+                ? CachedNetworkImageProvider(widget.workerProfile!.avatarUrl!)
                 : null,
-            child: widget.workerProfile!.avatarUrl == null ? const Icon(Icons.person, color: Colors.white) : null,
+            child: widget.workerProfile!.avatarUrl == null
+                ? const Icon(Icons.person, color: Colors.white)
+                : null,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -207,7 +307,9 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                 const SizedBox(height: 4),
                 Text(
                   widget.workerProfile!.specialization ?? 'Spesialis',
-                  style: AppTypography.caption.copyWith(color: AppColors.primary),
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.primary,
+                  ),
                 ),
               ],
             ),
@@ -218,8 +320,29 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
   }
 
   Widget _buildServiceSelector() {
-    if (widget.workerProfile == null || widget.workerProfile!.services.isEmpty) {
-      return const SizedBox.shrink();
+    if (widget.workerProfile == null ||
+        widget.workerProfile!.services.isEmpty) {
+      final specialization = _fallbackSpecialization();
+      if (specialization == null) return const SizedBox.shrink();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Layanan', style: AppTypography.h6),
+          const SizedBox(height: AppSpacing.sm),
+          InputChip(
+            avatar: const Icon(Icons.build, size: 16, color: AppColors.primary),
+            label: Text(specialization),
+            selected: true,
+            selectedColor: AppColors.primaryContainer,
+            checkmarkColor: AppColors.primary,
+            labelStyle: const TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
     }
 
     return Column(
@@ -230,8 +353,11 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: widget.workerProfile!.services.map((service) {
-            final isSelected = _selectedServiceId == service.id;
+          children: widget.workerProfile!.services.asMap().entries.map((entry) {
+            final index = entry.key;
+            final service = entry.value;
+            final selectionKey = _serviceSelectionKey(service, index);
+            final isSelected = _selectedServiceId == selectionKey;
             return FilterChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -241,11 +367,18 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                       imageUrl: service.iconUrl!,
                       width: 16,
                       height: 16,
-                      errorWidget: (_, _, _) => const Icon(Icons.build, size: 16),
+                      errorWidget: (_, _, _) =>
+                          const Icon(Icons.build, size: 16),
                     ),
                     const SizedBox(width: 4),
                   ] else ...[
-                    Icon(Icons.build, size: 16, color: isSelected ? AppColors.primary : AppColors.textSecondary),
+                    Icon(
+                      Icons.build,
+                      size: 16,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 4),
                   ],
                   Text(service.name),
@@ -254,7 +387,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
               selected: isSelected,
               onSelected: (selected) {
                 setState(() {
-                  if (selected) _selectedServiceId = service.id;
+                  if (selected) _selectedServiceId = selectionKey;
                 });
               },
               backgroundColor: AppColors.primaryContainer.withOpacity(0.3),
@@ -300,7 +433,8 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.situkang.app',
                   ),
                 ],
@@ -308,7 +442,11 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
               // Center pin
               const Padding(
                 padding: EdgeInsets.only(bottom: 35),
-                child: Icon(Icons.location_on, size: 40, color: AppColors.primary),
+                child: Icon(
+                  Icons.location_on,
+                  size: 40,
+                  color: AppColors.primary,
+                ),
               ),
               Positioned(
                 bottom: 16,
@@ -334,7 +472,10 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
           ),
         ),
         const SizedBox(height: 8),
-        const Text('Geser peta untuk menetapkan titik lokasi yang akurat.', style: AppTypography.caption),
+        const Text(
+          'Geser peta untuk menetapkan titik lokasi yang akurat.',
+          style: AppTypography.caption,
+        ),
       ],
     );
   }
@@ -350,13 +491,18 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
           hint: 'Jelaskan masalah yang Anda hadapi secara singkat...',
           maxLines: 4,
           validator: (value) {
-            if (value == null || value.trim().isEmpty) return 'Detail kerusakan wajib diisi';
+            if (value == null || value.trim().isEmpty) {
+              return 'Detail kerusakan wajib diisi';
+            }
             return null;
           },
         ),
         const SizedBox(height: AppSpacing.md),
 
-        const Text('Detail Alamat Tambahan (Opsional)', style: AppTypography.label),
+        const Text(
+          'Detail Alamat Tambahan (Opsional)',
+          style: AppTypography.label,
+        ),
         const SizedBox(height: AppSpacing.xs),
         AppTextField(
           controller: _addressDetailController,
@@ -365,14 +511,20 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        const Text('Foto Area Kerusakan (Opsional)', style: AppTypography.label),
+        const Text(
+          'Foto Area Kerusakan (Opsional)',
+          style: AppTypography.label,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Wrap(
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.sm,
           children: [
-            ..._photos.asMap().entries.map((entry) => _buildPhotoThumbnail(entry.value, entry.key)),
-            if (_photos.length < AppConstants.maxOrderPhotos) _buildAddPhotoArea(),
+            ..._photos.asMap().entries.map(
+              (entry) => _buildPhotoThumbnail(entry.value, entry.key),
+            ),
+            if (_photos.length < AppConstants.maxOrderPhotos)
+              _buildAddPhotoArea(),
           ],
         ),
       ],
@@ -388,10 +540,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         decoration: BoxDecoration(
           color: AppColors.primaryContainer.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.primaryContainer,
-            width: 1.5,
-          ),
+          border: Border.all(color: AppColors.primaryContainer, width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -402,7 +551,10 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
               child: Icon(Icons.camera_alt, color: Colors.white, size: 20),
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text('Unggah Foto Kerusakan', style: AppTypography.label.copyWith(color: AppColors.primary)),
+            Text(
+              'Unggah Foto Kerusakan',
+              style: AppTypography.label.copyWith(color: AppColors.primary),
+            ),
             const Text('Maksimal 5MB (JPG/PNG)', style: AppTypography.caption),
           ],
         ),
@@ -428,9 +580,16 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
           child: GestureDetector(
             onTap: () => setState(() => _photos.removeAt(index)),
             child: Container(
-              decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: AppColors.error,
+                shape: BoxShape.circle,
+              ),
               padding: const EdgeInsets.all(6),
-              child: const Icon(Icons.close, size: 16, color: AppColors.onError),
+              child: const Icon(
+                Icons.close,
+                size: 16,
+                color: AppColors.onError,
+              ),
             ),
           ),
         ),
@@ -465,28 +624,46 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
     try {
       final pickedFile = await _imagePicker.pickImage(source: source);
       if (pickedFile == null) return;
-      
+
       final file = File(pickedFile.path);
       final fileSize = await file.length();
       if (fileSize > AppConstants.maxPhotoFileSize) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ukuran foto maksimal 5MB')));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ukuran foto maksimal 5MB')),
+          );
+        }
         return;
       }
       setState(() => _photos.add(file));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+      }
     }
   }
 
   Widget _buildBottomBar() {
-    final bookingFee = widget.workerProfile?.bookingFee ?? AppConstants.bookingFee;
+    final bookingFee =
+        widget.workerProfile?.bookingFee ?? AppConstants.bookingFee;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: [BoxShadow(color: AppColors.shadow, blurRadius: 10, offset: Offset(0, -2))],
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          ),
+        ],
       ),
       child: SafeArea(
         top: false,
@@ -513,16 +690,28 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF006C84), // Deep teal
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: state is OrderLoading ? null : _onSubmit,
                     child: state is OrderLoading
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('Konfirmasi Pesanan', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text(
+                                'Konfirmasi Pesanan',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                               SizedBox(width: 8),
                               Icon(Icons.check_circle, size: 18),
                             ],

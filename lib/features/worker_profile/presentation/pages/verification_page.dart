@@ -21,12 +21,12 @@ class _VerificationPageState extends State<VerificationPage> {
   File? _selfiePhoto;
   final List<File> _certificatePhotos = [];
 
-  Future<void> _pickImage(ImageSource source, void Function(File) onPicked) async {
+  Future<void> _pickImage(
+    ImageSource source,
+    void Function(File) onPicked,
+  ) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: source,
-      imageQuality: 80,
-    );
+    final pickedFile = await picker.pickImage(source: source, imageQuality: 80);
 
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
@@ -39,13 +39,13 @@ class _VerificationPageState extends State<VerificationPage> {
         return;
       }
       final pathLowerCase = pickedFile.path.toLowerCase();
-      if (!pathLowerCase.endsWith('.jpg') && 
-          !pathLowerCase.endsWith('.png') && 
+      if (!pathLowerCase.endsWith('.jpg') &&
+          !pathLowerCase.endsWith('.png') &&
           !pathLowerCase.endsWith('.jpeg')) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Only JPG/PNG allowed')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Only JPG/PNG allowed')));
         }
         return;
       }
@@ -55,9 +55,9 @@ class _VerificationPageState extends State<VerificationPage> {
 
   void _submit() {
     if (_ktpPhoto == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Foto KTP wajib diunggah')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Foto KTP wajib diunggah')));
       return;
     }
 
@@ -91,17 +91,18 @@ class _VerificationPageState extends State<VerificationPage> {
               borderRadius: BorderRadius.circular(AppSizing.radiusMd),
               border: Border.all(color: AppColors.border),
               image: file != null
-                  ? DecorationImage(
-                      image: FileImage(file),
-                      fit: BoxFit.cover,
-                    )
+                  ? DecorationImage(image: FileImage(file), fit: BoxFit.cover)
                   : null,
             ),
             child: file == null
                 ? const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_a_photo, color: AppColors.primary, size: 32),
+                      Icon(
+                        Icons.add_a_photo,
+                        color: AppColors.primary,
+                        size: 32,
+                      ),
                       SizedBox(height: AppSpacing.xs),
                       Text('Ambil / Pilih Foto', style: AppTypography.caption),
                     ],
@@ -110,7 +111,10 @@ class _VerificationPageState extends State<VerificationPage> {
                     alignment: Alignment.topRight,
                     child: onRemove != null
                         ? IconButton(
-                            icon: const Icon(Icons.cancel, color: AppColors.error),
+                            icon: const Icon(
+                              Icons.cancel,
+                              color: AppColors.error,
+                            ),
                             onPressed: onRemove,
                           )
                         : null,
@@ -123,10 +127,13 @@ class _VerificationPageState extends State<VerificationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomScrollPadding =
+        AppSizing.bottomNavHeight +
+        MediaQuery.paddingOf(context).bottom +
+        AppSpacing.xl;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verifikasi Akun'),
-      ),
+      appBar: AppBar(title: const Text('Verifikasi Akun')),
       body: BlocConsumer<WorkerProfileBloc, WorkerProfileState>(
         listener: (context, state) {
           if (state is WorkerProfileError) {
@@ -139,7 +146,9 @@ class _VerificationPageState extends State<VerificationPage> {
           } else if (state is WorkerProfileVerificationSubmitted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Data verifikasi berhasil dikirim. Harap tunggu proses persetujuan.'),
+                content: Text(
+                  'Data verifikasi berhasil dikirim. Harap tunggu proses persetujuan.',
+                ),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -202,20 +211,24 @@ class _VerificationPageState extends State<VerificationPage> {
                     ),
                     const SizedBox(height: AppSpacing.xl),
 
-                    const Text('Sertifikat Keahlian (Opsional, max 5)', style: AppTypography.label),
+                    const Text(
+                      'Sertifikat Keahlian (Opsional, max 5)',
+                      style: AppTypography.label,
+                    ),
                     const SizedBox(height: AppSpacing.sm),
-                    
+
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: AppSpacing.md,
-                        mainAxisSpacing: AppSpacing.md,
-                        childAspectRatio: 1.5,
-                      ),
-                      itemCount: _certificatePhotos.length < 5 
-                          ? _certificatePhotos.length + 1 
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: AppSpacing.md,
+                            mainAxisSpacing: AppSpacing.md,
+                            childAspectRatio: 1.5,
+                          ),
+                      itemCount: _certificatePhotos.length < 5
+                          ? _certificatePhotos.length + 1
                           : 5,
                       itemBuilder: (context, index) {
                         if (index == _certificatePhotos.length) {
@@ -230,17 +243,24 @@ class _VerificationPageState extends State<VerificationPage> {
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 color: AppColors.surfaceVariant,
-                                borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSizing.radiusMd,
+                                ),
                                 border: Border.all(color: AppColors.border),
                               ),
-                              child: const Icon(Icons.add_photo_alternate, color: AppColors.primary),
+                              child: const Icon(
+                                Icons.add_photo_alternate,
+                                color: AppColors.primary,
+                              ),
                             ),
                           );
                         }
 
                         return Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppSizing.radiusMd,
+                            ),
                             image: DecorationImage(
                               image: FileImage(_certificatePhotos[index]),
                               fit: BoxFit.cover,
@@ -248,7 +268,10 @@ class _VerificationPageState extends State<VerificationPage> {
                           ),
                           alignment: Alignment.topRight,
                           child: IconButton(
-                            icon: const Icon(Icons.cancel, color: AppColors.error),
+                            icon: const Icon(
+                              Icons.cancel,
+                              color: AppColors.error,
+                            ),
                             onPressed: () {
                               setState(() {
                                 _certificatePhotos.removeAt(index);
@@ -260,10 +283,8 @@ class _VerificationPageState extends State<VerificationPage> {
                     ),
 
                     const SizedBox(height: AppSpacing.xxl),
-                    AppButton(
-                      text: 'Kirim Pengajuan',
-                      onPressed: _submit,
-                    ),
+                    AppButton(text: 'Kirim Pengajuan', onPressed: _submit),
+                    SizedBox(height: bottomScrollPadding),
                   ],
                 ),
               ),

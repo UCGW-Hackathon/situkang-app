@@ -7,6 +7,7 @@ abstract class WorkerProfileRepository {
   Future<Result<WorkerProfile>> updateWorkerProfile({
     String? name,
     String? bio,
+    String? specialization,
   });
 
   Future<Result<WorkerProfile>> uploadCoverPhoto(String filePath);

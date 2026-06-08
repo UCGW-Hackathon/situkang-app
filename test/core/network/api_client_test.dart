@@ -25,8 +25,9 @@ void main() {
 
     // Default: online and has a token
     when(() => mockConnectivityManager.isOnline).thenReturn(true);
-    when(() => mockTokenStorage.getAccessToken())
-        .thenAnswer((_) async => 'test-access-token');
+    when(
+      () => mockTokenStorage.getAccessToken(),
+    ).thenAnswer((_) async => 'test-access-token');
 
     dio = Dio(BaseOptions(baseUrl: 'https://api.situkang.id/v1'));
     dioAdapter = DioAdapter(dio: dio);
@@ -121,10 +122,7 @@ void main() {
 
     group('DELETE requests', () {
       test('should perform DELETE request', () async {
-        dioAdapter.onDelete(
-          '/test',
-          (server) => server.reply(204, null),
-        );
+        dioAdapter.onDelete('/test', (server) => server.reply(204, null));
 
         final response = await apiClient.delete<void>('/test');
 
@@ -135,8 +133,9 @@ void main() {
 
   group('AuthInterceptor', () {
     test('should attach Bearer token to request headers', () async {
-      when(() => mockTokenStorage.getAccessToken())
-          .thenAnswer((_) async => 'my-jwt-token');
+      when(
+        () => mockTokenStorage.getAccessToken(),
+      ).thenAnswer((_) async => 'my-jwt-token');
 
       dioAdapter.onGet(
         '/protected',
@@ -150,16 +149,16 @@ void main() {
     });
 
     test('should not attach header when no token available', () async {
-      when(() => mockTokenStorage.getAccessToken())
-          .thenAnswer((_) async => null);
+      when(
+        () => mockTokenStorage.getAccessToken(),
+      ).thenAnswer((_) async => null);
 
       dioAdapter.onGet(
         '/public',
         (server) => server.reply(200, {'status': 'success'}),
       );
 
-      final response =
-          await apiClient.get<Map<String, dynamic>>('/public');
+      final response = await apiClient.get<Map<String, dynamic>>('/public');
 
       expect(response.statusCode, 200);
     });
@@ -168,16 +167,41 @@ void main() {
   group('ConnectivityInterceptor', () {
     test('should reject request when offline', () async {
       when(() => mockConnectivityManager.isOnline).thenReturn(false);
+      when(
+        () => mockConnectivityManager.checkConnectivity(),
+      ).thenAnswer((_) async => ConnectivityStatus.offline);
 
       expect(
         () => apiClient.get<Map<String, dynamic>>('/test'),
-        throwsA(isA<DioException>().having(
-          (e) => e.type,
-          'type',
-          DioExceptionType.connectionError,
-        )),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.type,
+            'type',
+            DioExceptionType.connectionError,
+          ),
+        ),
       );
     });
+
+    test(
+      'should recheck connectivity before rejecting stale offline status',
+      () async {
+        when(() => mockConnectivityManager.isOnline).thenReturn(false);
+        when(
+          () => mockConnectivityManager.checkConnectivity(),
+        ).thenAnswer((_) async => ConnectivityStatus.online);
+
+        dioAdapter.onGet(
+          '/test',
+          (server) => server.reply(200, {'status': 'success'}),
+        );
+
+        final response = await apiClient.get<Map<String, dynamic>>('/test');
+
+        expect(response.statusCode, 200);
+        verify(() => mockConnectivityManager.checkConnectivity()).called(1);
+      },
+    );
 
     test('should allow request when online', () async {
       when(() => mockConnectivityManager.isOnline).thenReturn(true);
@@ -217,10 +241,8 @@ void main() {
     test('should map 401 to AuthFailure', () async {
       dioAdapter.onGet(
         '/test',
-        (server) => server.reply(401, {
-          'status': 'error',
-          'message': 'Token expired',
-        }),
+        (server) =>
+            server.reply(401, {'status': 'error', 'message': 'Token expired'}),
       );
 
       try {
@@ -236,10 +258,8 @@ void main() {
     test('should map 403 to AuthFailure', () async {
       dioAdapter.onGet(
         '/test',
-        (server) => server.reply(403, {
-          'status': 'error',
-          'message': 'Access denied',
-        }),
+        (server) =>
+            server.reply(403, {'status': 'error', 'message': 'Access denied'}),
       );
 
       try {
@@ -255,10 +275,8 @@ void main() {
     test('should map 404 to ServerFailure', () async {
       dioAdapter.onGet(
         '/test',
-        (server) => server.reply(404, {
-          'status': 'error',
-          'message': 'Not found',
-        }),
+        (server) =>
+            server.reply(404, {'status': 'error', 'message': 'Not found'}),
       );
 
       try {
@@ -275,10 +293,8 @@ void main() {
     test('should map 409 to ServerFailure', () async {
       dioAdapter.onGet(
         '/test',
-        (server) => server.reply(409, {
-          'status': 'error',
-          'message': 'Conflict',
-        }),
+        (server) =>
+            server.reply(409, {'status': 'error', 'message': 'Conflict'}),
       );
 
       try {
@@ -313,10 +329,8 @@ void main() {
     test('should map 429 to ServerFailure', () async {
       dioAdapter.onGet(
         '/test',
-        (server) => server.reply(429, {
-          'status': 'error',
-          'message': 'Rate limited',
-        }),
+        (server) =>
+            server.reply(429, {'status': 'error', 'message': 'Rate limited'}),
       );
 
       try {
@@ -409,10 +423,7 @@ void main() {
     });
 
     test('should parse error response', () {
-      final json = {
-        'status': 'error',
-        'message': 'Something went wrong',
-      };
+      final json = {'status': 'error', 'message': 'Something went wrong'};
 
       final response = ApiResponse<Map<String, dynamic>?>.fromJson(json);
 

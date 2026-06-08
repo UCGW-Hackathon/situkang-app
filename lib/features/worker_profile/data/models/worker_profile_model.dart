@@ -14,8 +14,14 @@ class WorkerServiceModel extends WorkerService {
     @JsonKey(name: 'price_unit') required super.priceUnit,
   });
 
-  factory WorkerServiceModel.fromJson(Map<String, dynamic> json) =>
-      _$WorkerServiceModelFromJson(json);
+  factory WorkerServiceModel.fromJson(Map<String, dynamic> json) {
+    return WorkerServiceModel(
+      id: json['id'] as String? ?? json['service_id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      basePrice: (json['base_price'] as num?)?.toInt() ?? 0,
+      priceUnit: json['price_unit'] as String? ?? 'per kunjungan',
+    );
+  }
 
   @override
   Map<String, dynamic> toJson() => _$WorkerServiceModelToJson(this);
@@ -23,20 +29,19 @@ class WorkerServiceModel extends WorkerService {
 
 @JsonSerializable()
 class WorkerProfileModel extends WorkerProfile {
-
   factory WorkerProfileModel.fromJson(Map<String, dynamic> json) {
     if (json['joined_at'] == null) {
       json['joined_at'] = DateTime.now().toIso8601String();
     }
     return _$WorkerProfileModelFromJson(json);
   }
-  
+
   const WorkerProfileModel({
     @JsonKey(name: 'worker_id') required super.id,
     @JsonKey(name: 'full_name') required super.name,
-    @JsonKey(name: 'phone') required super.phoneNumber, 
-    @JsonKey(name: 'verification_status') required super.verificationStatus, 
-    @JsonKey(name: 'joined_at') required super.joinedAt, 
+    @JsonKey(name: 'phone') required super.phoneNumber,
+    @JsonKey(name: 'verification_status') required super.verificationStatus,
+    @JsonKey(name: 'joined_at') required super.joinedAt,
     @JsonKey(name: 'avatar_url') super.avatarUrl,
     @JsonKey(name: 'cover_photo_url') super.coverUrl,
     super.bio,
