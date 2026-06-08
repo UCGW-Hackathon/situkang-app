@@ -106,7 +106,7 @@ class OrderDetailPage extends StatelessWidget {
             const SizedBox(height: AppSpacing.formSectionSpacing),
             _buildPurchaseSummary(order),
           ],
-          if (order.canCancel) ...[
+          if (order.canCancel || order.status.isCancellable) ...[
             const SizedBox(height: AppSpacing.formSectionSpacing),
             _buildCancelButton(context, order),
           ],

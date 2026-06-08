@@ -51,6 +51,21 @@ class WorkerProfileModel {
         serviceNames = rawServices.map((s) => s.toString()).toList();
       }
     }
+    
+    // Map specialization to services if services is empty
+    if (serviceModels.isEmpty &&
+        json['specialization'] != null &&
+        json['base_price'] != null &&
+        json['price_unit'] != null) {
+      serviceModels.add(
+        WorkerServiceModel(
+          serviceId: 'service_1',
+          name: json['specialization'] as String,
+          basePrice: json['base_price'] as int,
+          priceUnit: json['price_unit'] as String,
+        ),
+      );
+    }
 
     return WorkerProfileModel(
       workerId: json['worker_id'] as String? ?? json['user_id'] as String? ?? json['id'] as String? ?? '',

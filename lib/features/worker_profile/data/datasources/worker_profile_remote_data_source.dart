@@ -8,11 +8,7 @@ import '../models/worker_profile_model.dart';
 
 abstract class WorkerProfileRemoteDataSource {
   Future<WorkerProfileModel> getWorkerProfile();
-  Future<WorkerProfileModel> updateWorkerProfile(
-    String? name,
-    String? bio,
-    String? specialization,
-  );
+  Future<WorkerProfileModel> updateWorkerProfile(String? name, String? bio);
   Future<WorkerProfileModel> uploadCoverPhoto(String filePath);
   Future<void> submitVerification({
     required String ktpPath,
@@ -51,18 +47,10 @@ class WorkerProfileRemoteDataSourceImpl
   Future<WorkerProfileModel> updateWorkerProfile(
     String? name,
     String? bio,
-    String? specialization,
   ) async {
     final data = <String, dynamic>{};
-    if (name != null && name.trim().isNotEmpty) {
-      data['full_name'] = name.trim();
-    }
-    if (bio != null && bio.trim().isNotEmpty) {
-      data['bio'] = bio.trim();
-    }
-    if (specialization != null && specialization.trim().isNotEmpty) {
-      data['specialization'] = specialization.trim();
-    }
+    if (name != null) data['full_name'] = name;
+    if (bio != null) data['bio'] = bio;
 
     final response = await apiClient.put<Map<String, dynamic>>(
       ApiEndpoints.workerProfile,
@@ -125,9 +113,13 @@ class WorkerProfileRemoteDataSourceImpl
     int basePrice,
     String priceUnit,
   ) async {
-    final response = await apiClient.post<Map<String, dynamic>>(
-      '/worker/profile/services',
-      data: {'name': name, 'base_price': basePrice, 'price_unit': priceUnit},
+    final response = await apiClient.put<Map<String, dynamic>>(
+      ApiEndpoints.workerProfile,
+      data: {
+        'specialization': name,
+        'base_price': basePrice,
+        'price_unit': priceUnit,
+      },
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,
@@ -139,8 +131,9 @@ class WorkerProfileRemoteDataSourceImpl
 
   @override
   Future<WorkerProfileModel> removeService(String serviceId) async {
-    final response = await apiClient.delete<Map<String, dynamic>>(
-      '/worker/profile/services/$serviceId',
+    final response = await apiClient.put<Map<String, dynamic>>(
+      ApiEndpoints.workerProfile,
+      data: {'specialization': '', 'base_price': 0, 'price_unit': ''},
     );
     final apiResponse = ApiResponse<WorkerProfileModel>.fromJson(
       response.data!,
