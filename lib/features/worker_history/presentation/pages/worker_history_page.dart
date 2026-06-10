@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/enums.dart';
@@ -75,7 +76,9 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FC), // Light blue-grey background matching user UI
+      backgroundColor: const Color(
+        0xFFF5F8FC,
+      ), // Light blue-grey background matching user UI
       appBar: AppBar(
         title: const Text('Riwayat Pekerjaan'),
         backgroundColor: Colors.transparent,
@@ -102,32 +105,43 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
                       Expanded(
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: List.generate(_statusLabels.length, (index) {
-                            final isSelected = _selectedIndex == index;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 12),
-                              child: GestureDetector(
-                                onTap: () => _onFilterSelected(index),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: isSelected ? const Color(0xFF006B5E) : const Color(0xFFDEE8F5),
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  child: Text(
-                                    _statusLabels[index],
-                                    style: TextStyle(
-                                      color: isSelected ? Colors.white : const Color(0xFF4A5568),
-                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                      fontSize: 14,
+                          child: Row(
+                            children: List.generate(_statusLabels.length, (
+                              index,
+                            ) {
+                              final isSelected = _selectedIndex == index;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: GestureDetector(
+                                  onTap: () => _onFilterSelected(index),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? const Color(0xFF006B5E)
+                                          : const Color(0xFFDEE8F5),
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                    child: Text(
+                                      _statusLabels[index],
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? Colors.white
+                                            : const Color(0xFF4A5568),
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          }),
-                        ),
+                              );
+                            }),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -139,7 +153,11 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
                           color: Color(0xFFDEE8F5),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.tune, color: Color(0xFF1A202C), size: 20),
+                        child: const Icon(
+                          Icons.tune,
+                          color: Color(0xFF1A202C),
+                          size: 20,
+                        ),
                       ),
                     ],
                   ),
@@ -152,20 +170,26 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
               child: BlocBuilder<WorkerHistoryBloc, WorkerHistoryState>(
                 builder: (context, state) {
                   if (state.status == WorkerHistoryStatus.initial ||
-                      (state.status == WorkerHistoryStatus.loading && state.orders.isEmpty)) {
+                      (state.status == WorkerHistoryStatus.loading &&
+                          state.orders.isEmpty)) {
                     return const _OrderListSkeleton();
                   }
 
-                  if (state.status == WorkerHistoryStatus.error && state.orders.isEmpty) {
+                  if (state.status == WorkerHistoryStatus.error &&
+                      state.orders.isEmpty) {
                     return AppErrorWidget(
                       message: state.failure?.message ?? 'Terjadi kesalahan',
-                      onRetry: () => context.read<WorkerHistoryBloc>().add(FetchWorkerHistory()),
+                      onRetry: () => context.read<WorkerHistoryBloc>().add(
+                        FetchWorkerHistory(),
+                      ),
                     );
                   }
 
                   return RefreshIndicator(
                     onRefresh: () async {
-                      context.read<WorkerHistoryBloc>().add(FetchWorkerHistory());
+                      context.read<WorkerHistoryBloc>().add(
+                        FetchWorkerHistory(),
+                      );
                     },
                     child: state.orders.isEmpty
                         ? _buildEmptyState()
@@ -178,7 +202,9 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
                             itemBuilder: (context, index) {
                               if (index >= state.orders.length) {
                                 return const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: AppSpacing.md,
+                                  ),
                                   child: Center(child: LoadingIndicator()),
                                 );
                               }
@@ -187,10 +213,9 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
                               return _OrderCard(
                                 order: order,
                                 formatter: _formatter,
-                                onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Membuka detail pesanan...')));
-                                },
+                                onTap: () => context.push(
+                                  '/worker/orders/${order.id}/brief',
+                                ),
                               );
                             },
                           ),
@@ -236,11 +261,7 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
 
 /// Card widget displaying order summary information matching the design.
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({
-    required this.order,
-    required this.formatter,
-    this.onTap,
-  });
+  const _OrderCard({required this.order, required this.formatter, this.onTap});
 
   final Order order;
   final NumberFormat formatter;
@@ -365,21 +386,35 @@ class _OrderCard extends StatelessWidget {
             // Bottom Row (Date & Time)
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFFA0AEC0)),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 16,
+                  color: Color(0xFFA0AEC0),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   DateFormat('MMM dd, yyyy').format(order.createdAt),
-                  style: const TextStyle(color: Color(0xFF718096), fontSize: 13),
+                  style: const TextStyle(
+                    color: Color(0xFF718096),
+                    fontSize: 13,
+                  ),
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Text('•', style: TextStyle(color: Color(0xFFA0AEC0))),
                 ),
-                const Icon(Icons.access_time, size: 16, color: Color(0xFFA0AEC0)),
+                const Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: Color(0xFFA0AEC0),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   timeStr,
-                  style: const TextStyle(color: Color(0xFF718096), fontSize: 13),
+                  style: const TextStyle(
+                    color: Color(0xFF718096),
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),

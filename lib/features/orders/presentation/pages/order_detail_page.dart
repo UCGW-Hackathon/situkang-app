@@ -24,9 +24,7 @@ class OrderDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Pesanan'),
-      ),
+      appBar: AppBar(title: const Text('Detail Pesanan')),
       body: BlocConsumer<OrderBloc, OrderState>(
         listener: (context, state) {
           if (state is OrderCreated) {
@@ -56,8 +54,8 @@ class OrderDetailPage extends StatelessWidget {
               message: state.failure.message,
               onRetry: () {
                 context.read<OrderBloc>().add(
-                      FetchOrderDetailRequested(orderId: orderId),
-                    );
+                  FetchOrderDetailRequested(orderId: orderId),
+                );
               },
             );
           }
@@ -73,8 +71,15 @@ class OrderDetailPage extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, OrderDetail order) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom + 96;
+
     return SingleChildScrollView(
-      padding: AppSpacing.pagePadding,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.pagePaddingHorizontal,
+        AppSpacing.pagePaddingVertical,
+        AppSpacing.pagePaddingHorizontal,
+        bottomPadding,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -85,11 +90,11 @@ class OrderDetailPage extends StatelessWidget {
           _buildWorkerSection(order),
           const SizedBox(height: AppSpacing.formSectionSpacing),
           _buildLocationSection(order),
-          if (order.preferredDate != null || order.preferredTimeStart != null)
-            ...[
-              const SizedBox(height: AppSpacing.formSectionSpacing),
-              _buildScheduleSection(order),
-            ],
+          if (order.preferredDate != null ||
+              order.preferredTimeStart != null) ...[
+            const SizedBox(height: AppSpacing.formSectionSpacing),
+            _buildScheduleSection(order),
+          ],
           const SizedBox(height: AppSpacing.formSectionSpacing),
           _buildPricingSection(order),
           if (order.photos.isNotEmpty) ...[
@@ -145,10 +150,7 @@ class OrderDetailPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                Text(
-                  order.orderNumber,
-                  style: AppTypography.caption,
-                ),
+                Text(order.orderNumber, style: AppTypography.caption),
               ],
             ),
           ),
@@ -474,9 +476,7 @@ class OrderDetailPage extends StatelessWidget {
       children: [
         const Text('Catatan', style: AppTypography.h5),
         const SizedBox(height: AppSpacing.sm),
-        AppCard(
-          child: Text(order.notes!, style: AppTypography.bodyMedium),
-        ),
+        AppCard(child: Text(order.notes!, style: AppTypography.bodyMedium)),
       ],
     );
   }
@@ -550,9 +550,7 @@ class OrderDetailPage extends StatelessWidget {
           // Timeline content
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(
-                bottom: isLast ? 0 : AppSpacing.md,
-              ),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -567,8 +565,10 @@ class OrderDetailPage extends StatelessWidget {
                   if (item.timestamp != null) ...[
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      DateFormat('dd MMM yyyy, HH:mm', 'id')
-                          .format(item.timestamp!),
+                      DateFormat(
+                        'dd MMM yyyy, HH:mm',
+                        'id',
+                      ).format(item.timestamp!),
                       style: AppTypography.caption,
                     ),
                   ],
@@ -650,56 +650,29 @@ class OrderDetailPage extends StatelessWidget {
     );
   }
 
-  void _showCancelDialog(BuildContext context, OrderDetail order) {
-    final reasonController = TextEditingController();
+  Future<void> _showCancelDialog(
+    BuildContext context,
+    OrderDetail order,
+  ) async {
+    final orderBloc = context.read<OrderBloc>();
 
-    showDialog(
+    final input = await showDialog<_CancelOrderInput>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Batalkan Pesanan?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Pesanan ${order.orderNumber} akan dibatalkan. Tindakan ini tidak bisa dikembalikan.',
-              style: AppTypography.bodyMedium,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Alasan pembatalan *',
-                hintText: 'Masukkan alasan...',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-              maxLength: 1000,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Tidak'),
-          ),
-          TextButton(
-            onPressed: () {
-              final reason = reasonController.text.trim();
-              if (reason.isNotEmpty) {
-                context.read<OrderBloc>().add(
-                      CancelOrderRequested(
-                        orderId: order.id,
-                        reason: reason,
-                      ),
-                    );
-                Navigator.pop(dialogContext);
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Batalkan'),
-          ),
-        ],
+      builder: (_) => _CancelOrderDialog(order: order),
+    );
+
+    if (input == null) return;
+
+    await WidgetsBinding.instance.endOfFrame;
+    if (!context.mounted) return;
+
+    final cancelOrderId = order.id.isNotEmpty ? order.id : orderId;
+
+    orderBloc.add(
+      CancelOrderRequested(
+        orderId: cancelOrderId,
+        cancelReason: input.cancelReason,
+        notes: input.notes,
       ),
     );
   }
@@ -730,9 +703,7 @@ class OrderDetailPage extends StatelessWidget {
         Text(label, style: AppTypography.bodyMedium),
         Text(
           isPrice ? 'Rp$value' : value,
-          style: AppTypography.label.copyWith(
-            color: valueColor,
-          ),
+          style: AppTypography.label.copyWith(color: valueColor),
         ),
       ],
     );
@@ -835,6 +806,109 @@ class _OrderDetailSkeleton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CancelOrderInput {
+  const _CancelOrderInput({required this.cancelReason, this.notes});
+
+  final String cancelReason;
+  final String? notes;
+}
+
+class _CancelOrderDialog extends StatefulWidget {
+  const _CancelOrderDialog({required this.order});
+
+  final OrderDetail order;
+
+  @override
+  State<_CancelOrderDialog> createState() => _CancelOrderDialogState();
+}
+
+class _CancelOrderDialogState extends State<_CancelOrderDialog> {
+  final _notesController = TextEditingController();
+  var _selectedReason = 'changed_mind';
+
+  static const _reasons = <(String, String)>[
+    ('changed_mind', 'Berubah pikiran'),
+    ('found_other_worker', 'Menemukan tukang lain'),
+    ('too_long', 'Menunggu terlalu lama'),
+    ('other', 'Lainnya'),
+  ];
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Batalkan Pesanan?'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pesanan ${widget.order.orderNumber} akan dibatalkan. Tindakan ini tidak bisa dikembalikan.',
+              style: AppTypography.bodyMedium,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Text('Alasan pembatalan *', style: AppTypography.label),
+            const SizedBox(height: AppSpacing.xs),
+            ..._reasons.map(
+              (reason) => ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  _selectedReason == reason.$1
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: _selectedReason == reason.$1
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
+                ),
+                title: Text(reason.$2),
+                onTap: () => setState(() => _selectedReason = reason.$1),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _notesController,
+              decoration: const InputDecoration(
+                labelText: 'Catatan tambahan',
+                hintText: 'Opsional',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+              maxLength: 1000,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Tidak'),
+        ),
+        TextButton(
+          onPressed: () {
+            final notes = _notesController.text.trim();
+            Navigator.pop(
+              context,
+              _CancelOrderInput(
+                cancelReason: _selectedReason,
+                notes: notes.isEmpty ? null : notes,
+              ),
+            );
+          },
+          style: TextButton.styleFrom(foregroundColor: AppColors.error),
+          child: const Text('Batalkan'),
+        ),
+      ],
     );
   }
 }

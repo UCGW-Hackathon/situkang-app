@@ -32,10 +32,9 @@ part 'order_state.dart';
 @injectable
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
   /// Creates an [OrderBloc] with the required repository.
-  OrderBloc({
-    required OrderRepository orderRepository,
-  })  : _orderRepository = orderRepository,
-        super(const OrderInitial()) {
+  OrderBloc({required OrderRepository orderRepository})
+    : _orderRepository = orderRepository,
+      super(const OrderInitial()) {
     on<CreateOrderRequested>(_onCreateOrderRequested);
     on<FetchOrdersRequested>(_onFetchOrdersRequested);
     on<FetchOrderDetailRequested>(_onFetchOrderDetailRequested);
@@ -80,11 +79,9 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     result.fold(
       (failure) => emit(OrderError(failure: failure)),
-      (data) => emit(OrdersLoaded(
-        orders: data.$1,
-        meta: data.$2,
-        filter: event.filter,
-      )),
+      (data) => emit(
+        OrdersLoaded(orders: data.$1, meta: data.$2, filter: event.filter),
+      ),
     );
   }
 
@@ -118,7 +115,8 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     final result = await _orderRepository.cancelOrder(
       event.orderId,
-      event.reason,
+      cancelReason: event.cancelReason,
+      notes: event.notes,
     );
 
     result.fold(

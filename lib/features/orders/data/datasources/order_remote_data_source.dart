@@ -36,11 +36,15 @@ abstract class OrderRemoteDataSource {
   /// Calls `GET /orders/{orderId}`.
   Future<OrderDetailModel> getOrderDetail(String orderId);
 
-  /// Cancels an order with the given reason.
+  /// Cancels an order with the given reason code and optional notes.
   ///
   /// Calls `POST /orders/{orderId}/cancel`.
   /// Returns the updated order model.
-  Future<OrderModel> cancelOrder(String orderId, String reason);
+  Future<OrderModel> cancelOrder(
+    String orderId, {
+    required String cancelReason,
+    String? notes,
+  });
 }
 
 /// Implementation of [OrderRemoteDataSource] using [ApiClient].
@@ -71,9 +75,11 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       },
       if (params.preferredDate != null && params.preferredDate!.isNotEmpty)
         'preferred_date': params.preferredDate,
-      if (params.preferredTimeStart != null && params.preferredTimeStart!.isNotEmpty)
+      if (params.preferredTimeStart != null &&
+          params.preferredTimeStart!.isNotEmpty)
         'preferred_time_start': params.preferredTimeStart,
-      if (params.preferredTimeEnd != null && params.preferredTimeEnd!.isNotEmpty)
+      if (params.preferredTimeEnd != null &&
+          params.preferredTimeEnd!.isNotEmpty)
         'preferred_time_end': params.preferredTimeEnd,
       'urgency': params.urgency,
       if (params.notes != null && params.notes!.isNotEmpty)
@@ -110,10 +116,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   }) async {
     // Per openapi.yaml, GET /orders only accepts: status, page, per_page.
     // sort_by and sort_order are not in the spec and cause "invalid field" errors.
-    final queryParams = <String, dynamic>{
-      'page': page,
-      'per_page': perPage,
-    };
+    final queryParams = <String, dynamic>{'page': page, 'per_page': perPage};
 
     if (filter?.status != null) {
       queryParams['status'] = filter!.status!.value;
@@ -154,12 +157,19 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   }
 
   @override
-  Future<OrderModel> cancelOrder(String orderId, String reason) async {
+  Future<OrderModel> cancelOrder(
+    String orderId, {
+    required String cancelReason,
+    String? notes,
+  }) async {
+    final requestData = <String, dynamic>{
+      'cancel_reason': cancelReason,
+      if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+    };
+
     final response = await apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.orderCancel(orderId),
-      data: {
-        'cancel_reason': reason,
-      },
+      data: requestData,
     );
 
     final data = response.data!;

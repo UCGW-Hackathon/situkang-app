@@ -28,10 +28,7 @@ class CreateOrderRequested extends OrderEvent {
 ///
 /// Validates: Requirement 8.1 (display orders sorted by creation date).
 class FetchOrdersRequested extends OrderEvent {
-  const FetchOrdersRequested({
-    this.filter,
-    this.page = 1,
-  });
+  const FetchOrdersRequested({this.filter, this.page = 1});
 
   /// Optional filter to apply (e.g., status filter).
   final OrderFilter? filter;
@@ -62,17 +59,21 @@ class FetchOrderDetailRequested extends OrderEvent {
 class CancelOrderRequested extends OrderEvent {
   const CancelOrderRequested({
     required this.orderId,
-    required this.reason,
+    required this.cancelReason,
+    this.notes,
   });
 
   /// The ID of the order to cancel.
   final String orderId;
 
-  /// The reason for cancellation.
-  final String reason;
+  /// API reason code for cancellation.
+  final String cancelReason;
+
+  /// Optional user note for cancellation.
+  final String? notes;
 
   @override
-  List<Object?> get props => [orderId, reason];
+  List<Object?> get props => [orderId, cancelReason, notes];
 }
 
 /// Event dispatched when the user applies a status filter.

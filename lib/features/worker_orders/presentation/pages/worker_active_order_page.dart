@@ -8,9 +8,7 @@ import '../../../orders/domain/entities/order.dart';
 import '../bloc/worker_order_bloc.dart';
 
 class WorkerActiveOrderPage extends StatefulWidget {
-  const WorkerActiveOrderPage({
-    required this.order, super.key,
-  });
+  const WorkerActiveOrderPage({required this.order, super.key});
 
   final Order order;
 
@@ -40,18 +38,23 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
     // Requirements: Location sharing is active during on_the_way and arrived.
     // In a real app, we would call the LocationSharingService here.
     setState(() {
-      _isSharingLocation = _currentStatus == 'on_the_way' || _currentStatus == 'arrived';
+      _isSharingLocation =
+          _currentStatus == 'on_the_way' || _currentStatus == 'arrived';
     });
   }
 
   void _handleStatusChange(String newStatus) {
     context.read<WorkerOrderBloc>().add(
-      UpdateOrderStatus(orderId: widget.order.id, status: newStatus, currentStatus: _currentStatus),
+      UpdateOrderStatus(
+        orderId: widget.order.id,
+        status: newStatus,
+        currentStatus: _currentStatus,
+      ),
     );
   }
 
   void _showAddWorkItem() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) {
@@ -61,7 +64,7 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
   }
 
   void _showUploadPhoto() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) {
@@ -71,7 +74,7 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
   }
 
   void _showCompleteDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -79,7 +82,9 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Pastikan semua pekerjaan telah selesai dan tagihan telah dimasukkan.'),
+              const Text(
+                'Pastikan semua pekerjaan telah selesai dan tagihan telah dimasukkan.',
+              ),
               const SizedBox(height: AppSpacing.md),
               AppTextField(
                 controller: _workerNotesController,
@@ -116,9 +121,7 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pesanan Berlangsung'),
-      ),
+      appBar: AppBar(title: const Text('Pesanan Berlangsung')),
       body: BlocConsumer<WorkerOrderBloc, WorkerOrderState>(
         listener: (context, state) {
           if (state is WorkerOrderError) {
@@ -135,7 +138,9 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
             _updateLocationSharingState();
           } else if (state is WorkerOrderItemAdded) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Item berhasil ditambahkan ke tagihan.')),
+              const SnackBar(
+                content: Text('Item berhasil ditambahkan ke tagihan.'),
+              ),
             );
           } else if (state is WorkerOrderPhotoUploaded) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -149,7 +154,9 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
               ),
             );
             context.pop();
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Membuka tagihan...')));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Membuka tagihan...')));
           }
         },
         builder: (context, state) {
@@ -164,20 +171,19 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
                   children: [
                     _buildOrderInfo(),
                     const SizedBox(height: AppSpacing.xl),
-                    
-                    if (_isSharingLocation)
-                      _buildLocationSharingIndicator(),
-                    
+
+                    if (_isSharingLocation) _buildLocationSharingIndicator(),
+
                     const SizedBox(height: AppSpacing.md),
                     const Text('Status Pekerjaan', style: AppTypography.h6),
                     const SizedBox(height: AppSpacing.md),
-                    
+
                     _buildStatusTracker(),
                     const SizedBox(height: AppSpacing.xl),
-                    
+
                     const Text('Aksi', style: AppTypography.h6),
                     const SizedBox(height: AppSpacing.md),
-                    
+
                     if (_currentStatus == 'in_progress') ...[
                       Row(
                         children: [
@@ -229,7 +235,9 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
             children: [
               const Icon(Icons.build, color: AppColors.primary),
               const SizedBox(width: AppSpacing.sm),
-              Expanded(child: Text(widget.order.title, style: AppTypography.h6)),
+              Expanded(
+                child: Text(widget.order.title, style: AppTypography.h6),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -246,7 +254,10 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
               Icon(Icons.location_on, color: AppColors.error, size: 20),
               SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Text('Lokasi Pelanggan', style: AppTypography.bodyMedium),
+                child: Text(
+                  'Lokasi Pelanggan',
+                  style: AppTypography.bodyMedium,
+                ),
               ),
             ],
           ),
@@ -261,11 +272,14 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
                 icon: const Icon(Icons.chat),
                 color: AppColors.primary,
                 onPressed: () {
-                  context.push('/worker/chat/${widget.order.id}', extra: 'Pelanggan');
+                  context.push(
+                    '/worker/chat/${widget.order.id}',
+                    extra: 'Pelanggan',
+                  );
                 },
               ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -335,29 +349,41 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isActive ? AppColors.primary : AppColors.surfaceVariant,
+                    color: isActive
+                        ? AppColors.primary
+                        : AppColors.surfaceVariant,
                   ),
                   child: isActive
-                      ? const Icon(Icons.check, size: 16, color: AppColors.onPrimary)
+                      ? const Icon(
+                          Icons.check,
+                          size: 16,
+                          color: AppColors.onPrimary,
+                        )
                       : null,
                 ),
                 if (!isLast)
                   Container(
                     width: 2,
                     height: 30,
-                    color: isActive ? AppColors.primary : AppColors.surfaceVariant,
+                    color: isActive
+                        ? AppColors.primary
+                        : AppColors.surfaceVariant,
                   ),
               ],
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Container(
-                padding: const EdgeInsets.only(bottom: 24), // Match height + padding
+                padding: const EdgeInsets.only(
+                  bottom: 24,
+                ), // Match height + padding
                 child: Text(
                   steps[index]['label']!,
                   style: AppTypography.bodyMedium.copyWith(
                     fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                    color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
+                    color: isActive
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
                   ),
                 ),
               ),

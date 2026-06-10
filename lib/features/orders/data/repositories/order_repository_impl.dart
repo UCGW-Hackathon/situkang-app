@@ -84,8 +84,7 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<Result<OrderDetail>> getOrderDetail(String orderId) async {
     try {
-      final orderDetailModel =
-          await remoteDataSource.getOrderDetail(orderId);
+      final orderDetailModel = await remoteDataSource.getOrderDetail(orderId);
       // Cache the detail
       await localDataSource.cacheOrderDetail(orderDetailModel);
       return Right(orderDetailModel.toEntity());
@@ -107,10 +106,17 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
-  Future<Result<Order>> cancelOrder(String orderId, String reason) async {
+  Future<Result<Order>> cancelOrder(
+    String orderId, {
+    required String cancelReason,
+    String? notes,
+  }) async {
     try {
-      final orderModel =
-          await remoteDataSource.cancelOrder(orderId, reason);
+      final orderModel = await remoteDataSource.cancelOrder(
+        orderId,
+        cancelReason: cancelReason,
+        notes: notes,
+      );
       // Invalidate cached detail since status changed
       await localDataSource.clearCache();
       return Right(orderModel.toEntity());
@@ -123,10 +129,7 @@ class OrderRepositoryImpl implements OrderRepository {
 
   /// Builds a cache key based on the filter and pagination parameters.
   String _buildCacheKey(OrderFilter? filter, int page, int perPage) {
-    final parts = <String>[
-      'p_$page',
-      'pp_$perPage',
-    ];
+    final parts = <String>['p_$page', 'pp_$perPage'];
 
     if (filter?.status != null) {
       parts.add('status_${filter!.status!.value}');

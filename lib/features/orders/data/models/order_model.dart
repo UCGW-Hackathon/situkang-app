@@ -30,15 +30,17 @@ class OrderModel {
     OrderWorkerInfoModel? worker;
     if (json['worker'] is Map<String, dynamic>) {
       worker = OrderWorkerInfoModel.fromJson(
-          json['worker'] as Map<String, dynamic>);
+        json['worker'] as Map<String, dynamic>,
+      );
     }
 
     return OrderModel(
-      orderId: json['order_id'] as String? ?? '',
+      orderId: json['order_id'] as String? ?? json['id'] as String? ?? '',
       orderNumber: json['order_number'] as String? ?? '',
       title: json['title'] as String? ?? '',
       status: OrderStatus.fromString(json['status'] as String? ?? 'pending'),
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
           DateTime.now(),
       userId: json['user_id'] as String?,
       workerId: json['worker_id'] as String?,
@@ -79,42 +81,42 @@ class OrderModel {
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
-        'order_id': orderId,
-        'order_number': orderNumber,
-        'title': title,
-        'status': status.value,
-        'created_at': createdAt.toIso8601String(),
-        'user_id': userId,
-        'worker_id': workerId,
-        'service_id': serviceId,
-        'category_id': categoryId,
-        'worker': worker?.toJson(),
-        'service_name': serviceName,
-        'total_price': totalPrice,
-        'completed_at': completedAt?.toIso8601String(),
-        'cancelled_at': cancelledAt?.toIso8601String(),
-        'booking_fee': bookingFee,
-        'estimated_base_price': estimatedBasePrice,
-        'worker_name': workerName,
-      };
+    'order_id': orderId,
+    'order_number': orderNumber,
+    'title': title,
+    'status': status.value,
+    'created_at': createdAt.toIso8601String(),
+    'user_id': userId,
+    'worker_id': workerId,
+    'service_id': serviceId,
+    'category_id': categoryId,
+    'worker': worker?.toJson(),
+    'service_name': serviceName,
+    'total_price': totalPrice,
+    'completed_at': completedAt?.toIso8601String(),
+    'cancelled_at': cancelledAt?.toIso8601String(),
+    'booking_fee': bookingFee,
+    'estimated_base_price': estimatedBasePrice,
+    'worker_name': workerName,
+  };
 
   /// Converts this model to a domain [Order] entity.
   Order toEntity() => Order(
-        id: orderId,
-        orderNumber: orderNumber,
-        title: title,
-        status: status,
-        createdAt: createdAt,
-        userId: userId,
-        workerId: worker?.workerId ?? workerId,
-        serviceId: serviceId,
-        categoryId: categoryId,
-        workerInfo: worker?.toEntity(),
-        serviceName: serviceName,
-        totalPrice: totalPrice,
-        completedAt: completedAt,
-        cancelledAt: cancelledAt,
-      );
+    id: orderId,
+    orderNumber: orderNumber,
+    title: title,
+    status: status,
+    createdAt: createdAt,
+    userId: userId,
+    workerId: worker?.workerId ?? workerId,
+    serviceId: serviceId,
+    categoryId: categoryId,
+    workerInfo: worker?.toEntity(),
+    serviceName: serviceName,
+    totalPrice: totalPrice,
+    completedAt: completedAt,
+    cancelledAt: cancelledAt,
+  );
 }
 
 /// Data model for worker info within an order.
@@ -155,25 +157,25 @@ class OrderWorkerInfoModel {
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
-        'worker_id': workerId,
-        'full_name': fullName,
-        'avatar_url': avatarUrl,
-        'specialization': specialization,
-        'phone': phone,
-        'rating': rating,
-        'total_reviews': totalReviews,
-        'is_verified': isVerified,
-      };
+    'worker_id': workerId,
+    'full_name': fullName,
+    'avatar_url': avatarUrl,
+    'specialization': specialization,
+    'phone': phone,
+    'rating': rating,
+    'total_reviews': totalReviews,
+    'is_verified': isVerified,
+  };
 
   /// Converts this model to a domain [OrderWorkerInfo] entity.
   OrderWorkerInfo toEntity() => OrderWorkerInfo(
-        workerId: workerId,
-        fullName: fullName,
-        avatarUrl: avatarUrl,
-        specialization: specialization,
-        phone: phone,
-        rating: rating,
-        totalReviews: totalReviews,
-        isVerified: isVerified,
-      );
+    workerId: workerId,
+    fullName: fullName,
+    avatarUrl: avatarUrl,
+    specialization: specialization,
+    phone: phone,
+    rating: rating,
+    totalReviews: totalReviews,
+    isVerified: isVerified,
+  );
 }

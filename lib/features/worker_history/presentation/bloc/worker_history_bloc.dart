@@ -19,12 +19,20 @@ class WorkerHistoryBloc extends Bloc<WorkerHistoryEvent, WorkerHistoryState> {
   }
 
   final WorkerHistoryRepository repository;
+  static const _perPage = 10;
 
   Future<void> _onFetchWorkerHistory(
     FetchWorkerHistory event,
     Emitter<WorkerHistoryState> emit,
   ) async {
-    emit(state.copyWith(status: WorkerHistoryStatus.loading, page: 1));
+    emit(
+      state.copyWith(
+        status: WorkerHistoryStatus.loading,
+        orders: const <Order>[],
+        hasReachedMax: false,
+        page: 1,
+      ),
+    );
 
     final result = await repository.getHistory(
       status: state.statusFilter,
@@ -32,15 +40,16 @@ class WorkerHistoryBloc extends Bloc<WorkerHistoryEvent, WorkerHistoryState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: WorkerHistoryStatus.error,
-        failure: failure,
-      )),
-      (orders) => emit(state.copyWith(
-        status: WorkerHistoryStatus.success,
-        orders: orders,
-        hasReachedMax: orders.isEmpty, // Simple pagination logic
-      )),
+      (failure) => emit(
+        state.copyWith(status: WorkerHistoryStatus.error, failure: failure),
+      ),
+      (orders) => emit(
+        state.copyWith(
+          status: WorkerHistoryStatus.success,
+          orders: orders,
+          hasReachedMax: orders.length < _perPage,
+        ),
+      ),
     );
   }
 
@@ -48,7 +57,8 @@ class WorkerHistoryBloc extends Bloc<WorkerHistoryEvent, WorkerHistoryState> {
     LoadMoreWorkerHistory event,
     Emitter<WorkerHistoryState> emit,
   ) async {
-    if (state.hasReachedMax || state.status == WorkerHistoryStatus.loading) return;
+    if (state.hasReachedMax || state.status == WorkerHistoryStatus.loading)
+      return;
 
     final nextPage = state.page + 1;
     final result = await repository.getHistory(
@@ -57,19 +67,20 @@ class WorkerHistoryBloc extends Bloc<WorkerHistoryEvent, WorkerHistoryState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: WorkerHistoryStatus.error,
-        failure: failure,
-      )),
+      (failure) => emit(
+        state.copyWith(status: WorkerHistoryStatus.error, failure: failure),
+      ),
       (orders) {
-        emit(orders.isEmpty
-            ? state.copyWith(hasReachedMax: true)
-            : state.copyWith(
-                status: WorkerHistoryStatus.success,
-                orders: List.of(state.orders)..addAll(orders),
-                page: nextPage,
-                hasReachedMax: false,
-              ));
+        emit(
+          orders.isEmpty
+              ? state.copyWith(hasReachedMax: true)
+              : state.copyWith(
+                  status: WorkerHistoryStatus.success,
+                  orders: List.of(state.orders)..addAll(orders),
+                  page: nextPage,
+                  hasReachedMax: orders.length < _perPage,
+                ),
+        );
       },
     );
   }

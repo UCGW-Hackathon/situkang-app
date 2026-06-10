@@ -22,7 +22,9 @@ import '../widgets/typing_indicator.dart';
 /// Validates: Requirements 11.1-11.11
 class WorkerChatPage extends StatefulWidget {
   const WorkerChatPage({
-    required this.orderId, required this.currentUserId, super.key,
+    required this.orderId,
+    required this.currentUserId,
+    super.key,
     this.customerName = 'Pelanggan',
     this.customerAvatarUrl,
     this.isCustomerOnline = false,
@@ -55,8 +57,12 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
   @override
   void initState() {
     super.initState();
-    context.read<ChatBloc>().add(LoadMessages(orderId: widget.orderId));
-    context.read<ChatBloc>().add(MarkAsRead(orderId: widget.orderId));
+    context.read<ChatBloc>().add(
+      LoadMessages(orderId: widget.orderId, isWorker: true),
+    );
+    context.read<ChatBloc>().add(
+      MarkAsRead(orderId: widget.orderId, isWorker: true),
+    );
 
     _scrollController.addListener(_onScroll);
   }
@@ -75,11 +81,12 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
       final state = context.read<ChatBloc>().state;
       if (state is ChatLoaded && state.hasMore && !state.isLoadingMore) {
         context.read<ChatBloc>().add(
-              LoadMessages(
-                orderId: widget.orderId,
-                cursor: state.nextCursor,
-              ),
-            );
+          LoadMessages(
+            orderId: widget.orderId,
+            cursor: state.nextCursor,
+            isWorker: true,
+          ),
+        );
       }
     }
   }
@@ -111,7 +118,10 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
                       decoration: BoxDecoration(
                         color: AppColors.success,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.surface, width: 1.5),
+                        border: Border.all(
+                          color: AppColors.surface,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),
@@ -175,8 +185,8 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
                     message: state.failure.message,
                     onRetry: () {
                       context.read<ChatBloc>().add(
-                            LoadMessages(orderId: widget.orderId),
-                          );
+                        LoadMessages(orderId: widget.orderId),
+                      );
                     },
                   );
                 }
@@ -247,23 +257,19 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
               final isMe = message.senderId == widget.currentUserId;
 
               // Date separator
-              final showDate = _shouldShowDateSeparator(
-                state.messages,
-                index,
-              );
+              final showDate = _shouldShowDateSeparator(state.messages, index);
 
               return Column(
                 children: [
-                  if (showDate)
-                    _buildDateSeparator(message.createdAt),
+                  if (showDate) _buildDateSeparator(message.createdAt),
                   ChatBubble(
                     message: message,
                     isMe: isMe,
-                    onRetry: message.deliveryStatus ==
-                            MessageDeliveryStatus.failed
+                    onRetry:
+                        message.deliveryStatus == MessageDeliveryStatus.failed
                         ? () => context.read<ChatBloc>().add(
-                              RetryMessage(message: message),
-                            )
+                            RetryMessage(message: message, isWorker: true),
+                          )
                         : null,
                   ),
                 ],
@@ -303,9 +309,7 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
           ),
           child: Text(
             _formatDateSeparator(date),
-            style: AppTypography.caption.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTypography.caption.copyWith(fontWeight: FontWeight.w500),
           ),
         ),
       ),
@@ -362,8 +366,7 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
                     filled: true,
                     fillColor: AppColors.surfaceVariant,
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppSizing.radiusFull),
+                      borderRadius: BorderRadius.circular(AppSizing.radiusFull),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -375,11 +378,17 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
                   maxLength: 2000,
                   maxLines: 4,
                   minLines: 1,
-                  buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
+                  buildCounter:
+                      (
+                        _, {
+                        required currentLength,
+                        required isFocused,
+                        maxLength,
+                      }) => null,
                   onChanged: (_) {
                     context.read<ChatBloc>().add(
-                          TypingStarted(orderId: widget.orderId),
-                        );
+                      TypingStarted(orderId: widget.orderId),
+                    );
                   },
                 ),
               ),
@@ -426,11 +435,8 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
     if (text.isEmpty) return;
 
     context.read<ChatBloc>().add(
-          SendTextMessage(
-            orderId: widget.orderId,
-            content: text,
-          ),
-        );
+      SendTextMessage(orderId: widget.orderId, content: text, isWorker: true),
+    );
     _messageController.clear();
   }
 
@@ -447,11 +453,12 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
       // Optional: show caption dialog
       if (mounted) {
         context.read<ChatBloc>().add(
-              SendImageMessage(
-                orderId: widget.orderId,
-                image: file,
-              ),
-            );
+          SendImageMessage(
+            orderId: widget.orderId,
+            image: file,
+            isWorker: true,
+          ),
+        );
       }
     } on Exception catch (e) {
       if (mounted) {
@@ -505,7 +512,9 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
     final messageDate = DateTime(date.year, date.month, date.day);
 
     if (messageDate == today) return 'Hari ini';
-    if (messageDate == today.subtract(const Duration(days: 1))) return 'Kemarin';
+    if (messageDate == today.subtract(const Duration(days: 1))) {
+      return 'Kemarin';
+    }
     return DateFormat('dd MMMM yyyy', 'id').format(date);
   }
 }

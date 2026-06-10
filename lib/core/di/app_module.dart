@@ -16,22 +16,24 @@ abstract class AppModule {
   /// Configured with:
   /// - Base URL from [AppConstants.baseUrl]
   /// - Connection timeout from [AppConstants.connectTimeout]
+  /// - Send timeout from [AppConstants.sendTimeout]
   /// - Receive timeout from [AppConstants.receiveTimeout]
   ///
   /// Interceptors (Auth, TokenRefresh, Error, Connectivity, Logging)
   /// are added separately during DI registration of the ApiClient.
   @singleton
   Dio get dio => Dio(
-        BaseOptions(
-          baseUrl: AppConstants.baseUrl,
-          connectTimeout: AppConstants.connectTimeout,
-          receiveTimeout: AppConstants.receiveTimeout,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
-      );
+    BaseOptions(
+      baseUrl: AppConstants.baseUrl,
+      connectTimeout: AppConstants.connectTimeout,
+      sendTimeout: AppConstants.sendTimeout,
+      receiveTimeout: AppConstants.receiveTimeout,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    ),
+  );
 
   /// Provides a [FlutterSecureStorage] instance as a singleton.
   ///
@@ -40,9 +42,9 @@ abstract class AppModule {
   /// - Android: EncryptedSharedPreferences
   @singleton
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage(
-        aOptions: AndroidOptions(encryptedSharedPreferences: true),
-        iOptions: IOSOptions(
-          accessibility: KeychainAccessibility.first_unlock_this_device,
-        ),
-      );
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+  );
 }

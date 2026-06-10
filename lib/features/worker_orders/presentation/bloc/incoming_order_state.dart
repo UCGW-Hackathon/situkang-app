@@ -24,10 +24,7 @@ class IncomingOrderPending extends IncomingOrderState {
   final Order order;
   final int remainingSeconds;
 
-  IncomingOrderPending copyWith({
-    Order? order,
-    int? remainingSeconds,
-  }) {
+  IncomingOrderPending copyWith({Order? order, int? remainingSeconds}) {
     return IncomingOrderPending(
       order: order ?? this.order,
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
@@ -41,7 +38,12 @@ class IncomingOrderPending extends IncomingOrderState {
 class IncomingOrderProcessing extends IncomingOrderState {}
 
 class IncomingOrderAccepted extends IncomingOrderState {
-  const IncomingOrderAccepted();
+  const IncomingOrderAccepted(this.orderId);
+
+  final String orderId;
+
+  @override
+  List<Object?> get props => [orderId];
 }
 
 class IncomingOrderRejected extends IncomingOrderState {

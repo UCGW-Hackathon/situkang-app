@@ -25,13 +25,18 @@ abstract class ChatRemoteDataSource {
     String orderId, {
     String? cursor,
     int limit = 50,
+    bool isWorker = false,
   });
 
   /// Sends a text message via REST (fallback when WebSocket unavailable).
   ///
   /// [orderId] is the order context.
   /// [content] is the message text.
-  Future<ChatMessageModel> sendTextMessage(String orderId, String content);
+  Future<ChatMessageModel> sendTextMessage(
+    String orderId,
+    String content, {
+    bool isWorker = false,
+  });
 
   /// Uploads an image message with optional caption.
   ///
@@ -42,12 +47,13 @@ abstract class ChatRemoteDataSource {
     String orderId,
     File image, {
     String? caption,
+    bool isWorker = false,
   });
 
   /// Marks all messages in the order's chat as read.
   ///
   /// [orderId] is the order whose messages to mark as read.
-  Future<void> markAsRead(String orderId);
+  Future<void> markAsRead(String orderId, {bool isWorker = false});
 
   /// Fetches the list of active chat conversations.
   Future<List<ChatConversationModel>> getChatList();
@@ -65,16 +71,17 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     String orderId, {
     String? cursor,
     int limit = 50,
+    bool isWorker = false,
   }) async {
-    final queryParams = <String, dynamic>{
-      'limit': limit,
-    };
+    final queryParams = <String, dynamic>{'limit': limit};
     if (cursor != null) {
       queryParams['cursor'] = cursor;
     }
 
     final response = await apiClient.get<Map<String, dynamic>>(
-      ApiEndpoints.chatMessages(orderId),
+      isWorker
+          ? ApiEndpoints.workerChatMessages(orderId)
+          : ApiEndpoints.chatMessages(orderId),
       queryParams: queryParams,
     );
 
@@ -94,13 +101,15 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
   @override
   Future<ChatMessageModel> sendTextMessage(
-      String orderId, String content) async {
+    String orderId,
+    String content, {
+    bool isWorker = false,
+  }) async {
     final response = await apiClient.post<Map<String, dynamic>>(
-      ApiEndpoints.chatMessages(orderId),
-      data: {
-        'message_type': 'text',
-        'content': content,
-      },
+      isWorker
+          ? ApiEndpoints.workerChatMessages(orderId)
+          : ApiEndpoints.chatMessages(orderId),
+      data: {'message_type': 'text', 'content': content},
     );
 
     final data = response.data;
@@ -117,6 +126,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     String orderId,
     File image, {
     String? caption,
+    bool isWorker = false,
   }) async {
     final formData = FormData.fromMap(<String, dynamic>{
       'message_type': 'image',
@@ -128,7 +138,9 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     });
 
     final response = await apiClient.upload<Map<String, dynamic>>(
-      ApiEndpoints.chatMessages(orderId),
+      isWorker
+          ? ApiEndpoints.workerChatMessages(orderId)
+          : ApiEndpoints.chatMessages(orderId),
       data: formData,
     );
 
@@ -142,9 +154,11 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   }
 
   @override
-  Future<void> markAsRead(String orderId) async {
+  Future<void> markAsRead(String orderId, {bool isWorker = false}) async {
     await apiClient.patch<Map<String, dynamic>>(
-      ApiEndpoints.chatMarkRead(orderId),
+      isWorker
+          ? ApiEndpoints.workerChatMarkRead(orderId)
+          : ApiEndpoints.chatMarkRead(orderId),
     );
   }
 
@@ -165,8 +179,10 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
         responseData['conversations'] as List<dynamic>? ?? [];
 
     return conversationsList
-        .map((item) =>
-            ChatConversationModel.fromJson(item as Map<String, dynamic>))
+        .map(
+          (item) =>
+              ChatConversationModel.fromJson(item as Map<String, dynamic>),
+        )
         .toList();
   }
 }

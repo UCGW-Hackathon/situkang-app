@@ -11,6 +11,17 @@ class WorkerOrderInitial extends WorkerOrderState {}
 
 class WorkerOrderLoading extends WorkerOrderState {}
 
+class WorkerOrderDetailLoading extends WorkerOrderState {}
+
+class WorkerOrderDetailLoaded extends WorkerOrderState {
+  const WorkerOrderDetailLoaded(this.detail);
+
+  final WorkerOrderDetail detail;
+
+  @override
+  List<Object?> get props => [detail];
+}
+
 class WorkerOrderStatusUpdated extends WorkerOrderState {
   const WorkerOrderStatusUpdated(this.newStatus);
 

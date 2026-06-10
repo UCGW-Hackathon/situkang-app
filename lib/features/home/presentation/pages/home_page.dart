@@ -11,6 +11,7 @@ import '../../../knowledge/presentation/pages/article_detail_page.dart';
 import '../../../orders/presentation/bloc/order_bloc.dart';
 import '../../../orders/presentation/pages/order_detail_page.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../domain/entities/active_order.dart';
 import '../../domain/entities/article_item.dart';
 import '../../domain/entities/category_item.dart';
 import '../../domain/entities/featured_worker.dart';
@@ -28,16 +29,21 @@ const _softBg = Color(0xFFF6F7FC);
 const _iconBg = Color(0xFFDCE9FF);
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.initialActiveOrder});
+
+  final ActiveOrder? initialActiveOrder;
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  ActiveOrder? _optimisticActiveOrder;
+
   @override
   void initState() {
     super.initState();
+    _optimisticActiveOrder = widget.initialActiveOrder;
     context.read<HomeBloc>().add(const FetchHomeData());
     _fetchAndUpdateLocation();
   }
@@ -64,7 +70,10 @@ class _HomePageState extends State<HomePage> {
       );
 
       // 3. Reverse geocode using Nominatim API (OpenStreetMap)
-      final address = await _reverseGeocode(position.latitude, position.longitude);
+      final address = await _reverseGeocode(
+        position.latitude,
+        position.longitude,
+      );
       if (address.isEmpty) return;
 
       // 4. Update location to the backend
@@ -77,7 +86,9 @@ class _HomePageState extends State<HomePage> {
 
       // 5. If successful, refresh HomeBloc to update greeting and location on beranda
       result.fold(
-        (failure) => debugPrint('Failed to update location on server: ${failure.message}'),
+        (failure) => debugPrint(
+          'Failed to update location on server: ${failure.message}',
+        ),
         (_) {
           if (mounted) {
             context.read<HomeBloc>().add(const RefreshHomeData());
@@ -132,14 +143,22 @@ class _HomePageState extends State<HomePage> {
           if (state is HomeError) {
             return AppErrorWidget(
               message: state.failure.message,
-              onRetry: () => context.read<HomeBloc>().add(
-                    const FetchHomeData(),
-                  ),
+              onRetry: () =>
+                  context.read<HomeBloc>().add(const FetchHomeData()),
             );
           }
 
           if (state is HomeLoaded) {
-            return _HomeContent(homeData: state.homeData);
+            final activeOrder =
+                state.homeData.activeOrder ?? _optimisticActiveOrder;
+            if (state.homeData.activeOrder != null &&
+                _optimisticActiveOrder != null) {
+              _optimisticActiveOrder = null;
+            }
+            return _HomeContent(
+              homeData: state.homeData,
+              activeOrder: activeOrder,
+            );
           }
 
           return const SizedBox.shrink();
@@ -150,9 +169,10 @@ class _HomePageState extends State<HomePage> {
 }
 
 class _HomeContent extends StatelessWidget {
-  const _HomeContent({required this.homeData});
+  const _HomeContent({required this.homeData, this.activeOrder});
 
   final HomeData homeData;
+  final ActiveOrder? activeOrder;
 
   @override
   Widget build(BuildContext context) {
@@ -170,19 +190,24 @@ class _HomeContent extends StatelessWidget {
                 child: _Header(homeData: homeData),
               ),
             ),
-            if (homeData.activeOrder != null)
+            if (activeOrder != null)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
                   child: ActiveOrderBanner(
-                    activeOrder: homeData.activeOrder!,
+                    activeOrder: activeOrder!,
                     onTap: () {
-                      final orderId = homeData.activeOrder!.orderId;
+                      final orderId = activeOrder!.orderId;
                       Navigator.of(context).push(
-                        MaterialPageRoute(
+                        MaterialPageRoute<void>(
                           builder: (_) => BlocProvider(
                             create: (_) => getIt<OrderBloc>()
-                              ..add(FetchOrderDetailRequested(orderId: orderId)),
+                              ..add(
+                                FetchOrderDetailRequested(orderId: orderId),
+                              ),
                             child: OrderDetailPage(orderId: orderId),
                           ),
                         ),
@@ -276,11 +301,7 @@ class _Header extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         // Lokasi Saat Ini (Kanan)
-        const Icon(
-          Icons.location_on,
-          color: _teal,
-          size: 20,
-        ),
+        const Icon(Icons.location_on, color: _teal, size: 20),
         const SizedBox(width: 4),
         Expanded(
           flex: 6,
@@ -292,11 +313,7 @@ class _Header extends StatelessWidget {
                 'Lokasi saat ini',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: _teal,
-                  fontSize: 11,
-                  height: 1.2,
-                ),
+                style: TextStyle(color: _teal, fontSize: 11, height: 1.2),
               ),
               const SizedBox(height: 2),
               Text(
@@ -354,10 +371,7 @@ class _SearchBar extends StatelessWidget {
                 'Cari tukang atau jenis kerusakan...',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Color(0xFF8E8E93),
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Color(0xFF8E8E93), fontSize: 14),
               ),
             ),
             const SizedBox(width: 8),
@@ -371,11 +385,7 @@ class _SearchBar extends StatelessWidget {
                   color: _teal,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
-                  Icons.tune,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                child: const Icon(Icons.tune, color: Colors.white, size: 20),
               ),
             ),
           ],
@@ -459,9 +469,7 @@ class _CategoryTile extends StatelessWidget {
                     color: Color(0xFFE9F0FF),
                     shape: BoxShape.circle,
                   ),
-                  child: Center(
-                    child: _getCategoryIcon(category.name),
-                  ),
+                  child: Center(child: _getCategoryIcon(category.name)),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -563,9 +571,7 @@ class _PromoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 280,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         fit: StackFit.expand,
@@ -587,10 +593,7 @@ class _PromoCard extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Color(0xAA000000),
-                ],
+                colors: [Colors.transparent, Color(0xAA000000)],
               ),
             ),
           ),
@@ -621,7 +624,10 @@ class _PromoCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: _teal,
                     borderRadius: BorderRadius.circular(8),
@@ -655,7 +661,7 @@ class _ArticleCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(
+          MaterialPageRoute<void>(
             builder: (_) => ArticleDetailPage(articleId: article.id),
           ),
         );
@@ -730,12 +736,14 @@ class _FeaturedWorkersSection extends StatelessWidget {
           onAction: () => context.push('/workers'),
         ),
         const SizedBox(height: 16),
-        ...workers.take(4).map(
-          (worker) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _WorkerCard(worker: worker),
-          ),
-        ),
+        ...workers
+            .take(4)
+            .map(
+              (worker) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _WorkerCard(worker: worker),
+              ),
+            ),
       ],
     );
   }
@@ -834,7 +842,11 @@ class _WorkerCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(Icons.business_center, color: _muted, size: 14),
+                      const Icon(
+                        Icons.business_center,
+                        color: _muted,
+                        size: 14,
+                      ),
                       const SizedBox(width: 2),
                       Text(
                         '${worker.completedJobs} Job',
@@ -1001,7 +1013,11 @@ class _HomeSkeleton extends StatelessWidget {
               ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
-                child: Skeleton(height: 54, width: double.infinity, borderRadius: 12),
+                child: Skeleton(
+                  height: 54,
+                  width: double.infinity,
+                  borderRadius: 12,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1019,12 +1035,13 @@ class _HomeSkeleton extends StatelessWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: 8,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 0.85,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 10,
+                            childAspectRatio: 0.85,
+                          ),
                       itemBuilder: (context, index) {
                         return const Skeleton(borderRadius: 12);
                       },
@@ -1043,7 +1060,11 @@ class _HomeSkeleton extends StatelessWidget {
                     itemBuilder: (context, index) {
                       return const Padding(
                         padding: EdgeInsets.only(right: 12),
-                        child: Skeleton(width: 280, height: 170, borderRadius: 16),
+                        child: Skeleton(
+                          width: 280,
+                          height: 170,
+                          borderRadius: 16,
+                        ),
                       );
                     },
                   ),
@@ -1061,10 +1082,17 @@ class _HomeSkeleton extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    ...List.generate(3, (index) => const Padding(
-                      padding: EdgeInsets.only(bottom: 12),
-                      child: Skeleton(height: 120, width: double.infinity, borderRadius: 14),
-                    )),
+                    ...List.generate(
+                      3,
+                      (index) => const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: Skeleton(
+                          height: 120,
+                          width: double.infinity,
+                          borderRadius: 14,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1075,4 +1103,3 @@ class _HomeSkeleton extends StatelessWidget {
     );
   }
 }
-

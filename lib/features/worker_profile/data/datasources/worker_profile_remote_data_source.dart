@@ -8,7 +8,11 @@ import '../models/worker_profile_model.dart';
 
 abstract class WorkerProfileRemoteDataSource {
   Future<WorkerProfileModel> getWorkerProfile();
-  Future<WorkerProfileModel> updateWorkerProfile(String? name, String? bio);
+  Future<WorkerProfileModel> updateWorkerProfile(
+    String? name,
+    String? bio,
+    String? specialization,
+  );
   Future<WorkerProfileModel> uploadCoverPhoto(String filePath);
   Future<void> submitVerification({
     required String ktpPath,
@@ -47,10 +51,12 @@ class WorkerProfileRemoteDataSourceImpl
   Future<WorkerProfileModel> updateWorkerProfile(
     String? name,
     String? bio,
+    String? specialization,
   ) async {
     final data = <String, dynamic>{};
     if (name != null) data['full_name'] = name;
     if (bio != null) data['bio'] = bio;
+    if (specialization != null) data['specialization'] = specialization;
 
     final response = await apiClient.put<Map<String, dynamic>>(
       ApiEndpoints.workerProfile,

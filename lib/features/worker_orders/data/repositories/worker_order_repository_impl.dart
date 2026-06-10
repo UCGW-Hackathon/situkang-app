@@ -4,6 +4,7 @@ import 'package:situkang_app/core/error/result.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../invoice/domain/entities/invoice.dart';
+import '../../domain/entities/worker_order_detail.dart';
 import '../../domain/repositories/worker_order_repository.dart';
 import '../datasources/worker_order_remote_data_source.dart';
 
@@ -12,6 +13,18 @@ class WorkerOrderRepositoryImpl implements WorkerOrderRepository {
   const WorkerOrderRepositoryImpl(this.remoteDataSource);
 
   final WorkerOrderRemoteDataSource remoteDataSource;
+
+  @override
+  Future<Result<WorkerOrderDetail>> getOrderDetail(String orderId) async {
+    try {
+      final detail = await remoteDataSource.getOrderDetail(orderId);
+      return Right(detail.toEntity());
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure(e.toString(), statusCode: 500));
+    }
+  }
 
   @override
   Future<Result<void>> updateOrderStatus({
@@ -72,7 +85,10 @@ class WorkerOrderRepositoryImpl implements WorkerOrderRepository {
     String? workerNotes,
   }) async {
     try {
-      final invoice = await remoteDataSource.completeOrder(orderId, workerNotes);
+      final invoice = await remoteDataSource.completeOrder(
+        orderId,
+        workerNotes,
+      );
       return Right(invoice);
     } on Failure catch (e) {
       return Left(e);

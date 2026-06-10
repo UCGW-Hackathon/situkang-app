@@ -16,11 +16,14 @@ class AppConstants {
 
   // ─── Timeouts ────────────────────────────────────────────────────────────────
 
-  /// HTTP connection timeout in milliseconds.
-  static const Duration connectTimeout = Duration(seconds: 30);
+  /// HTTP connection timeout.
+  static const Duration connectTimeout = Duration(seconds: 60);
 
-  /// HTTP receive (response) timeout in milliseconds.
-  static const Duration receiveTimeout = Duration(seconds: 30);
+  /// HTTP send timeout.
+  static const Duration sendTimeout = Duration(seconds: 120);
+
+  /// HTTP receive (response) timeout.
+  static const Duration receiveTimeout = Duration(seconds: 120);
 
   /// Buffer time before token expiry to trigger a proactive refresh.
   static const Duration tokenRefreshBuffer = Duration(seconds: 60);

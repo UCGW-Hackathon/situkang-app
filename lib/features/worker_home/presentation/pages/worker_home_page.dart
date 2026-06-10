@@ -3,10 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../../orders/domain/entities/order.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../worker_orders/presentation/bloc/incoming_order_bloc.dart';
 import '../../domain/entities/worker_dashboard.dart';
@@ -49,7 +47,9 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
                     );
                   }
                   if (state.dashboard.incomingOrderCount > 0) {
-                    context.read<IncomingOrderBloc>().add(FetchIncomingOrders());
+                    context.read<IncomingOrderBloc>().add(
+                      FetchIncomingOrders(),
+                    );
                   }
                 }
               },
@@ -80,16 +80,16 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
                         children: [
                           _buildHeader(context, state.dashboard),
                           const SizedBox(height: AppSpacing.lg),
-                          
+
                           _buildOnlineStatusCard(context, state.dashboard),
                           const SizedBox(height: AppSpacing.lg),
-                          
+
                           _buildGridMenu(context),
                           const SizedBox(height: AppSpacing.lg),
-                          
+
                           _buildWeeklySummary(state.dashboard),
                           const SizedBox(height: AppSpacing.lg),
-                          
+
                           if (state.dashboard.activeOrderId != null) ...[
                             const SizedBox(height: AppSpacing.md),
                             _buildActiveOrderCard(state.dashboard),
@@ -109,13 +109,20 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
             BlocConsumer<IncomingOrderBloc, IncomingOrderState>(
               listener: (context, incomingState) {
                 if (incomingState is IncomingOrderActionError) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(incomingState.failure.message)));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(incomingState.failure.message)),
+                  );
                 } else if (incomingState is IncomingOrderAccepted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pesanan berhasil diterima!')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Pesanan berhasil diterima!')),
+                  );
                   context.read<WorkerHomeBloc>().add(FetchDashboardData());
                   context.read<IncomingOrderBloc>().add(FetchIncomingOrders());
+                  context.go('/worker/orders/${incomingState.orderId}/brief');
                 } else if (incomingState is IncomingOrderRejected) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pesanan telah ditolak')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Pesanan telah ditolak')),
+                  );
                   context.read<WorkerHomeBloc>().add(FetchDashboardData());
                   context.read<IncomingOrderBloc>().add(FetchIncomingOrders());
                 }
@@ -138,7 +145,9 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
 
   Widget _buildHeader(BuildContext context, WorkerDashboard dashboard) {
     final authState = context.read<AuthBloc>().state;
-    final workerName = authState is Authenticated ? authState.user.fullName : 'Mitra Pekerja';
+    final workerName = authState is Authenticated
+        ? authState.user.fullName
+        : 'Mitra Pekerja';
 
     return Row(
       children: [
@@ -204,7 +213,9 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
               'Rp${NumberFormat('#,###', 'id').format(dashboard.earningsToday)}',
               style: AppTypography.h5.copyWith(
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF1B2C44), // Warna hitam kebiruan sesuai deskripsi
+                color: const Color(
+                  0xFF1B2C44,
+                ), // Warna hitam kebiruan sesuai deskripsi
               ),
             ),
           ],
@@ -213,12 +224,18 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
     );
   }
 
-  Widget _buildOnlineStatusCard(BuildContext context, WorkerDashboard dashboard) {
+  Widget _buildOnlineStatusCard(
+    BuildContext context,
+    WorkerDashboard dashboard,
+  ) {
     final isOnline = dashboard.isAvailable;
-    
+
     return AppCard(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl, horizontal: AppSpacing.lg),
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSpacing.xl,
+        horizontal: AppSpacing.lg,
+      ),
       child: Column(
         children: [
           AnimatedContainer(
@@ -248,11 +265,13 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: Text(
-              isOnline 
-                  ? 'Anda terlihat online oleh pelanggan di sekitar.' 
+              isOnline
+                  ? 'Anda terlihat online oleh pelanggan di sekitar.'
                   : 'Anda sedang tidak terlihat oleh pelanggan.',
               key: ValueKey(isOnline ? 'desc_on' : 'desc_off'),
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -264,15 +283,16 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: AppColors.border,
             onChanged: (value) {
-              context
-                  .read<WorkerHomeBloc>()
-                  .add(ToggleAvailability(isAvailable: value));
+              context.read<WorkerHomeBloc>().add(
+                ToggleAvailability(isAvailable: value),
+              );
             },
           ),
         ],
       ),
     );
   }
+
   Widget _buildGridMenu(BuildContext context) {
     return GridView.count(
       crossAxisCount: 2,
@@ -323,7 +343,9 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
           const SizedBox(height: AppSpacing.sm),
           Text(
             title,
-            style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -331,7 +353,9 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -413,18 +437,7 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
         AppCard(
           color: AppColors.primaryContainer,
           onTap: () {
-            context.push(
-              '/worker/orders',
-              extra: Order(
-                id: dashboard.activeOrderId!,
-                orderNumber: dashboard.activeOrderId!,
-                title: dashboard.activeOrderTitle ?? 'Pekerjaan',
-                status: OrderStatus.fromString(
-                  dashboard.activeOrderStatus ?? 'accepted',
-                ),
-                createdAt: dashboard.activeOrderStartTime ?? DateTime.now(),
-              ),
-            );
+            context.push('/worker/orders/${dashboard.activeOrderId}/brief');
           },
           child: Row(
             children: [

@@ -7,6 +7,15 @@ sealed class WorkerOrderEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class FetchWorkerOrderDetail extends WorkerOrderEvent {
+  const FetchWorkerOrderDetail({required this.orderId});
+
+  final String orderId;
+
+  @override
+  List<Object?> get props => [orderId];
+}
+
 class UpdateOrderStatus extends WorkerOrderEvent {
   const UpdateOrderStatus({
     required this.orderId,
@@ -55,10 +64,7 @@ class AddWorkItem extends WorkerOrderEvent {
 }
 
 class CompleteOrder extends WorkerOrderEvent {
-  const CompleteOrder({
-    required this.orderId,
-    this.workerNotes,
-  });
+  const CompleteOrder({required this.orderId, this.workerNotes});
 
   final String orderId;
   final String? workerNotes;

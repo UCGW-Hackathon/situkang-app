@@ -35,10 +35,9 @@ part 'chat_state.dart';
 @injectable
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   /// Creates a [ChatBloc] with the required repository.
-  ChatBloc({
-    required ChatRepository chatRepository,
-  })  : _chatRepository = chatRepository,
-        super(const ChatInitial()) {
+  ChatBloc({required ChatRepository chatRepository})
+    : _chatRepository = chatRepository,
+      super(const ChatInitial()) {
     on<LoadMessages>(_onLoadMessages);
     on<SendTextMessage>(_onSendTextMessage);
     on<SendImageMessage>(_onSendImageMessage);
@@ -57,12 +56,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> connectToChat(String orderId) async {
     await _chatRepository.connectToChat(orderId);
 
-    _messageSubscription?.cancel();
+    await _messageSubscription?.cancel();
     _messageSubscription = _chatRepository.incomingMessageStream.listen(
       (message) => add(MessageReceived(message: message)),
     );
 
-    _typingSubscription?.cancel();
+    await _typingSubscription?.cancel();
     _typingSubscription = _chatRepository.typingStream.listen(
       (isTyping) => add(TypingStatusChanged(isTyping: isTyping)),
     );
@@ -86,6 +85,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final result = await _chatRepository.getMessages(
       event.orderId,
       cursor: event.cursor,
+      isWorker: event.isWorker,
     );
 
     result.fold(
@@ -105,18 +105,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         if (isLoadingMore && currentState is ChatLoaded) {
           // Append older messages to the end of the list
           final allMessages = [...currentState.messages, ...messages];
-          emit(currentState.copyWith(
-            messages: allMessages,
-            hasMore: hasMore,
-            nextCursor: nextCursor,
-            isLoadingMore: false,
-          ));
+          emit(
+            currentState.copyWith(
+              messages: allMessages,
+              hasMore: hasMore,
+              nextCursor: nextCursor,
+              isLoadingMore: false,
+            ),
+          );
         } else {
-          emit(ChatLoaded(
-            messages: messages,
-            hasMore: hasMore,
-            nextCursor: nextCursor,
-          ));
+          emit(
+            ChatLoaded(
+              messages: messages,
+              hasMore: hasMore,
+              nextCursor: nextCursor,
+            ),
+          );
         }
       },
     );
@@ -154,14 +158,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
 
     // Add optimistic message to the top of the list
-    emit(currentState.copyWith(
-      messages: [optimisticMessage, ...currentState.messages],
-      isSending: true,
-    ));
+    emit(
+      currentState.copyWith(
+        messages: [optimisticMessage, ...currentState.messages],
+        isSending: true,
+      ),
+    );
 
     final result = await _chatRepository.sendTextMessage(
       event.orderId,
       event.content,
+      isWorker: event.isWorker,
     );
 
     final updatedState = state;
@@ -177,10 +184,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           if (m.id == optimisticMessage.id) return failedMessage;
           return m;
         }).toList();
-        emit(updatedState.copyWith(
-          messages: updatedMessages,
-          isSending: false,
-        ));
+        emit(
+          updatedState.copyWith(messages: updatedMessages, isSending: false),
+        );
       },
       (sentMessage) {
         // Replace optimistic message with confirmed message
@@ -188,10 +194,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           if (m.id == optimisticMessage.id) return sentMessage;
           return m;
         }).toList();
-        emit(updatedState.copyWith(
-          messages: updatedMessages,
-          isSending: false,
-        ));
+        emit(
+          updatedState.copyWith(messages: updatedMessages, isSending: false),
+        );
       },
     );
   }
@@ -230,9 +235,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         createdAt: DateTime.now(),
         deliveryStatus: MessageDeliveryStatus.failed,
       );
-      emit(currentState.copyWith(
-        messages: [failedMessage, ...currentState.messages],
-      ));
+      emit(
+        currentState.copyWith(
+          messages: [failedMessage, ...currentState.messages],
+        ),
+      );
       return;
     }
 
@@ -255,15 +262,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       deliveryStatus: MessageDeliveryStatus.sending,
     );
 
-    emit(currentState.copyWith(
-      messages: [optimisticMessage, ...currentState.messages],
-      isSending: true,
-    ));
+    emit(
+      currentState.copyWith(
+        messages: [optimisticMessage, ...currentState.messages],
+        isSending: true,
+      ),
+    );
 
     final result = await _chatRepository.sendImageMessage(
       event.orderId,
       event.image,
       caption: event.caption,
+      isWorker: event.isWorker,
     );
 
     final updatedState = state;
@@ -279,20 +289,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           if (m.id == optimisticMessage.id) return failedMessage;
           return m;
         }).toList();
-        emit(updatedState.copyWith(
-          messages: updatedMessages,
-          isSending: false,
-        ));
+        emit(
+          updatedState.copyWith(messages: updatedMessages, isSending: false),
+        );
       },
       (sentMessage) {
         final updatedMessages = updatedState.messages.map((m) {
           if (m.id == optimisticMessage.id) return sentMessage;
           return m;
         }).toList();
-        emit(updatedState.copyWith(
-          messages: updatedMessages,
-          isSending: false,
-        ));
+        emit(
+          updatedState.copyWith(messages: updatedMessages, isSending: false),
+        );
       },
     );
   }
@@ -300,10 +308,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   /// Handles [MessageReceived] events from WebSocket.
   ///
   /// Appends the incoming message to the top of the message list.
-  void _onMessageReceived(
-    MessageReceived event,
-    Emitter<ChatState> emit,
-  ) {
+  void _onMessageReceived(MessageReceived event, Emitter<ChatState> emit) {
     final currentState = state;
     if (currentState is! ChatLoaded) return;
 
@@ -311,29 +316,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final exists = currentState.messages.any((m) => m.id == event.message.id);
     if (exists) return;
 
-    emit(currentState.copyWith(
-      messages: [event.message, ...currentState.messages],
-    ));
+    emit(
+      currentState.copyWith(
+        messages: [event.message, ...currentState.messages],
+      ),
+    );
   }
 
   /// Handles [TypingStarted] events.
   ///
   /// Sends a typing indicator to the counterpart via WebSocket.
-  void _onTypingStarted(
-    TypingStarted event,
-    Emitter<ChatState> emit,
-  ) {
+  void _onTypingStarted(TypingStarted event, Emitter<ChatState> emit) {
     _chatRepository.sendTypingIndicator(event.orderId);
   }
 
   /// Handles [MarkAsRead] events.
   ///
   /// Calls the mark-read endpoint to mark all messages as read.
-  Future<void> _onMarkAsRead(
-    MarkAsRead event,
-    Emitter<ChatState> emit,
-  ) async {
-    await _chatRepository.markAsRead(event.orderId);
+  Future<void> _onMarkAsRead(MarkAsRead event, Emitter<ChatState> emit) async {
+    await _chatRepository.markAsRead(event.orderId, isWorker: event.isWorker);
   }
 
   /// Handles [TypingStatusChanged] events from WebSocket.
@@ -375,6 +376,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final result = await _chatRepository.sendTextMessage(
         message.orderId,
         message.content,
+        isWorker: event.isWorker,
       );
 
       final latestState = state;
@@ -406,8 +408,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   @override
   Future<void> close() async {
-    _messageSubscription?.cancel();
-    _typingSubscription?.cancel();
+    await _messageSubscription?.cancel();
+    await _typingSubscription?.cancel();
     await _chatRepository.disconnectFromChat();
     return super.close();
   }

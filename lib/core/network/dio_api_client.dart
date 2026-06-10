@@ -35,6 +35,7 @@ class DioApiClient implements ApiClient {
     _dio.options = BaseOptions(
       baseUrl: AppConstants.baseUrl,
       connectTimeout: AppConstants.connectTimeout,
+      sendTimeout: AppConstants.sendTimeout,
       receiveTimeout: AppConstants.receiveTimeout,
       headers: {
         'Content-Type': 'application/json',
@@ -61,34 +62,22 @@ class DioApiClient implements ApiClient {
   Dio get dio => _dio;
 
   @override
-  Future<Response<T>> get<T>(
-    String path, {
-    Map<String, dynamic>? queryParams,
-  }) {
+  Future<Response<T>> get<T>(String path, {Map<String, dynamic>? queryParams}) {
     return _dio.get<T>(path, queryParameters: queryParams);
   }
 
   @override
-  Future<Response<T>> post<T>(
-    String path, {
-    dynamic data,
-  }) {
+  Future<Response<T>> post<T>(String path, {dynamic data}) {
     return _dio.post<T>(path, data: data);
   }
 
   @override
-  Future<Response<T>> put<T>(
-    String path, {
-    dynamic data,
-  }) {
+  Future<Response<T>> put<T>(String path, {dynamic data}) {
     return _dio.put<T>(path, data: data);
   }
 
   @override
-  Future<Response<T>> patch<T>(
-    String path, {
-    dynamic data,
-  }) {
+  Future<Response<T>> patch<T>(String path, {dynamic data}) {
     return _dio.patch<T>(path, data: data);
   }
 
@@ -98,16 +87,11 @@ class DioApiClient implements ApiClient {
   }
 
   @override
-  Future<Response<T>> upload<T>(
-    String path, {
-    required FormData data,
-  }) {
+  Future<Response<T>> upload<T>(String path, {required FormData data}) {
     return _dio.post<T>(
       path,
       data: data,
-      options: Options(
-        headers: {'Content-Type': 'multipart/form-data'},
-      ),
+      options: Options(headers: {'Content-Type': 'multipart/form-data'}),
     );
   }
 }

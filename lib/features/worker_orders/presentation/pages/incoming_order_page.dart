@@ -26,9 +26,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pesanan Masuk'),
-      ),
+      appBar: AppBar(title: const Text('Pesanan Masuk')),
       body: BlocConsumer<IncomingOrderBloc, IncomingOrderState>(
         listener: (context, state) {
           if (state is IncomingOrderActionError) {
@@ -45,19 +43,17 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                 backgroundColor: AppColors.success,
               ),
             );
-            // Navigate to active order
-            context.pop(); 
+            context.go('/worker/orders/${state.orderId}/brief');
           } else if (state is IncomingOrderRejected) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Pesanan telah ditolak'),
-              ),
+              const SnackBar(content: Text('Pesanan telah ditolak')),
             );
             context.read<IncomingOrderBloc>().add(FetchIncomingOrders());
           }
         },
         builder: (context, state) {
-          if (state is IncomingOrderLoading || state is IncomingOrderProcessing) {
+          if (state is IncomingOrderLoading ||
+              state is IncomingOrderProcessing) {
             return const LoadingIndicator();
           }
 
@@ -71,9 +67,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
           }
 
           if (state is IncomingOrderEmpty) {
-            return const Center(
-              child: Text('Belum ada pesanan masuk.'),
-            );
+            return const Center(child: Text('Belum ada pesanan masuk.'));
           }
 
           if (state is IncomingOrderExpired) {
@@ -83,21 +77,28 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                 children: [
                   const Icon(Icons.timer_off, size: 64, color: AppColors.error),
                   const SizedBox(height: AppSpacing.md),
-                  const Text('Pesanan telah kedaluwarsa', style: AppTypography.h6),
+                  const Text(
+                    'Pesanan telah kedaluwarsa',
+                    style: AppTypography.h6,
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   AppButton(
                     text: 'Kembali',
                     onPressed: () {
                       context.pop();
                     },
-                  )
+                  ),
                 ],
               ),
             );
           }
 
           if (state is IncomingOrderPending) {
-            return _buildPendingOrder(context, state.order, state.remainingSeconds);
+            return _buildPendingOrder(
+              context,
+              state.order,
+              state.remainingSeconds,
+            );
           }
 
           return const SizedBox.shrink();
@@ -106,10 +107,14 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
     );
   }
 
-  Widget _buildPendingOrder(BuildContext context, Order order, int remainingSeconds) {
+  Widget _buildPendingOrder(
+    BuildContext context,
+    Order order,
+    int remainingSeconds,
+  ) {
     final formatter = NumberFormat('#,###', 'id');
     final progress = remainingSeconds / 30.0;
-    
+
     return SingleChildScrollView(
       padding: AppSpacing.pagePadding,
       child: Column(
@@ -127,23 +132,31 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                     value: progress,
                     strokeWidth: 8,
                     backgroundColor: AppColors.surfaceVariant,
-                    color: remainingSeconds <= 10 ? AppColors.error : AppColors.primary,
+                    color: remainingSeconds <= 10
+                        ? AppColors.error
+                        : AppColors.primary,
                   ),
                 ),
                 Text(
                   '$remainingSeconds',
                   style: AppTypography.h3.copyWith(
-                    color: remainingSeconds <= 10 ? AppColors.error : AppColors.textPrimary,
+                    color: remainingSeconds <= 10
+                        ? AppColors.error
+                        : AppColors.textPrimary,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          
-          const Text('Pesanan Baru!', style: AppTypography.h5, textAlign: TextAlign.center),
+
+          const Text(
+            'Pesanan Baru!',
+            style: AppTypography.h5,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: AppSpacing.lg),
-          
+
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,10 +176,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            order.title,
-                            style: AppTypography.h6,
-                          ),
+                          Text(order.title, style: AppTypography.h6),
                           Text(
                             order.serviceName ?? 'Jasa Tukang',
                             style: AppTypography.caption,
@@ -181,7 +191,11 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                 const SizedBox(height: AppSpacing.md),
                 const Row(
                   children: [
-                    Icon(Icons.person, color: AppColors.textSecondary, size: 20),
+                    Icon(
+                      Icons.person,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
                     SizedBox(width: AppSpacing.sm),
                     Text('Pelanggan', style: AppTypography.bodyMedium),
                   ],
@@ -189,7 +203,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                 const SizedBox(height: AppSpacing.sm),
                 const Row(
                   children: [
-                    Icon(Icons.location_on,  size: 20),
+                    Icon(Icons.location_on, size: 20),
                     SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
@@ -205,7 +219,11 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
-                      const Icon(Icons.payments, color: AppColors.success, size: 20),
+                      const Icon(
+                        Icons.payments,
+                        color: AppColors.success,
+                        size: 20,
+                      ),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         'Estimasi: Rp${formatter.format(order.totalPrice)}',
@@ -216,13 +234,13 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                       ),
                     ],
                   ),
-                ]
+                ],
               ],
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.xl),
-          
+
           // Action Buttons
           Row(
             children: [
@@ -230,7 +248,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                 child: AppButton(
                   text: 'Tolak',
                   variant: AppButtonVariant.outline,
-                  
+
                   onPressed: () => _showRejectDialog(context, order.id),
                 ),
               ),
@@ -240,7 +258,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
                   text: 'Detail & Terima',
                   onPressed: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(
+                      MaterialPageRoute<void>(
                         builder: (_) => IncomingOrderDetailPage(
                           order: order,
                           remainingSeconds: remainingSeconds,
@@ -258,7 +276,7 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
   }
 
   void _showRejectDialog(BuildContext context, String orderId) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -269,9 +287,24 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
               const Text('Pilih alasan penolakan:'),
               const SizedBox(height: AppSpacing.sm),
               _buildReasonItem(dialogContext, orderId, 'Sibuk', 'busy'),
-              _buildReasonItem(dialogContext, orderId, 'Terlalu Jauh', 'too_far'),
-              _buildReasonItem(dialogContext, orderId, 'Bukan Keahlian', 'not_my_expertise'),
-              _buildReasonItem(dialogContext, orderId, 'Kendala Pribadi', 'personal'),
+              _buildReasonItem(
+                dialogContext,
+                orderId,
+                'Terlalu Jauh',
+                'too_far',
+              ),
+              _buildReasonItem(
+                dialogContext,
+                orderId,
+                'Bukan Keahlian',
+                'not_my_expertise',
+              ),
+              _buildReasonItem(
+                dialogContext,
+                orderId,
+                'Kendala Pribadi',
+                'personal',
+              ),
               _buildReasonItem(dialogContext, orderId, 'Lainnya', 'other'),
             ],
           ),
@@ -286,7 +319,12 @@ class _IncomingOrderPageState extends State<IncomingOrderPage> {
     );
   }
 
-  Widget _buildReasonItem(BuildContext context, String orderId, String label, String code) {
+  Widget _buildReasonItem(
+    BuildContext context,
+    String orderId,
+    String label,
+    String code,
+  ) {
     return ListTile(
       title: Text(label),
       onTap: () {

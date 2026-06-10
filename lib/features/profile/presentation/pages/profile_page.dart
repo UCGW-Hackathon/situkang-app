@@ -22,10 +22,7 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil Saya'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Profil Saya'), centerTitle: true),
       body: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, state) {
           User? user;
@@ -43,19 +40,24 @@ class ProfilePage extends StatelessWidget {
           }
 
           // Fallback to mock user if profile not loaded
-          final displayUser = user ?? User(
-            id: 'mock-user-id',
-            fullName: 'Budi Santoso',
-            email: 'budi.santoso@gmail.com',
-            phone: '081234567890',
-            role: UserRole.user,
-            createdAt: DateTime(2025),
-            address: 'Jl. Merdeka No. 12',
-          );
+          final displayUser =
+              user ??
+              User(
+                id: 'mock-user-id',
+                fullName: 'Budi Santoso',
+                email: 'budi.santoso@gmail.com',
+                phone: '081234567890',
+                role: UserRole.user,
+                createdAt: DateTime(2025),
+                address: 'Jl. Merdeka No. 12',
+              );
 
           return _ProfileContent(
             user: displayUser,
-            isUpdating: isUpdating || state is ProfileLoading || state is ProfileInitial,
+            isUpdating:
+                isUpdating ||
+                state is ProfileLoading ||
+                state is ProfileInitial,
             errorMessage: errorMessage,
           );
         },
@@ -77,13 +79,20 @@ class _ProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom + 96;
+
     return RefreshIndicator(
       onRefresh: () async {
         context.read<ProfileBloc>().add(const FetchProfile());
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: AppSpacing.pagePadding,
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.pagePaddingHorizontal,
+          AppSpacing.pagePaddingVertical,
+          AppSpacing.pagePaddingHorizontal,
+          bottomPadding,
+        ),
         child: Column(
           children: [
             if (errorMessage != null) ...[
@@ -173,10 +182,16 @@ class _ProfileContent extends StatelessWidget {
                 context.read<AuthBloc>().add(const LogoutRequested());
               },
               icon: const Icon(Icons.logout, color: AppColors.error),
-              label: const Text('Keluar', style: TextStyle(color: AppColors.error)),
+              label: const Text(
+                'Keluar',
+                style: TextStyle(color: AppColors.error),
+              ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
-                minimumSize: const Size(double.infinity, AppSizing.buttonHeightMd),
+                minimumSize: const Size(
+                  double.infinity,
+                  AppSizing.buttonHeightMd,
+                ),
                 side: const BorderSide(color: AppColors.error, width: 1.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizing.radiusSm),
@@ -206,11 +221,7 @@ class _AvatarSection extends StatelessWidget {
             ? CachedNetworkImageProvider(avatarUrl!)
             : null,
         child: avatarUrl == null
-            ? const Icon(
-                Icons.person,
-                size: 56,
-                color: AppColors.textSecondary,
-              )
+            ? const Icon(Icons.person, size: 56, color: AppColors.textSecondary)
             : null,
       ),
     );
@@ -253,10 +264,7 @@ class _ProfileInfoCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: AppTypography.bodyMedium,
-                ),
+                Text(value, style: AppTypography.bodyMedium),
               ],
             ),
           ),

@@ -54,14 +54,16 @@ class OrderDetailModel {
     OrderWorkerInfoModel? worker;
     if (json['worker'] is Map<String, dynamic>) {
       worker = OrderWorkerInfoModel.fromJson(
-          json['worker'] as Map<String, dynamic>);
+        json['worker'] as Map<String, dynamic>,
+      );
     }
 
     // Parse service
     OrderServiceInfoModel? service;
     if (json['service'] is Map<String, dynamic>) {
       service = OrderServiceInfoModel.fromJson(
-          json['service'] as Map<String, dynamic>);
+        json['service'] as Map<String, dynamic>,
+      );
     }
 
     // Parse schedule
@@ -93,15 +95,15 @@ class OrderDetailModel {
     // Parse timeline
     final timelineJson = json['timeline'] as List<dynamic>? ?? [];
     final timeline = timelineJson
-        .map((t) =>
-            OrderTimelineEntryModel.fromJson(t as Map<String, dynamic>))
+        .map((t) => OrderTimelineEntryModel.fromJson(t as Map<String, dynamic>))
         .toList();
 
     // Parse purchase summary
     OrderPurchaseSummaryModel? purchaseSummary;
     if (json['purchase_summary'] is Map<String, dynamic>) {
       purchaseSummary = OrderPurchaseSummaryModel.fromJson(
-          json['purchase_summary'] as Map<String, dynamic>);
+        json['purchase_summary'] as Map<String, dynamic>,
+      );
     }
 
     // Parse photos
@@ -109,15 +111,15 @@ class OrderDetailModel {
     final photos = photosJson.map((p) => p.toString()).toList();
 
     return OrderDetailModel(
-      orderId: json['order_id'] as String? ?? '',
+      orderId: json['order_id'] as String? ?? json['id'] as String? ?? '',
       orderNumber: json['order_number'] as String? ?? '',
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       status: OrderStatus.fromString(json['status'] as String? ?? 'pending'),
-      urgency:
-          OrderUrgency.fromString(json['urgency'] as String? ?? 'normal'),
+      urgency: OrderUrgency.fromString(json['urgency'] as String? ?? 'normal'),
       location: locationModel,
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
           DateTime.now(),
       userId: json['user_id'] as String?,
       workerId: json['worker_id'] as String?,
@@ -193,86 +195,86 @@ class OrderDetailModel {
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
-        'order_id': orderId,
-        'order_number': orderNumber,
-        'title': title,
-        'description': description,
-        'status': status.value,
-        'urgency': urgency.value,
-        'location': location.toJson(),
-        'created_at': createdAt.toIso8601String(),
-        'user_id': userId,
-        'worker_id': workerId,
-        'service_id': serviceId,
-        'category_id': categoryId,
-        'worker': worker?.toJson(),
-        'service': service?.toJson(),
-        'schedule': {
-          'preferred_date': preferredDate,
-          'preferred_time_start': preferredTimeStart,
-          'preferred_time_end': preferredTimeEnd,
-        },
-        'pricing': {
-          'booking_fee': bookingFee,
-          'base_service_fee': baseServiceFee,
-          'total_material_cost': totalMaterialCost,
-          'total_additional_cost': totalAdditionalCost,
-          'grand_total': grandTotal,
-        },
-        'notes': notes,
-        'photos': photos,
-        'accepted_at': acceptedAt?.toIso8601String(),
-        'completed_at': completedAt?.toIso8601String(),
-        'cancelled_at': cancelledAt?.toIso8601String(),
-        'cancel_reason': cancelReason,
-        'timeline': timeline.map((t) => t.toJson()).toList(),
-        'purchase_summary': purchaseSummary?.toJson(),
-        'has_unread_chat': hasUnreadChat,
-        'can_cancel': canCancel,
-        'cancellation_policy': cancellationPolicy,
-        'updated_at': updatedAt?.toIso8601String(),
-      };
+    'order_id': orderId,
+    'order_number': orderNumber,
+    'title': title,
+    'description': description,
+    'status': status.value,
+    'urgency': urgency.value,
+    'location': location.toJson(),
+    'created_at': createdAt.toIso8601String(),
+    'user_id': userId,
+    'worker_id': workerId,
+    'service_id': serviceId,
+    'category_id': categoryId,
+    'worker': worker?.toJson(),
+    'service': service?.toJson(),
+    'schedule': {
+      'preferred_date': preferredDate,
+      'preferred_time_start': preferredTimeStart,
+      'preferred_time_end': preferredTimeEnd,
+    },
+    'pricing': {
+      'booking_fee': bookingFee,
+      'base_service_fee': baseServiceFee,
+      'total_material_cost': totalMaterialCost,
+      'total_additional_cost': totalAdditionalCost,
+      'grand_total': grandTotal,
+    },
+    'notes': notes,
+    'photos': photos,
+    'accepted_at': acceptedAt?.toIso8601String(),
+    'completed_at': completedAt?.toIso8601String(),
+    'cancelled_at': cancelledAt?.toIso8601String(),
+    'cancel_reason': cancelReason,
+    'timeline': timeline.map((t) => t.toJson()).toList(),
+    'purchase_summary': purchaseSummary?.toJson(),
+    'has_unread_chat': hasUnreadChat,
+    'can_cancel': canCancel,
+    'cancellation_policy': cancellationPolicy,
+    'updated_at': updatedAt?.toIso8601String(),
+  };
 
   /// Converts this model to a domain [OrderDetail] entity.
   OrderDetail toEntity() => OrderDetail(
-        id: orderId,
-        orderNumber: orderNumber,
-        title: title,
-        description: description,
-        status: status,
-        urgency: urgency,
-        location: location.toEntity(),
-        createdAt: createdAt,
-        userId: userId,
-        workerId: worker?.workerId ?? workerId,
-        serviceId: service?.serviceId ?? serviceId,
-        categoryId: categoryId,
-        workerInfo: worker?.toEntity(),
-        serviceInfo: service?.toEntity(),
-        preferredDate: preferredDate != null
-            ? DateTime.tryParse(preferredDate!)
-            : null,
-        preferredTimeStart: preferredTimeStart,
-        preferredTimeEnd: preferredTimeEnd,
-        notes: notes,
-        addressDetail: location.addressDetail,
-        bookingFee: bookingFee,
-        baseServiceFee: baseServiceFee,
-        totalMaterialCost: totalMaterialCost,
-        totalAdditionalCost: totalAdditionalCost,
-        grandTotal: grandTotal,
-        photos: photos,
-        acceptedAt: acceptedAt,
-        completedAt: completedAt,
-        cancelledAt: cancelledAt,
-        cancelReason: cancelReason,
-        timeline: timeline.map((t) => t.toEntity()).toList(),
-        purchaseSummary: purchaseSummary?.toEntity(),
-        hasUnreadChat: hasUnreadChat,
-        canCancel: canCancel,
-        cancellationPolicy: cancellationPolicy,
-        updatedAt: updatedAt,
-      );
+    id: orderId,
+    orderNumber: orderNumber,
+    title: title,
+    description: description,
+    status: status,
+    urgency: urgency,
+    location: location.toEntity(),
+    createdAt: createdAt,
+    userId: userId,
+    workerId: worker?.workerId ?? workerId,
+    serviceId: service?.serviceId ?? serviceId,
+    categoryId: categoryId,
+    workerInfo: worker?.toEntity(),
+    serviceInfo: service?.toEntity(),
+    preferredDate: preferredDate != null
+        ? DateTime.tryParse(preferredDate!)
+        : null,
+    preferredTimeStart: preferredTimeStart,
+    preferredTimeEnd: preferredTimeEnd,
+    notes: notes,
+    addressDetail: location.addressDetail,
+    bookingFee: bookingFee,
+    baseServiceFee: baseServiceFee,
+    totalMaterialCost: totalMaterialCost,
+    totalAdditionalCost: totalAdditionalCost,
+    grandTotal: grandTotal,
+    photos: photos,
+    acceptedAt: acceptedAt,
+    completedAt: completedAt,
+    cancelledAt: cancelledAt,
+    cancelReason: cancelReason,
+    timeline: timeline.map((t) => t.toEntity()).toList(),
+    purchaseSummary: purchaseSummary?.toEntity(),
+    hasUnreadChat: hasUnreadChat,
+    canCancel: canCancel,
+    cancellationPolicy: cancellationPolicy,
+    updatedAt: updatedAt,
+  );
 }
 
 /// Data model for order location.
@@ -301,19 +303,19 @@ class OrderLocationModel {
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
-        'latitude': latitude,
-        'longitude': longitude,
-        'address': address,
-        'address_detail': addressDetail,
-      };
+    'latitude': latitude,
+    'longitude': longitude,
+    'address': address,
+    'address_detail': addressDetail,
+  };
 
   /// Converts this model to a domain [OrderLocation] entity.
   OrderLocation toEntity() => OrderLocation(
-        latitude: latitude,
-        longitude: longitude,
-        address: address,
-        addressDetail: addressDetail,
-      );
+    latitude: latitude,
+    longitude: longitude,
+    address: address,
+    addressDetail: addressDetail,
+  );
 }
 
 /// Data model for service info within an order.
@@ -339,17 +341,14 @@ class OrderServiceInfoModel {
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
-        'service_id': serviceId,
-        'name': name,
-        'category': category,
-      };
+    'service_id': serviceId,
+    'name': name,
+    'category': category,
+  };
 
   /// Converts this model to a domain [OrderServiceInfo] entity.
-  OrderServiceInfo toEntity() => OrderServiceInfo(
-        serviceId: serviceId,
-        name: name,
-        category: category,
-      );
+  OrderServiceInfo toEntity() =>
+      OrderServiceInfo(serviceId: serviceId, name: name, category: category);
 }
 
 /// Data model for timeline entries.
@@ -380,19 +379,19 @@ class OrderTimelineEntryModel {
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
-        'event': event,
-        'label': label,
-        'timestamp': timestamp?.toIso8601String(),
-        'is_completed': isCompleted,
-      };
+    'event': event,
+    'label': label,
+    'timestamp': timestamp?.toIso8601String(),
+    'is_completed': isCompleted,
+  };
 
   /// Converts this model to a domain [OrderTimelineEntry] entity.
   OrderTimelineEntry toEntity() => OrderTimelineEntry(
-        event: event,
-        label: label,
-        timestamp: timestamp,
-        isCompleted: isCompleted,
-      );
+    event: event,
+    label: label,
+    timestamp: timestamp,
+    isCompleted: isCompleted,
+  );
 }
 
 /// Data model for purchase summary within an order.
@@ -424,19 +423,19 @@ class OrderPurchaseSummaryModel {
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
-        'total_items': totalItems,
-        'total_cost': totalCost,
-        'pending_approval': pendingApproval,
-        'approved': approved,
-        'rejected': rejected,
-      };
+    'total_items': totalItems,
+    'total_cost': totalCost,
+    'pending_approval': pendingApproval,
+    'approved': approved,
+    'rejected': rejected,
+  };
 
   /// Converts this model to a domain [OrderPurchaseSummary] entity.
   OrderPurchaseSummary toEntity() => OrderPurchaseSummary(
-        totalItems: totalItems,
-        totalCost: totalCost,
-        pendingApproval: pendingApproval,
-        approved: approved,
-        rejected: rejected,
-      );
+    totalItems: totalItems,
+    totalCost: totalCost,
+    pendingApproval: pendingApproval,
+    approved: approved,
+    rejected: rejected,
+  );
 }

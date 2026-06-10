@@ -51,6 +51,7 @@ class ChatRepositoryImpl implements ChatRepository {
     String orderId, {
     String? cursor,
     int limit = 50,
+    bool isWorker = false,
   }) async {
     try {
       if (!connectivityManager.isOnline) {
@@ -66,6 +67,7 @@ class ChatRepositoryImpl implements ChatRepository {
         orderId,
         cursor: cursor,
         limit: limit,
+        isWorker: isWorker,
       );
 
       // Cache the first page of messages (no cursor = first load)
@@ -89,9 +91,16 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Future<Result<ChatMessage>> sendTextMessage(
-      String orderId, String content) async {
+    String orderId,
+    String content, {
+    bool isWorker = false,
+  }) async {
     try {
-      final model = await remoteDataSource.sendTextMessage(orderId, content);
+      final model = await remoteDataSource.sendTextMessage(
+        orderId,
+        content,
+        isWorker: isWorker,
+      );
       final message = model.toEntity();
 
       // Cache the sent message
@@ -110,12 +119,14 @@ class ChatRepositoryImpl implements ChatRepository {
     String orderId,
     File image, {
     String? caption,
+    bool isWorker = false,
   }) async {
     try {
       final model = await remoteDataSource.sendImageMessage(
         orderId,
         image,
         caption: caption,
+        isWorker: isWorker,
       );
       final message = model.toEntity();
 
@@ -131,9 +142,12 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Result<void>> markAsRead(String orderId) async {
+  Future<Result<void>> markAsRead(
+    String orderId, {
+    bool isWorker = false,
+  }) async {
     try {
-      await remoteDataSource.markAsRead(orderId);
+      await remoteDataSource.markAsRead(orderId, isWorker: isWorker);
       return const Right(null);
     } on DioException catch (e) {
       return Left(_mapDioException(e));
@@ -203,8 +217,7 @@ class ChatRepositoryImpl implements ChatRepository {
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode ?? 0;
         final data = e.response?.data as Map<String, dynamic>?;
-        final message =
-            data?['message'] as String? ?? 'Terjadi kesalahan';
+        final message = data?['message'] as String? ?? 'Terjadi kesalahan';
         return ServerFailure(message, statusCode: statusCode);
       default:
         return const NetworkFailure();

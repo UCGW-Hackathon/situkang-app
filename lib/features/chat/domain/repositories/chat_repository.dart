@@ -22,6 +22,7 @@ abstract class ChatRepository {
     String orderId, {
     String? cursor,
     int limit = 50,
+    bool isWorker = false,
   });
 
   /// Sends a text message in the order's chat.
@@ -29,7 +30,11 @@ abstract class ChatRepository {
   /// [orderId] is the order context.
   /// [content] is the message text (1-2000 characters, non-whitespace-only).
   /// Delivers via WebSocket and returns the confirmed message.
-  Future<Result<ChatMessage>> sendTextMessage(String orderId, String content);
+  Future<Result<ChatMessage>> sendTextMessage(
+    String orderId,
+    String content, {
+    bool isWorker = false,
+  });
 
   /// Sends an image message in the order's chat.
   ///
@@ -41,12 +46,13 @@ abstract class ChatRepository {
     String orderId,
     File image, {
     String? caption,
+    bool isWorker = false,
   });
 
   /// Marks all messages in the order's chat as read.
   ///
   /// [orderId] is the order whose messages to mark as read.
-  Future<Result<void>> markAsRead(String orderId);
+  Future<Result<void>> markAsRead(String orderId, {bool isWorker = false});
 
   /// Fetches the list of active chat conversations.
   ///

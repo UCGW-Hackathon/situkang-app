@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../invoice/domain/entities/invoice.dart';
+import '../../domain/entities/worker_order_detail.dart';
 import '../../domain/repositories/worker_order_repository.dart';
 
 part 'worker_order_event.dart';
@@ -12,6 +13,7 @@ part 'worker_order_state.dart';
 @injectable
 class WorkerOrderBloc extends Bloc<WorkerOrderEvent, WorkerOrderState> {
   WorkerOrderBloc(this.repository) : super(WorkerOrderInitial()) {
+    on<FetchWorkerOrderDetail>(_onFetchWorkerOrderDetail);
     on<UpdateOrderStatus>(_onUpdateOrderStatus);
     on<UploadProgressPhoto>(_onUploadProgressPhoto);
     on<AddWorkItem>(_onAddWorkItem);
@@ -19,6 +21,20 @@ class WorkerOrderBloc extends Bloc<WorkerOrderEvent, WorkerOrderState> {
   }
 
   final WorkerOrderRepository repository;
+
+  Future<void> _onFetchWorkerOrderDetail(
+    FetchWorkerOrderDetail event,
+    Emitter<WorkerOrderState> emit,
+  ) async {
+    emit(WorkerOrderDetailLoading());
+
+    final result = await repository.getOrderDetail(event.orderId);
+
+    result.fold(
+      (failure) => emit(WorkerOrderError(failure)),
+      (detail) => emit(WorkerOrderDetailLoaded(detail)),
+    );
+  }
 
   Future<void> _onUpdateOrderStatus(
     UpdateOrderStatus event,
@@ -33,11 +49,16 @@ class WorkerOrderBloc extends Bloc<WorkerOrderEvent, WorkerOrderState> {
       'work_paused': ['in_progress'],
     };
 
-    if (validTransitions[event.currentStatus] == null || !validTransitions[event.currentStatus]!.contains(event.status)) {
-      emit(const WorkerOrderError(ValidationFailure('Invalid status transition', fieldErrors: {})));
+    if (validTransitions[event.currentStatus] == null ||
+        !validTransitions[event.currentStatus]!.contains(event.status)) {
+      emit(
+        const WorkerOrderError(
+          ValidationFailure('Invalid status transition', fieldErrors: {}),
+        ),
+      );
       return;
     }
-    
+
     emit(WorkerOrderLoading());
 
     final result = await repository.updateOrderStatus(

@@ -1,8 +1,12 @@
 import '../../../../core/error/result.dart';
 import '../../../invoice/domain/entities/invoice.dart';
+import '../entities/worker_order_detail.dart';
 
 /// Repository interface for a worker managing an active order.
 abstract class WorkerOrderRepository {
+  /// Fetches the worker-facing detail brief for an order.
+  Future<Result<WorkerOrderDetail>> getOrderDetail(String orderId);
+
   /// Updates the status of the active order (e.g., on_the_way, arrived, in_progress, completed).
   Future<Result<void>> updateOrderStatus({
     required String orderId,

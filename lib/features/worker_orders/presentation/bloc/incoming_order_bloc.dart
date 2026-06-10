@@ -32,34 +32,33 @@ class IncomingOrderBloc extends Bloc<IncomingOrderEvent, IncomingOrderState> {
 
     final result = await repository.getIncomingOrders();
 
-    result.fold(
-      (failure) => emit(IncomingOrderError(failure)),
-      (orders) {
-        if (orders.isNotEmpty) {
-          // Assume the first one is the active one to answer (SITUKANG usually gives 1 pending at a time)
-          final activeOrder = orders.first;
-          
-          // Calculate remaining time
-          final now = DateTime.now();
-          final requestTime = activeOrder.createdAt;
-          final elapsed = now.difference(requestTime).inSeconds;
-          final remaining = 30 - elapsed; // 30 seconds countdown
+    result.fold((failure) => emit(IncomingOrderError(failure)), (orders) {
+      if (orders.isNotEmpty) {
+        // Assume the first one is the active one to answer (SITUKANG usually gives 1 pending at a time)
+        final activeOrder = orders.first;
 
-          if (remaining > 0) {
-            emit(IncomingOrderPending(
+        // Calculate remaining time
+        final now = DateTime.now();
+        final requestTime = activeOrder.createdAt;
+        final elapsed = now.difference(requestTime).inSeconds;
+        final remaining = 30 - elapsed; // 30 seconds countdown
+
+        if (remaining > 0) {
+          emit(
+            IncomingOrderPending(
               order: activeOrder,
               remainingSeconds: remaining,
-            ));
-            _startTimer();
-          } else {
-            // Already expired
-            emit(const IncomingOrderExpired());
-          }
+            ),
+          );
+          _startTimer();
         } else {
-          emit(const IncomingOrderEmpty());
+          // Already expired
+          emit(const IncomingOrderExpired());
         }
-      },
-    );
+      } else {
+        emit(const IncomingOrderEmpty());
+      }
+    });
   }
 
   void _startTimer() {
@@ -84,14 +83,16 @@ class IncomingOrderBloc extends Bloc<IncomingOrderEvent, IncomingOrderState> {
     if (state is IncomingOrderPending) {
       final currentState = state as IncomingOrderPending;
       if (currentState.remainingSeconds > 1) {
-        emit(currentState.copyWith(
-          remainingSeconds: currentState.remainingSeconds - 1,
-        ));
+        emit(
+          currentState.copyWith(
+            remainingSeconds: currentState.remainingSeconds - 1,
+          ),
+        );
       } else {
         _cancelTimer();
         emit(const IncomingOrderExpired());
-        
-        // Auto reject on server side might be handled by backend, 
+
+        // Auto reject on server side might be handled by backend,
         // but we can also trigger a local reject if needed.
         // For now, just mark expired.
       }
@@ -103,7 +104,7 @@ class IncomingOrderBloc extends Bloc<IncomingOrderEvent, IncomingOrderState> {
     Emitter<IncomingOrderState> emit,
   ) async {
     if (state is! IncomingOrderPending) return;
-    
+
     _cancelTimer();
     emit(IncomingOrderProcessing());
 
@@ -114,7 +115,7 @@ class IncomingOrderBloc extends Bloc<IncomingOrderEvent, IncomingOrderState> {
 
     result.fold(
       (failure) => emit(IncomingOrderActionError(failure)),
-      (_) => emit(const IncomingOrderAccepted()),
+      (_) => emit(IncomingOrderAccepted(event.orderId)),
     );
   }
 
@@ -123,7 +124,7 @@ class IncomingOrderBloc extends Bloc<IncomingOrderEvent, IncomingOrderState> {
     Emitter<IncomingOrderState> emit,
   ) async {
     if (state is! IncomingOrderPending) return;
-    
+
     _cancelTimer();
     emit(IncomingOrderProcessing());
 

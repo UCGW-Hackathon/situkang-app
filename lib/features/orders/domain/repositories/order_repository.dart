@@ -34,9 +34,14 @@ abstract class OrderRepository {
   /// Returns cached data if available on network failure.
   Future<Result<OrderDetail>> getOrderDetail(String orderId);
 
-  /// Cancels an order with the given [orderId] and [reason].
+  /// Cancels an order with the given [orderId], [cancelReason], and optional
+  /// [notes].
   ///
   /// Only orders in cancellable states (pending, accepted, on_the_way)
   /// can be cancelled. Returns the updated order data on success.
-  Future<Result<Order>> cancelOrder(String orderId, String reason);
+  Future<Result<Order>> cancelOrder(
+    String orderId, {
+    required String cancelReason,
+    String? notes,
+  });
 }

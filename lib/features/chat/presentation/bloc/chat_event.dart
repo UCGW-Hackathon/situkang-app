@@ -20,6 +20,7 @@ class LoadMessages extends ChatEvent {
   const LoadMessages({
     required this.orderId,
     this.cursor,
+    this.isWorker = false,
   });
 
   /// The order whose chat messages to load.
@@ -28,8 +29,10 @@ class LoadMessages extends ChatEvent {
   /// Optional cursor for loading older messages (pagination).
   final String? cursor;
 
+  final bool isWorker;
+
   @override
-  List<Object?> get props => [orderId, cursor];
+  List<Object?> get props => [orderId, cursor, isWorker];
 }
 
 /// Event dispatched when the user sends a text message.
@@ -40,6 +43,7 @@ class SendTextMessage extends ChatEvent {
   const SendTextMessage({
     required this.orderId,
     required this.content,
+    this.isWorker = false,
   });
 
   /// The order context for this message.
@@ -48,8 +52,10 @@ class SendTextMessage extends ChatEvent {
   /// The text content (1-2000 chars, non-whitespace-only).
   final String content;
 
+  final bool isWorker;
+
   @override
-  List<Object?> get props => [orderId, content];
+  List<Object?> get props => [orderId, content, isWorker];
 }
 
 /// Event dispatched when the user sends an image message.
@@ -61,6 +67,7 @@ class SendImageMessage extends ChatEvent {
     required this.orderId,
     required this.image,
     this.caption,
+    this.isWorker = false,
   });
 
   /// The order context for this message.
@@ -72,8 +79,10 @@ class SendImageMessage extends ChatEvent {
   /// Optional caption (max 500 characters).
   final String? caption;
 
+  final bool isWorker;
+
   @override
-  List<Object?> get props => [orderId, image, caption];
+  List<Object?> get props => [orderId, image, caption, isWorker];
 }
 
 /// Event dispatched when a new message is received via WebSocket.
@@ -109,13 +118,15 @@ class TypingStarted extends ChatEvent {
 /// Validates: Requirement 11.6
 class MarkAsRead extends ChatEvent {
   /// Creates a [MarkAsRead] event.
-  const MarkAsRead({required this.orderId});
+  const MarkAsRead({required this.orderId, this.isWorker = false});
 
   /// The order whose messages to mark as read.
   final String orderId;
 
+  final bool isWorker;
+
   @override
-  List<Object?> get props => [orderId];
+  List<Object?> get props => [orderId, isWorker];
 }
 
 /// Event dispatched when the counterpart's typing status changes.
@@ -135,11 +146,13 @@ class TypingStatusChanged extends ChatEvent {
 /// Validates: Requirement 11.9
 class RetryMessage extends ChatEvent {
   /// Creates a [RetryMessage] event.
-  const RetryMessage({required this.message});
+  const RetryMessage({required this.message, this.isWorker = false});
 
   /// The failed message to retry.
   final ChatMessage message;
 
+  final bool isWorker;
+
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, isWorker];
 }
