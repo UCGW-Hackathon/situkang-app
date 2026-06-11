@@ -24,6 +24,7 @@ enum OrderStatus {
   arrived,
   inProgress,
   workPaused,
+  waitingPayment,
   completed,
   cancelled,
   rejected;
@@ -37,6 +38,8 @@ enum OrderStatus {
         return 'in_progress';
       case OrderStatus.workPaused:
         return 'work_paused';
+      case OrderStatus.waitingPayment:
+        return 'waiting_payment';
       default:
         return name;
     }
@@ -51,6 +54,9 @@ enum OrderStatus {
         return OrderStatus.inProgress;
       case 'work_paused':
         return OrderStatus.workPaused;
+      case 'waiting_payment':
+      case 'waiting_for_payment':
+        return OrderStatus.waitingPayment;
       default:
         return OrderStatus.values.firstWhere(
           (e) => e.name == value,
@@ -61,18 +67,19 @@ enum OrderStatus {
 
   /// Whether this status represents an active order (visible on tracking).
   bool get isActive => [
-        OrderStatus.accepted,
-        OrderStatus.onTheWay,
-        OrderStatus.arrived,
-        OrderStatus.inProgress,
-      ].contains(this);
+    OrderStatus.accepted,
+    OrderStatus.onTheWay,
+    OrderStatus.arrived,
+    OrderStatus.inProgress,
+    OrderStatus.waitingPayment,
+  ].contains(this);
 
   /// Whether this order can be cancelled by the user.
   bool get isCancellable => [
-        OrderStatus.pending,
-        OrderStatus.accepted,
-        OrderStatus.onTheWay,
-      ].contains(this);
+    OrderStatus.pending,
+    OrderStatus.accepted,
+    OrderStatus.onTheWay,
+  ].contains(this);
 }
 
 /// Order urgency levels.

@@ -33,10 +33,9 @@ part 'tracking_state.dart';
 @injectable
 class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   /// Creates a [TrackingBloc] with the required [trackingRepository].
-  TrackingBloc({
-    required TrackingRepository trackingRepository,
-  })  : _trackingRepository = trackingRepository,
-        super(const TrackingInitial()) {
+  TrackingBloc({required TrackingRepository trackingRepository})
+    : _trackingRepository = trackingRepository,
+      super(const TrackingInitial()) {
     on<StartTracking>(_onStartTracking);
     on<StopTracking>(_onStopTracking);
     on<LocationUpdated>(_onLocationUpdated);
@@ -60,16 +59,23 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     _currentOrderId = event.orderId;
 
     // Start tracking (connects WebSocket)
-    final startResult =
-        await _trackingRepository.startTracking(event.orderId);
+    final startResult = await _trackingRepository.startTracking(event.orderId);
 
     // Fetch initial timeline
-    final timelineResult =
-        await _trackingRepository.getTrackingTimeline(event.orderId);
+    final timelineResult = await _trackingRepository.getTrackingTimeline(
+      event.orderId,
+    );
 
     final timeline = timelineResult.fold(
       (_) => <TimelineEntry>[],
       (entries) => entries,
+    );
+    final locationResult = await _trackingRepository.getLocationFallback(
+      event.orderId,
+    );
+    final initialLocation = locationResult.fold(
+      (_) => null,
+      (location) => location,
     );
 
     // Determine initial status from timeline
@@ -80,16 +86,24 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     startResult.fold(
       (failure) {
         // WebSocket failed but polling started — emit active state
-        emit(TrackingActive(
-          status: initialStatus,
-          timeline: timeline,
-        ));
+        emit(
+          TrackingActive(
+            status: initialStatus,
+            timeline: timeline,
+            workerLocation: initialLocation,
+            etaMinutes: initialLocation?.eta,
+          ),
+        );
       },
       (_) {
-        emit(TrackingActive(
-          status: initialStatus,
-          timeline: timeline,
-        ));
+        emit(
+          TrackingActive(
+            status: initialStatus,
+            timeline: timeline,
+            workerLocation: initialLocation,
+            etaMinutes: initialLocation?.eta,
+          ),
+        );
       },
     );
 
@@ -125,17 +139,16 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   ///
   /// Updates the active state with the new worker location and ETA.
   /// Requirement 9.3: Must update within 2 seconds of receiving the event.
-  void _onLocationUpdated(
-    LocationUpdated event,
-    Emitter<TrackingState> emit,
-  ) {
+  void _onLocationUpdated(LocationUpdated event, Emitter<TrackingState> emit) {
     final currentState = state;
     if (currentState is TrackingActive) {
-      emit(currentState.copyWith(
-        workerLocation: event.location,
-        etaMinutes: event.location.eta,
-        clearEta: event.location.eta == null,
-      ));
+      emit(
+        currentState.copyWith(
+          workerLocation: event.location,
+          etaMinutes: event.location.eta,
+          clearEta: event.location.eta == null,
+        ),
+      );
     }
   }
 
@@ -163,13 +176,17 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     final currentState = state;
     if (currentState is TrackingActive) {
       // Update timeline to reflect new status
-      final updatedTimeline =
-          _updateTimeline(currentState.timeline, event.newStatus);
+      final updatedTimeline = _updateTimeline(
+        currentState.timeline,
+        event.newStatus,
+      );
 
-      emit(currentState.copyWith(
-        status: event.newStatus,
-        timeline: updatedTimeline,
-      ));
+      emit(
+        currentState.copyWith(
+          status: event.newStatus,
+          timeline: updatedTimeline,
+        ),
+      );
     }
   }
 

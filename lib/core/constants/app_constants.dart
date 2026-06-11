@@ -14,6 +14,12 @@ class AppConstants {
   /// WebSocket base URL for real-time features (tracking, chat).
   static const String webSocketUrl = 'wss://xryz-gcw-situkang.hf.space/v1/ws';
 
+  /// Public Mapbox access token. Pass with:
+  /// `--dart-define=MAPBOX_ACCESS_TOKEN=YOUR_TOKEN`
+  static const String mapboxAccessToken = String.fromEnvironment(
+    'MAPBOX_ACCESS_TOKEN',
+  );
+
   // ─── Timeouts ────────────────────────────────────────────────────────────────
 
   /// HTTP connection timeout.

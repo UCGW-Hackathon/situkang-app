@@ -2,16 +2,20 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mb;
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/situkang_mapbox_map.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/worker_order_detail.dart';
 import '../bloc/worker_order_bloc.dart';
@@ -33,8 +37,14 @@ class _WorkerOrderDetailBriefPageState
   static const _complaintBackground = Color(0xFFE6EEFF);
   static const _complaintBorder = Color(0xFFD5E3FC);
 
-  final _mapController = MapController();
+  mb.MapboxMap? _mapboxMap;
   LatLng? _currentLocation;
+  List<LatLng> _directionsRoute = const [];
+  String? _directionsRouteKey;
+  bool _isLoadingDirections = false;
+  String? _mapboxPlaceName;
+  String? _mapboxPlaceKey;
+  bool _isLoadingPlaceName = false;
 
   @override
   void initState() {
@@ -200,7 +210,11 @@ class _WorkerOrderDetailBriefPageState
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: _buildWorkSnapshot(detail),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
                 child: _buildComplaintSection(detail),
               ),
             ],
@@ -216,73 +230,38 @@ class _WorkerOrderDetailBriefPageState
     final center = detail.hasUsableLocation
         ? target
         : const LatLng(-6.2, 106.8);
+    final markers = [
+      if (_currentLocation != null)
+        SitukangMapboxMarker(
+          point: _currentLocation!,
+          color: AppColors.success,
+        ),
+      if (detail.hasUsableLocation)
+        SitukangMapboxMarker(point: target, color: _brandTeal, radius: 9),
+    ];
+    final fitPoints =
+        detail.hasUsableLocation &&
+            _currentLocation != null &&
+            _currentLocation != target
+        ? [_currentLocation!, target]
+        : const <LatLng>[];
+    unawaited(_loadDirectionsRoute(target, fitPoints));
+    if (detail.hasUsableLocation) {
+      unawaited(_loadMapboxPlaceName(target));
+    }
 
     return SizedBox(
       height: 309,
       child: Stack(
         children: [
-          ColorFiltered(
-            colorFilter: ColorFilter.mode(
-              const Color(0xFFE7F0F7).withValues(alpha: 0.18),
-              BlendMode.srcATop,
-            ),
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: center,
-                initialZoom: 13.8,
-                interactionOptions: const InteractionOptions(
-                  flags:
-                      InteractiveFlag.drag |
-                      InteractiveFlag.pinchZoom |
-                      InteractiveFlag.doubleTapZoom,
-                ),
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.situkang.app',
-                ),
-                if (detail.hasUsableLocation &&
-                    _currentLocation != null &&
-                    _currentLocation != target)
-                  PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: [_currentLocation!, target],
-                        color: _brandTeal,
-                        strokeWidth: 5,
-                        borderColor: Colors.white,
-                        borderStrokeWidth: 3,
-                      ),
-                    ],
-                  ),
-                if (detail.hasUsableLocation)
-                  MarkerLayer(
-                    markers: [
-                      if (_currentLocation != null)
-                        Marker(
-                          point: _currentLocation!,
-                          width: 44,
-                          height: 44,
-                          child: const _MapMarker(
-                            color: AppColors.success,
-                            icon: Icons.navigation,
-                          ),
-                        ),
-                      Marker(
-                        point: target,
-                        width: 52,
-                        height: 52,
-                        child: const _MapMarker(
-                          color: _brandTeal,
-                          icon: Icons.place,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
+          SitukangMapboxMap(
+            initialCenter: center,
+            markers: markers,
+            route: _directionsRoute,
+            fitPoints: fitPoints,
+            onMapCreated: (mapboxMap) {
+              _mapboxMap = mapboxMap;
+            },
           ),
           const Positioned.fill(
             child: IgnorePointer(
@@ -312,7 +291,15 @@ class _WorkerOrderDetailBriefPageState
               child: IconButton(
                 tooltip: 'Pusatkan peta',
                 onPressed: detail.hasUsableLocation
-                    ? () => _mapController.move(target, 14.2)
+                    ? () => _mapboxMap?.flyTo(
+                        mb.CameraOptions(
+                          center: _toPoint(target),
+                          zoom: 14.5,
+                          bearing: 0,
+                          pitch: 0,
+                        ),
+                        mb.MapAnimationOptions(duration: 700),
+                      )
                     : null,
                 icon: const Icon(Icons.my_location),
                 color: _brandTeal,
@@ -324,11 +311,139 @@ class _WorkerOrderDetailBriefPageState
     );
   }
 
+  Future<void> _loadDirectionsRoute(
+    LatLng target,
+    List<LatLng> fitPoints,
+  ) async {
+    final origin = _currentLocation;
+    final token = AppConstants.mapboxAccessToken.trim();
+    if (origin == null || fitPoints.length < 2 || token.isEmpty) {
+      if (_directionsRoute.isNotEmpty) {
+        setState(() {
+          _directionsRoute = const [];
+          _directionsRouteKey = null;
+        });
+      }
+      return;
+    }
+
+    final routeKey =
+        '${origin.latitude.toStringAsFixed(6)},${origin.longitude.toStringAsFixed(6)}'
+        '>${target.latitude.toStringAsFixed(6)},${target.longitude.toStringAsFixed(6)}';
+    if (_directionsRouteKey == routeKey || _isLoadingDirections) return;
+
+    _isLoadingDirections = true;
+    try {
+      final response = await Dio().get<Map<String, dynamic>>(
+        'https://api.mapbox.com/directions/v5/mapbox/driving/'
+        '${origin.longitude},${origin.latitude};'
+        '${target.longitude},${target.latitude}',
+        queryParameters: {
+          'alternatives': false,
+          'geometries': 'geojson',
+          'overview': 'full',
+          'steps': false,
+          'access_token': token,
+        },
+      );
+
+      final routes = response.data?['routes'];
+      Object? coordinates;
+      if (routes is List && routes.isNotEmpty) {
+        final firstRoute = routes.first;
+        if (firstRoute is Map) {
+          final geometry = firstRoute['geometry'];
+          if (geometry is Map) {
+            coordinates = geometry['coordinates'];
+          }
+        }
+      }
+      if (coordinates is! List) return;
+
+      final parsedRoute = coordinates
+          .whereType<List<dynamic>>()
+          .where((coordinate) => coordinate.length >= 2)
+          .map(
+            (coordinate) => LatLng(
+              (coordinate[1] as num).toDouble(),
+              (coordinate[0] as num).toDouble(),
+            ),
+          )
+          .toList(growable: false);
+
+      if (!mounted) return;
+      setState(() {
+        _directionsRouteKey = routeKey;
+        _directionsRoute = parsedRoute;
+      });
+    } on DioException {
+      if (!mounted) return;
+      setState(() {
+        _directionsRouteKey = routeKey;
+        _directionsRoute = const [];
+      });
+    } finally {
+      _isLoadingDirections = false;
+    }
+  }
+
+  Future<void> _loadMapboxPlaceName(LatLng target) async {
+    final token = AppConstants.mapboxAccessToken.trim();
+    if (token.isEmpty) return;
+
+    final placeKey =
+        '${target.latitude.toStringAsFixed(6)},${target.longitude.toStringAsFixed(6)}';
+    if (_mapboxPlaceKey == placeKey || _isLoadingPlaceName) return;
+
+    _isLoadingPlaceName = true;
+    try {
+      final response = await Dio().get<Map<String, dynamic>>(
+        'https://api.mapbox.com/search/geocode/v6/reverse',
+        queryParameters: {
+          'longitude': target.longitude,
+          'latitude': target.latitude,
+          'language': 'id',
+          'country': 'ID',
+          'access_token': token,
+        },
+      );
+
+      final features = response.data?['features'];
+      Object? properties;
+      if (features is List && features.isNotEmpty) {
+        final firstFeature = features.first;
+        if (firstFeature is Map) {
+          properties = firstFeature['properties'];
+        }
+      }
+      if (properties is! Map) return;
+
+      final placeName =
+          properties['full_address'] ??
+          properties['place_formatted'] ??
+          properties['name'];
+      if (placeName is! String || placeName.trim().isEmpty) return;
+
+      if (!mounted) return;
+      setState(() {
+        _mapboxPlaceKey = placeKey;
+        _mapboxPlaceName = placeName.trim();
+      });
+    } on DioException {
+      if (!mounted) return;
+      setState(() {
+        _mapboxPlaceKey = placeKey;
+      });
+    } finally {
+      _isLoadingPlaceName = false;
+    }
+  }
+
   Widget _buildCustomerCard(WorkerOrderDetail detail) {
     final customer = detail.customer;
     final customerName = _displayCustomerName(detail);
     final distanceText = _distanceText(detail);
-    final address = detail.location.address.trim();
+    final address = _displayAddress(detail);
     final addressDetail = detail.location.addressDetail?.trim();
 
     return DecoratedBox(
@@ -401,44 +516,14 @@ class _WorkerOrderDetailBriefPageState
             const SizedBox(height: 16),
             const Divider(height: 1, color: Color(0x4DBDC8CE)),
             const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 2),
-                  child: Icon(
-                    Icons.location_on_outlined,
-                    size: 22,
-                    color: _brandTeal,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        address.isNotEmpty ? address : 'Lokasi belum tersedia',
-                        style: AppTypography.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF0D1C2E),
-                        ),
-                      ),
-                      if (addressDetail != null &&
-                          addressDetail.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          addressDetail,
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF3E484D),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
+            _LocationSummary(
+              address: address,
+              addressDetail: addressDetail,
+              coordinateText: detail.hasUsableLocation
+                  ? '${detail.location.latitude.toStringAsFixed(5)}, '
+                        '${detail.location.longitude.toStringAsFixed(5)}'
+                  : null,
+              routeText: _routeText(detail),
             ),
           ],
         ),
@@ -446,49 +531,203 @@ class _WorkerOrderDetailBriefPageState
     );
   }
 
+  Widget _buildWorkSnapshot(WorkerOrderDetail detail) {
+    return Row(
+      children: [
+        Expanded(
+          child: _InfoTile(
+            icon: Icons.build_circle_outlined,
+            label: 'Layanan',
+            value: _serviceLabel(detail),
+            color: _brandTeal,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _InfoTile(
+            icon: Icons.bolt_outlined,
+            label: 'Prioritas',
+            value: _urgencyLabel(detail.urgency),
+            color: _urgencyColor(detail.urgency),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildComplaintSection(WorkerOrderDetail detail) {
+    final description = detail.description.trim();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            const Icon(Icons.plumbing, color: _brandTeal, size: 22),
-            const SizedBox(width: 8),
-            Text(
-              'Detail Keluhan',
-              style: AppTypography.h4.copyWith(
-                color: const Color(0xFF0D1C2E),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+        const _SectionHeader(
+          icon: Icons.assignment_outlined,
+          title: 'Brief Pekerjaan',
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: _complaintBackground,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _complaintBorder),
+            border: Border.all(color: const Color(0xFFE1E8EF)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(17),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  detail.title,
-                  style: AppTypography.h4.copyWith(
-                    color: _brandTeal,
-                    fontWeight: FontWeight.w700,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: const BoxDecoration(
+                        color: _complaintBackground,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.plumbing, color: _brandTeal),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            detail.title,
+                            style: AppTypography.h4.copyWith(
+                              color: const Color(0xFF0D1C2E),
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _InfoPill(
+                                icon: Icons.confirmation_number_outlined,
+                                label: '#${detail.orderNumber}',
+                              ),
+                              _InfoPill(
+                                icon: Icons.schedule_outlined,
+                                label: _formatDateTime(detail.createdAt),
+                              ),
+                              if (detail.acceptedAt != null)
+                                _InfoPill(
+                                  icon: Icons.check_circle_outline,
+                                  label:
+                                      'Diterima ${_formatClock(detail.acceptedAt!)}',
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: _complaintBackground,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _complaintBorder),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Catatan Pelanggan',
+                          style: AppTypography.label.copyWith(
+                            color: _brandTeal,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          description.isNotEmpty
+                              ? description
+                              : 'Pelanggan belum menambahkan catatan khusus.',
+                          style: AppTypography.bodyLarge.copyWith(
+                            color: const Color(0xFF3E484D),
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                if (detail.description.trim().isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    detail.description,
-                    style: AppTypography.bodyLarge.copyWith(
-                      color: const Color(0xFF3E484D),
-                      height: 1.5,
+                const SizedBox(height: 16),
+                _DetailRow(
+                  icon: Icons.location_on_outlined,
+                  label: 'Titik pekerjaan',
+                  value: _displayAddress(detail),
+                  subValue:
+                      detail.location.addressDetail?.trim().isNotEmpty == true
+                      ? detail.location.addressDetail!.trim()
+                      : _routeText(detail),
+                ),
+                const SizedBox(height: 12),
+                _DetailRow(
+                  icon: Icons.route_outlined,
+                  label: 'Navigasi',
+                  value: _routeText(detail),
+                  subValue: detail.hasUsableLocation
+                      ? 'Koordinat ${detail.location.latitude.toStringAsFixed(5)}, ${detail.location.longitude.toStringAsFixed(5)}'
+                      : null,
+                ),
+                if (detail.photos.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Text(
+                        'Foto Kerusakan',
+                        style: AppTypography.label.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0D1C2E),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F3F6),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '${detail.photos.length}',
+                          style: AppTypography.caption.copyWith(
+                            color: _brandTeal,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 140,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: detail.photos.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        return _DamagePhoto(url: detail.photos[index]);
+                      },
                     ),
                   ),
                 ],
@@ -496,28 +735,6 @@ class _WorkerOrderDetailBriefPageState
             ),
           ),
         ),
-        if (detail.photos.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text(
-            'Foto Kerusakan (${detail.photos.length})',
-            style: AppTypography.label.copyWith(
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF0D1C2E),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 140,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: detail.photos.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                return _DamagePhoto(url: detail.photos[index]);
-              },
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -576,15 +793,47 @@ class _WorkerOrderDetailBriefPageState
               ),
               const SizedBox(height: 16),
               if (detail.status == OrderStatus.pending)
-                _SlideToStartButton(
-                  text: 'Geser untuk Terima Pekerjaan',
-                  onCompleted: () {
+                _PendingOrderDecisionButtons(
+                  onReject: () {
+                    context.read<WorkerOrderBloc>().add(
+                      RejectWorkerOrder(orderId: detail.id),
+                    );
+                  },
+                  onAccept: () {
                     context.read<WorkerOrderBloc>().add(
                       AcceptWorkerOrder(orderId: detail.id),
                     );
                   },
                 )
               else if (detail.status == OrderStatus.accepted)
+                _SlideToStartButton(
+                  text: 'Geser untuk Menuju Lokasi',
+                  onCompleted: () {
+                    context.read<WorkerOrderBloc>().add(
+                      UpdateOrderStatus(
+                        orderId: detail.id,
+                        status: 'on_the_way',
+                        currentStatus: detail.status.value,
+                      ),
+                    );
+                  },
+                )
+              else if (detail.status == OrderStatus.onTheWay)
+                canStartWork
+                    ? _SlideToStartButton(
+                        text: 'Geser Saat Tiba Lokasi',
+                        onCompleted: () {
+                          context.read<WorkerOrderBloc>().add(
+                            UpdateOrderStatus(
+                              orderId: detail.id,
+                              status: 'arrived',
+                              currentStatus: detail.status.value,
+                            ),
+                          );
+                        },
+                      )
+                    : _DistanceLockedAction(text: _arriveLockedText(detail))
+              else if (detail.status == OrderStatus.arrived)
                 canStartWork
                     ? _SlideToStartButton(
                         text: 'Geser untuk Kerjakan',
@@ -656,6 +905,59 @@ class _WorkerOrderDetailBriefPageState
     return 'Hubungi ${name.split(RegExp(r'\s+')).first} (Chat)';
   }
 
+  String _displayAddress(WorkerOrderDetail detail) {
+    final mapboxAddress = _mapboxPlaceName?.trim();
+    if (mapboxAddress != null && mapboxAddress.isNotEmpty) {
+      return mapboxAddress;
+    }
+
+    final apiAddress = detail.location.address.trim();
+    if (apiAddress.isNotEmpty) return apiAddress;
+
+    return detail.hasUsableLocation
+        ? 'Lokasi sesuai titik peta'
+        : 'Lokasi belum tersedia';
+  }
+
+  String _serviceLabel(WorkerOrderDetail detail) {
+    final serviceName = detail.serviceName?.trim();
+    if (serviceName != null && serviceName.isNotEmpty) return serviceName;
+    return 'Jasa Tukang';
+  }
+
+  String _urgencyLabel(OrderUrgency urgency) {
+    switch (urgency) {
+      case OrderUrgency.urgent:
+        return 'Mendesak';
+      case OrderUrgency.normal:
+        return 'Normal';
+    }
+  }
+
+  Color _urgencyColor(OrderUrgency urgency) {
+    switch (urgency) {
+      case OrderUrgency.urgent:
+        return AppColors.error;
+      case OrderUrgency.normal:
+        return _brandTeal;
+    }
+  }
+
+  String _formatDateTime(DateTime value) {
+    return DateFormat('dd MMM yyyy, HH:mm').format(value.toLocal());
+  }
+
+  String _formatClock(DateTime value) {
+    return DateFormat('HH:mm').format(value.toLocal());
+  }
+
+  String _routeText(WorkerOrderDetail detail) {
+    if (!detail.hasUsableLocation) return 'Titik peta belum tersedia';
+    final distanceText = _distanceText(detail);
+    if (distanceText != null) return distanceText;
+    return 'Rute siap setelah lokasi Anda aktif';
+  }
+
   String? _distanceText(WorkerOrderDetail detail) {
     final meters = _distanceMeters(detail);
     if (meters == null) return null;
@@ -673,6 +975,10 @@ class _WorkerOrderDetailBriefPageState
     return const Distance().as(LengthUnit.Meter, _currentLocation!, target);
   }
 
+  mb.Point _toPoint(LatLng point) {
+    return mb.Point(coordinates: mb.Position(point.longitude, point.latitude));
+  }
+
   bool _canStartWork(WorkerOrderDetail detail) {
     final meters = _distanceMeters(detail);
     return meters != null && meters < 100;
@@ -686,17 +992,25 @@ class _WorkerOrderDetailBriefPageState
     return 'Dekati lokasi pelanggan (<100 m). Saat ini ${_distanceText(detail)}';
   }
 
+  String _arriveLockedText(WorkerOrderDetail detail) {
+    final meters = _distanceMeters(detail);
+    if (meters == null) {
+      return 'Aktifkan lokasi untuk konfirmasi tiba';
+    }
+    return 'Konfirmasi tiba saat sudah <100 m. Saat ini ${_distanceText(detail)}';
+  }
+
   String? _nextStatus(OrderStatus status) {
     switch (status) {
       case OrderStatus.accepted:
-        return null;
       case OrderStatus.onTheWay:
-        return 'arrived';
       case OrderStatus.arrived:
+        return null;
       case OrderStatus.workPaused:
         return 'in_progress';
       case OrderStatus.pending:
       case OrderStatus.inProgress:
+      case OrderStatus.waitingPayment:
       case OrderStatus.completed:
       case OrderStatus.cancelled:
       case OrderStatus.rejected:
@@ -707,7 +1021,7 @@ class _WorkerOrderDetailBriefPageState
   String _slideText(OrderStatus status) {
     switch (status) {
       case OrderStatus.accepted:
-        return 'Geser untuk Kerjakan';
+        return 'Geser untuk Menuju Lokasi';
       case OrderStatus.onTheWay:
         return 'Geser Saat Tiba Lokasi';
       case OrderStatus.arrived:
@@ -716,6 +1030,7 @@ class _WorkerOrderDetailBriefPageState
         return 'Geser untuk Lanjut Kerja';
       case OrderStatus.pending:
       case OrderStatus.inProgress:
+      case OrderStatus.waitingPayment:
       case OrderStatus.completed:
       case OrderStatus.cancelled:
       case OrderStatus.rejected:
@@ -727,6 +1042,8 @@ class _WorkerOrderDetailBriefPageState
     switch (status) {
       case OrderStatus.inProgress:
         return 'Pekerjaan sedang berlangsung';
+      case OrderStatus.waitingPayment:
+        return 'Menunggu pembayaran pelanggan';
       case OrderStatus.completed:
         return 'Pekerjaan selesai';
       case OrderStatus.cancelled:
@@ -755,6 +1072,300 @@ class _WorkerOrderDetailBriefPageState
       default:
         return 'Status pekerjaan diperbarui.';
     }
+  }
+}
+
+class _LocationSummary extends StatelessWidget {
+  const _LocationSummary({
+    required this.address,
+    required this.routeText,
+    this.addressDetail,
+    this.coordinateText,
+  });
+
+  final String address;
+  final String routeText;
+  final String? addressDetail;
+  final String? coordinateText;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7FAFC),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE1E8EF)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 22,
+                  color: _WorkerOrderDetailBriefPageState._brandTeal,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        address,
+                        style: AppTypography.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0D1C2E),
+                        ),
+                      ),
+                      if (addressDetail != null &&
+                          addressDetail!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          addressDetail!,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: const Color(0xFF52606D),
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _InfoPill(icon: Icons.route_outlined, label: routeText),
+                if (coordinateText != null)
+                  _InfoPill(
+                    icon: Icons.my_location_outlined,
+                    label: coordinateText!,
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE1E8EF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 19),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: const Color(0xFF0D1C2E),
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          color: _WorkerOrderDetailBriefPageState._brandTeal,
+          size: 22,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: AppTypography.h4.copyWith(
+            color: const Color(0xFF0D1C2E),
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoPill extends StatelessWidget {
+  const _InfoPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F7FA),
+        borderRadius: BorderRadius.circular(AppSizing.radiusFull),
+        border: Border.all(color: const Color(0xFFDDE8EE)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: _WorkerOrderDetailBriefPageState._brandTeal,
+          ),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              style: AppTypography.caption.copyWith(
+                color: const Color(0xFF3E484D),
+                fontWeight: FontWeight.w700,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.subValue,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final String? subValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: const BoxDecoration(
+            color: Color(0xFFF2F7FA),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: _WorkerOrderDetailBriefPageState._brandTeal,
+            size: 19,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: const Color(0xFF0D1C2E),
+                  fontWeight: FontWeight.w700,
+                  height: 1.35,
+                ),
+              ),
+              if (subValue != null && subValue!.isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Text(
+                  subValue!,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: const Color(0xFF52606D),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -866,8 +1477,9 @@ class _StatusBadge extends StatelessWidget {
       case OrderStatus.arrived:
       case OrderStatus.inProgress:
       case OrderStatus.workPaused:
+      case OrderStatus.waitingPayment:
       case OrderStatus.completed:
-        return (const Color(0xFF006947), const Color(0x3300855B));
+        return (const Color(0xFF00647C), const Color(0x1A00647C));
       case OrderStatus.pending:
         return (AppColors.warning, AppColors.warningLight);
       case OrderStatus.cancelled:
@@ -890,6 +1502,8 @@ class _StatusBadge extends StatelessWidget {
         return 'Dikerjakan';
       case OrderStatus.workPaused:
         return 'Jeda';
+      case OrderStatus.waitingPayment:
+        return 'Menunggu Bayar';
       case OrderStatus.completed:
         return 'Selesai';
       case OrderStatus.cancelled:
@@ -900,33 +1514,66 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-class _MapMarker extends StatelessWidget {
-  const _MapMarker({required this.color, required this.icon});
+class _PendingOrderDecisionButtons extends StatelessWidget {
+  const _PendingOrderDecisionButtons({
+    required this.onReject,
+    required this.onAccept,
+  });
 
-  final Color color;
-  final IconData icon;
+  static const _gojekGreen = Color(0xFF00AA13);
+  static const _rejectRed = Color(0xFFE53935);
+
+  final VoidCallback onReject;
+  final VoidCallback onAccept;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return SizedBox(
+      height: 56,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: OutlinedButton(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                onReject();
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _rejectRed,
+                side: const BorderSide(color: _rejectRed, width: 1.6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Icon(Icons.close, size: 28),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 7,
+            child: ElevatedButton(
+              onPressed: () {
+                HapticFeedback.heavyImpact();
+                onAccept();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _gojekGreen,
+                foregroundColor: Colors.white,
+                elevation: 8,
+                shadowColor: _gojekGreen.withValues(alpha: 0.45),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                textStyle: AppTypography.buttonLarge.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.6,
+                ),
+              ),
+              child: const Text('TERIMA'),
+            ),
           ),
         ],
-      ),
-      child: Center(
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          child: Icon(icon, color: Colors.white, size: 20),
-        ),
       ),
     );
   }

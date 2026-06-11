@@ -47,7 +47,9 @@ class OrderDetailModel {
   /// Creates an [OrderDetailModel] from a JSON map.
   factory OrderDetailModel.fromJson(Map<String, dynamic> json) {
     // Parse location
-    final locationJson = json['location'] as Map<String, dynamic>? ?? {};
+    final locationJson = json['location'] is Map<String, dynamic>
+        ? json['location'] as Map<String, dynamic>
+        : json;
     final locationModel = OrderLocationModel.fromJson(locationJson);
 
     // Parse worker
@@ -289,10 +291,19 @@ class OrderLocationModel {
   /// Creates an [OrderLocationModel] from a JSON map.
   factory OrderLocationModel.fromJson(Map<String, dynamic> json) {
     return OrderLocationModel(
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
-      address: json['address'] as String? ?? '',
-      addressDetail: json['address_detail'] as String?,
+      latitude:
+          _asDouble(json['latitude'] ?? json['lat'] ?? json['location_lat']) ??
+          0.0,
+      longitude:
+          _asDouble(json['longitude'] ?? json['lng'] ?? json['location_lng']) ??
+          0.0,
+      address:
+          json['address'] as String? ??
+          json['location_address'] as String? ??
+          '',
+      addressDetail:
+          json['address_detail'] as String? ??
+          json['location_detail'] as String?,
     );
   }
 
@@ -392,6 +403,12 @@ class OrderTimelineEntryModel {
     timestamp: timestamp,
     isCompleted: isCompleted,
   );
+}
+
+double? _asDouble(Object? value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
 }
 
 /// Data model for purchase summary within an order.

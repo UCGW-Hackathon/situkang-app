@@ -41,7 +41,8 @@ class Invoice extends Equatable {
     required this.paymentMethod,
     required this.items,
     required this.createdAt,
-    required this.dueDate,
+    // dueDate is optional — API does not always return it
+    this.dueDate,
     this.paidAt,
     this.aiSummary,
     this.workerNotes,
@@ -61,7 +62,7 @@ class Invoice extends Equatable {
   final PaymentMethod? paymentMethod;
   final List<InvoiceLineItem> items;
   final DateTime createdAt;
-  final DateTime dueDate;
+  final DateTime? dueDate; // optional — not always returned by API
   final DateTime? paidAt;
   final String? aiSummary;
   final String? workerNotes;

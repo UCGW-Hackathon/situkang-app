@@ -115,6 +115,10 @@ class ApiEndpoints {
   /// Returns the path for confirming payment.
   static String orderPayment(String orderId) => '/orders/$orderId/payment';
 
+  /// Returns the path for synchronizing Midtrans payment status.
+  static String orderPaymentSync(String orderId) =>
+      '/orders/$orderId/payment/sync';
+
   /// Returns the path for downloading invoice PDF.
   static String orderInvoicePdf(String orderId) =>
       '/orders/$orderId/invoice/pdf';

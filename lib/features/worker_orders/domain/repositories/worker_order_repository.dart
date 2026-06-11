@@ -14,6 +14,12 @@ abstract class WorkerOrderRepository {
     int? estimatedArrivalMinutes,
   });
 
+  /// Rejects a pending order offer.
+  Future<Result<void>> rejectOrder({
+    required String orderId,
+    required String reasonCode,
+  });
+
   /// Updates the status of the active order (e.g., on_the_way, arrived, in_progress, completed).
   Future<Result<void>> updateOrderStatus({
     required String orderId,

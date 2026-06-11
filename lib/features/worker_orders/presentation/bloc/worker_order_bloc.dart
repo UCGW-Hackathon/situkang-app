@@ -16,6 +16,7 @@ class WorkerOrderBloc extends Bloc<WorkerOrderEvent, WorkerOrderState> {
   WorkerOrderBloc(this.repository) : super(WorkerOrderInitial()) {
     on<FetchWorkerOrderDetail>(_onFetchWorkerOrderDetail);
     on<AcceptWorkerOrder>(_onAcceptWorkerOrder);
+    on<RejectWorkerOrder>(_onRejectWorkerOrder);
     on<UpdateOrderStatus>(_onUpdateOrderStatus);
     on<UploadProgressPhoto>(_onUploadProgressPhoto);
     on<AddWorkItem>(_onAddWorkItem);
@@ -52,6 +53,23 @@ class WorkerOrderBloc extends Bloc<WorkerOrderEvent, WorkerOrderState> {
     result.fold(
       (failure) => emit(WorkerOrderError(failure)),
       (_) => emit(const WorkerOrderStatusUpdated('accepted')),
+    );
+  }
+
+  Future<void> _onRejectWorkerOrder(
+    RejectWorkerOrder event,
+    Emitter<WorkerOrderState> emit,
+  ) async {
+    emit(WorkerOrderLoading());
+
+    final result = await repository.rejectOrder(
+      orderId: event.orderId,
+      reasonCode: event.reasonCode,
+    );
+
+    result.fold(
+      (failure) => emit(WorkerOrderError(failure)),
+      (_) => emit(const WorkerOrderStatusUpdated('cancelled')),
     );
   }
 

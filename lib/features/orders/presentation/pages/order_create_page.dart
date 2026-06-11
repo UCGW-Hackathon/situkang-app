@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,6 +11,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/situkang_mapbox_map.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../workers/domain/entities/worker_profile.dart';
 import '../../../workers/domain/entities/worker_service.dart';
@@ -42,7 +42,6 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
   final List<File> _photos = [];
   final ImagePicker _imagePicker = ImagePicker();
 
-  final MapController _mapController = MapController();
   LatLng _selectedLocation = const LatLng(
     -6.200000,
     106.816666,
@@ -157,9 +156,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         _selectedLocation = LatLng(position.latitude, position.longitude);
         _isLoadingLocation = false;
       });
-
-      _mapController.move(_selectedLocation, 15);
-    } catch (e) {
+    } on Exception {
       setState(() => _isLoadingLocation = false);
     }
   }
@@ -168,7 +165,6 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
   void dispose() {
     _descriptionController.dispose();
     _addressDetailController.dispose();
-    _mapController.dispose();
     super.dispose();
   }
 
@@ -279,7 +275,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -389,7 +385,9 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                   if (selected) _selectedServiceId = selectionKey;
                 });
               },
-              backgroundColor: AppColors.primaryContainer.withOpacity(0.3),
+              backgroundColor: AppColors.primaryContainer.withValues(
+                alpha: 0.3,
+              ),
               selectedColor: AppColors.primaryContainer,
               checkmarkColor: AppColors.primary,
               labelStyle: TextStyle(
@@ -419,24 +417,12 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-                  initialCenter: _selectedLocation,
-                  initialZoom: 15,
-                  onPositionChanged: (position, hasGesture) {
-                    if (hasGesture) {
-                      _selectedLocation = position.center;
-                    }
-                  },
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.situkang.app',
-                  ),
-                ],
+              SitukangMapboxMap(
+                initialCenter: _selectedLocation,
+                initialZoom: 15,
+                onCameraIdle: (center) {
+                  _selectedLocation = center;
+                },
               ),
               // Center pin
               const Padding(
@@ -537,7 +523,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 24),
         decoration: BoxDecoration(
-          color: AppColors.primaryContainer.withOpacity(0.1),
+          color: AppColors.primaryContainer.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.primaryContainer, width: 1.5),
         ),
@@ -635,7 +621,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         return;
       }
       setState(() => _photos.add(file));
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,

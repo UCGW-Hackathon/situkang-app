@@ -152,8 +152,8 @@ class WorkerPurchaseRemoteDataSourceImpl
       ApiEndpoints.workerPurchaseClarifyResponse(orderId, purchaseId),
       data: {
         'response': responseText,
-        'updated_item_name': ?updatedItemName,
-        'updated_reason': ?updatedReason,
+        if (updatedItemName != null) 'updated_item_name': updatedItemName,
+        if (updatedReason != null) 'updated_reason': updatedReason,
       },
     );
 

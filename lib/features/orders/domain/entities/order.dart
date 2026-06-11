@@ -13,6 +13,8 @@ class OrderWorkerInfo extends Equatable {
     this.rating,
     this.totalReviews,
     this.isVerified = false,
+    this.latitude,
+    this.longitude,
   });
 
   /// Worker's unique identifier.
@@ -39,17 +41,25 @@ class OrderWorkerInfo extends Equatable {
   /// Whether the worker is verified.
   final bool isVerified;
 
+  /// Last known worker latitude, if returned by the backend.
+  final double? latitude;
+
+  /// Last known worker longitude, if returned by the backend.
+  final double? longitude;
+
   @override
   List<Object?> get props => [
-        workerId,
-        fullName,
-        avatarUrl,
-        specialization,
-        phone,
-        rating,
-        totalReviews,
-        isVerified,
-      ];
+    workerId,
+    fullName,
+    avatarUrl,
+    specialization,
+    phone,
+    rating,
+    totalReviews,
+    isVerified,
+    latitude,
+    longitude,
+  ];
 }
 
 /// Represents a service's summary info within an order.
@@ -164,19 +174,19 @@ class Order extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        orderNumber,
-        title,
-        status,
-        createdAt,
-        userId,
-        workerId,
-        serviceId,
-        categoryId,
-        workerInfo,
-        serviceName,
-        totalPrice,
-        completedAt,
-        cancelledAt,
-      ];
+    id,
+    orderNumber,
+    title,
+    status,
+    createdAt,
+    userId,
+    workerId,
+    serviceId,
+    categoryId,
+    workerInfo,
+    serviceName,
+    totalPrice,
+    completedAt,
+    cancelledAt,
+  ];
 }

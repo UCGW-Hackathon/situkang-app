@@ -7,6 +7,7 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../orders/domain/entities/order.dart';
+import '../../../orders/presentation/widgets/order_progress_icon.dart';
 import '../bloc/worker_history_bloc.dart';
 
 class WorkerHistoryPage extends StatefulWidget {
@@ -18,7 +19,6 @@ class WorkerHistoryPage extends StatefulWidget {
 
 class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
   final _scrollController = ScrollController();
-  final NumberFormat _formatter = NumberFormat('#,###', 'id');
 
   int _selectedIndex = 0;
 
@@ -214,7 +214,6 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
                               final order = state.orders[index];
                               return _OrderCard(
                                 order: order,
-                                formatter: _formatter,
                                 onTap: () {
                                   context
                                       .push('/worker/orders/${order.id}/brief')
@@ -272,10 +271,9 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
 
 /// Card widget displaying order summary information matching the design.
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order, required this.formatter, this.onTap});
+  const _OrderCard({required this.order, this.onTap});
 
   final Order order;
-  final NumberFormat formatter;
   final VoidCallback? onTap;
 
   IconData _getServiceIcon(String? title) {
@@ -319,20 +317,7 @@ class _OrderCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon Container
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F2F4), // Light teal background
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    iconData,
-                    color: const Color(0xFF006B5E), // Dark teal icon
-                    size: 24,
-                  ),
-                ),
+                OrderProgressIcon(status: order.status, icon: iconData),
                 const SizedBox(width: 16),
 
                 // Middle Column (Title & Service Name)
@@ -363,33 +348,6 @@ class _OrderCard extends StatelessWidget {
                     ],
                   ),
                 ),
-
-                // Right Column (Price & Status)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      order.totalPrice != null
-                          ? 'Rp ${formatter.format(order.totalPrice)}'
-                          : '-',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: statusColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _getStatusLabel(order.status).toUpperCase(),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                        color: statusColor,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -403,11 +361,14 @@ class _OrderCard extends StatelessWidget {
                   color: Color(0xFFA0AEC0),
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  DateFormat('MMM dd, yyyy').format(order.createdAt),
-                  style: const TextStyle(
-                    color: Color(0xFF718096),
-                    fontSize: 13,
+                Flexible(
+                  child: Text(
+                    DateFormat('MMM dd, yyyy').format(order.createdAt),
+                    style: const TextStyle(
+                      color: Color(0xFF718096),
+                      fontSize: 13,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Padding(
@@ -420,11 +381,28 @@ class _OrderCard extends StatelessWidget {
                   color: Color(0xFFA0AEC0),
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  timeStr,
-                  style: const TextStyle(
-                    color: Color(0xFF718096),
-                    fontSize: 13,
+                Flexible(
+                  child: Text(
+                    timeStr,
+                    style: const TextStyle(
+                      color: Color(0xFF718096),
+                      fontSize: 13,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    _getStatusLabel(order.status).toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: statusColor,
+                      letterSpacing: 0.5,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
                   ),
                 ),
               ],
@@ -444,6 +422,8 @@ class _OrderCard extends StatelessWidget {
       case OrderStatus.arrived:
       case OrderStatus.inProgress:
       case OrderStatus.workPaused:
+        return const Color(0xFF2563EB);
+      case OrderStatus.waitingPayment:
         return const Color(0xFF2563EB);
       case OrderStatus.completed:
         return const Color(0xFF00AA13);
@@ -467,6 +447,8 @@ class _OrderCard extends StatelessWidget {
         return 'Dikerjakan';
       case OrderStatus.workPaused:
         return 'Jeda';
+      case OrderStatus.waitingPayment:
+        return 'Menunggu Bayar';
       case OrderStatus.completed:
         return 'Selesai';
       case OrderStatus.cancelled:

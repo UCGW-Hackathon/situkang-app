@@ -276,7 +276,7 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
       {'key': 'on_the_way', 'label': 'Menuju Lokasi'},
       {'key': 'arrived', 'label': 'Tiba di Lokasi'},
       {'key': 'in_progress', 'label': 'Sedang Dikerjakan'},
-      {'key': 'completed', 'label': 'Selesai'},
+      {'key': 'completed', 'label': 'Menunggu Pembayaran'},
     ];
 
     var currentIndex = steps.indexWhere((s) => s['key'] == _currentStatus);

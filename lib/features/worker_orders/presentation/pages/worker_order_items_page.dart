@@ -3,13 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/constants/enums.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/theme.dart';
-import '../../../invoice/domain/entities/invoice.dart';
 import '../../../purchases/domain/entities/purchase.dart';
 import '../../../purchases/domain/repositories/worker_purchase_repository.dart';
+import '../../domain/entities/invoice_material_input.dart';
 import '../../domain/entities/worker_order_detail.dart';
+import '../../domain/repositories/worker_order_repository.dart';
 
 class WorkerOrderItemsPage extends StatefulWidget {
   const WorkerOrderItemsPage({required this.orderId, this.detail, super.key});
@@ -29,6 +29,7 @@ class _WorkerOrderItemsPageState extends State<WorkerOrderItemsPage> {
 
   final _formatter = NumberFormat('#,###', 'id');
   final _purchaseRepository = getIt<WorkerPurchaseRepository>();
+  final _orderRepository = getIt<WorkerOrderRepository>();
   final List<Purchase> _items = [];
 
   bool _isSaving = false;
@@ -566,43 +567,33 @@ class _WorkerOrderItemsPageState extends State<WorkerOrderItemsPage> {
     if (_isCreatingInvoice) return;
     setState(() => _isCreatingInvoice = true);
 
-    final now = DateTime.now();
-    final invoice = Invoice(
-      id: 'local-${now.microsecondsSinceEpoch}',
+    final result = await _orderRepository.completeOrder(
       orderId: widget.orderId,
-      invoiceNumber: 'LOCAL-${now.millisecondsSinceEpoch}',
-      baseServiceFee: _baseServiceFee,
-      bookingFee: 0,
-      platformFee: 0,
-      materialsTotal: _materialsTotal,
-      additionalCostTotal: 0,
-      discount: 0,
-      grandTotal: _grandTotal,
-      status: PaymentStatus.pending,
-      paymentMethod: PaymentMethod.cash,
-      items: _items
+      materials: _items
           .map(
-            (item) => InvoiceLineItem(
-              id: item.id,
-              name: item.itemName,
+            (item) => InvoiceMaterialInput(
+              purchaseId: item.id,
+              itemName: item.itemName,
+              category: item.category.value,
               quantity: item.quantity,
+              unit: item.unit,
               unitPrice: item.unitPrice,
               totalPrice: item.totalPrice,
-              type: item.category.value,
+              reason: item.reason,
             ),
           )
           .toList(),
-      createdAt: now,
-      dueDate: now,
     );
 
     if (!mounted) return;
     setState(() => _isCreatingInvoice = false);
 
-    await context.push(
-      '/worker/orders/${widget.orderId}/invoice',
-      extra: invoice,
-    );
+    result.fold((failure) => _showError(failure.message), (invoice) async {
+      await context.push(
+        '/worker/orders/${widget.orderId}/invoice',
+        extra: invoice,
+      );
+    });
   }
 
   void _showError(String message) {

@@ -112,7 +112,15 @@ class OrderDetailPage extends StatelessWidget {
             const SizedBox(height: AppSpacing.formSectionSpacing),
             _buildPurchaseSummary(order),
           ],
-          if (order.canCancel || order.status.isCancellable) ...[
+          if (_canTrackWorker(order)) ...[
+            const SizedBox(height: AppSpacing.formSectionSpacing),
+            _buildTrackWorkerButton(context, order),
+          ],
+          if (_canReviewPayment(order)) ...[
+            const SizedBox(height: AppSpacing.formSectionSpacing),
+            _buildReviewPaymentButton(context, order),
+          ],
+          if (_shouldShowCancelButton(order)) ...[
             const SizedBox(height: AppSpacing.formSectionSpacing),
             _buildCancelButton(context, order),
           ],
@@ -632,16 +640,111 @@ class OrderDetailPage extends StatelessWidget {
   }
 
   Widget _buildCancelButton(BuildContext context, OrderDetail order) {
+    final locked = _isCancelLocked(order.status);
     return SizedBox(
       width: double.infinity,
       height: AppSizing.buttonHeightMd,
       child: OutlinedButton.icon(
-        onPressed: () => _showCancelDialog(context, order),
+        onPressed: locked
+            ? () => _showCancelLockedDialog(context, order)
+            : () => _showCancelDialog(context, order),
         icon: const Icon(Icons.cancel_outlined),
         label: const Text('Batalkan Pesanan'),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.error,
           side: const BorderSide(color: AppColors.error, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          ),
+          textStyle: AppTypography.buttonMedium,
+        ),
+      ),
+    );
+  }
+
+  bool _canTrackWorker(OrderDetail order) {
+    final hasWorker = order.workerInfo != null || order.workerId != null;
+    if (!hasWorker) return false;
+    return switch (order.status) {
+      OrderStatus.accepted ||
+      OrderStatus.onTheWay ||
+      OrderStatus.arrived ||
+      OrderStatus.inProgress ||
+      OrderStatus.workPaused => true,
+      OrderStatus.pending ||
+      OrderStatus.waitingPayment ||
+      OrderStatus.completed ||
+      OrderStatus.cancelled ||
+      OrderStatus.rejected => false,
+    };
+  }
+
+  bool _canReviewPayment(OrderDetail order) {
+    return order.status == OrderStatus.waitingPayment;
+  }
+
+  Widget _buildReviewPaymentButton(BuildContext context, OrderDetail order) {
+    return SizedBox(
+      width: double.infinity,
+      height: AppSizing.buttonHeightMd,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          final reviewOrderId = order.id.isNotEmpty ? order.id : orderId;
+          context.push('/orders/$reviewOrderId/review-payment', extra: order);
+        },
+        icon: const Icon(Icons.receipt_long_outlined),
+        label: const Text('Review Pembayaran'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF00AA13),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          ),
+          textStyle: AppTypography.buttonMedium.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool _shouldShowCancelButton(OrderDetail order) {
+    return order.canCancel ||
+        order.status.isCancellable ||
+        _isCancelLocked(order.status);
+  }
+
+  bool _isCancelLocked(OrderStatus status) {
+    return switch (status) {
+      OrderStatus.onTheWay ||
+      OrderStatus.arrived ||
+      OrderStatus.inProgress ||
+      OrderStatus.waitingPayment ||
+      OrderStatus.workPaused => true,
+      OrderStatus.pending ||
+      OrderStatus.accepted ||
+      OrderStatus.completed ||
+      OrderStatus.cancelled ||
+      OrderStatus.rejected => false,
+    };
+  }
+
+  Widget _buildTrackWorkerButton(BuildContext context, OrderDetail order) {
+    return SizedBox(
+      width: double.infinity,
+      height: AppSizing.buttonHeightMd,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          final trackerOrderId = order.id.isNotEmpty ? order.id : orderId;
+          context.push('/orders/$trackerOrderId/tracker', extra: order);
+        },
+        icon: const Icon(Icons.near_me_outlined),
+        label: const Text('Pantau Lokasi Tukang'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.onPrimary,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           ),
@@ -679,6 +782,48 @@ class OrderDetailPage extends StatelessWidget {
   }
 
   // ─── Helper Widgets ─────────────────────────────────────────────────────────
+
+  Future<void> _showCancelLockedDialog(
+    BuildContext context,
+    OrderDetail order,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pesanan Tidak Bisa Dibatalkan'),
+        content: Text(
+          'Tukang sudah ${_activeCancelBlockedLabel(order.status)}. Pesanan ini tidak bisa dibatalkan dari aplikasi agar status pekerjaan tidak berubah secara tidak sengaja.',
+          style: AppTypography.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Mengerti'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _activeCancelBlockedLabel(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.onTheWay:
+        return 'dalam perjalanan ke lokasi';
+      case OrderStatus.arrived:
+        return 'tiba di lokasi';
+      case OrderStatus.inProgress:
+      case OrderStatus.workPaused:
+        return 'mulai mengerjakan pesanan';
+      case OrderStatus.waitingPayment:
+        return 'menunggu pembayaran';
+      case OrderStatus.pending:
+      case OrderStatus.accepted:
+      case OrderStatus.completed:
+      case OrderStatus.cancelled:
+      case OrderStatus.rejected:
+        return 'memproses pesanan';
+    }
+  }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
@@ -724,8 +869,10 @@ class OrderDetailPage extends StatelessWidget {
         return AppColors.statusInProgress;
       case OrderStatus.workPaused:
         return AppColors.statusInProgress;
+      case OrderStatus.waitingPayment:
+        return AppColors.statusAccepted;
       case OrderStatus.completed:
-        return AppColors.statusCompleted;
+        return AppColors.success;
       case OrderStatus.cancelled:
         return AppColors.statusCancelled;
       case OrderStatus.rejected:
@@ -747,8 +894,10 @@ class OrderDetailPage extends StatelessWidget {
         return Icons.build;
       case OrderStatus.workPaused:
         return Icons.pause_circle_outline;
+      case OrderStatus.waitingPayment:
+        return Icons.payments_outlined;
       case OrderStatus.completed:
-        return Icons.task_alt;
+        return Icons.check_circle_outline;
       case OrderStatus.cancelled:
         return Icons.cancel_outlined;
       case OrderStatus.rejected:
@@ -770,8 +919,10 @@ class OrderDetailPage extends StatelessWidget {
         return 'Sedang Dikerjakan';
       case OrderStatus.workPaused:
         return 'Pekerjaan Dijeda';
+      case OrderStatus.waitingPayment:
+        return 'Menunggu Pembayaran';
       case OrderStatus.completed:
-        return 'Pesanan Selesai';
+        return 'Selesai';
       case OrderStatus.cancelled:
         return 'Pesanan Dibatalkan';
       case OrderStatus.rejected:

@@ -130,6 +130,8 @@ class OrderWorkerInfoModel {
     this.rating,
     this.totalReviews,
     this.isVerified = false,
+    this.latitude,
+    this.longitude,
   });
 
   /// Creates an [OrderWorkerInfoModel] from a JSON map.
@@ -143,6 +145,8 @@ class OrderWorkerInfoModel {
       rating: (json['rating'] as num?)?.toDouble(),
       totalReviews: json['total_reviews'] as int?,
       isVerified: json['is_verified'] as bool? ?? false,
+      latitude: _asDouble(json['latitude'] ?? json['worker_latitude']),
+      longitude: _asDouble(json['longitude'] ?? json['worker_longitude']),
     );
   }
 
@@ -154,6 +158,8 @@ class OrderWorkerInfoModel {
   final double? rating;
   final int? totalReviews;
   final bool isVerified;
+  final double? latitude;
+  final double? longitude;
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
@@ -165,6 +171,8 @@ class OrderWorkerInfoModel {
     'rating': rating,
     'total_reviews': totalReviews,
     'is_verified': isVerified,
+    'latitude': latitude,
+    'longitude': longitude,
   };
 
   /// Converts this model to a domain [OrderWorkerInfo] entity.
@@ -177,5 +185,13 @@ class OrderWorkerInfoModel {
     rating: rating,
     totalReviews: totalReviews,
     isVerified: isVerified,
+    latitude: latitude,
+    longitude: longitude,
   );
+}
+
+double? _asDouble(Object? value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
 }

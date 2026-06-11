@@ -133,8 +133,10 @@ class ActiveOrderBanner extends StatelessWidget {
     switch (status) {
       case OrderStatus.pending:
         return (const Color(0xFF7B8490), const Color(0xFFA8B0BA));
+      case OrderStatus.waitingPayment:
+        return (AppColors.primary, AppColors.primaryLight);
       case OrderStatus.completed:
-        return (const Color(0xFF00AA13), const Color(0xFF37D64A));
+        return (AppColors.success, AppColors.successLight);
       case OrderStatus.accepted:
       case OrderStatus.onTheWay:
       case OrderStatus.arrived:
@@ -159,6 +161,10 @@ class ActiveOrderBanner extends StatelessWidget {
         return Icons.location_on;
       case OrderStatus.inProgress:
         return Icons.build;
+      case OrderStatus.waitingPayment:
+        return Icons.payments_outlined;
+      case OrderStatus.completed:
+        return Icons.check_circle_outline;
       default:
         return Icons.assignment;
     }
@@ -176,8 +182,10 @@ class ActiveOrderBanner extends StatelessWidget {
         return 'Tukang Telah Tiba';
       case OrderStatus.inProgress:
         return 'Sedang Dikerjakan';
+      case OrderStatus.waitingPayment:
+        return 'Menunggu Pembayaran';
       case OrderStatus.completed:
-        return 'Pekerjaan Selesai';
+        return 'Selesai';
       default:
         return 'Pesanan Aktif';
     }

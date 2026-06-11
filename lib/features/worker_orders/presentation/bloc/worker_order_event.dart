@@ -29,6 +29,16 @@ class AcceptWorkerOrder extends WorkerOrderEvent {
   List<Object?> get props => [orderId, estimatedArrivalMinutes];
 }
 
+class RejectWorkerOrder extends WorkerOrderEvent {
+  const RejectWorkerOrder({required this.orderId, this.reasonCode = 'busy'});
+
+  final String orderId;
+  final String reasonCode;
+
+  @override
+  List<Object?> get props => [orderId, reasonCode];
+}
+
 class UpdateOrderStatus extends WorkerOrderEvent {
   const UpdateOrderStatus({
     required this.orderId,

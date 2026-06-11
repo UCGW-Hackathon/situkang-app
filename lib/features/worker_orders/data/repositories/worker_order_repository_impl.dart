@@ -48,6 +48,23 @@ class WorkerOrderRepositoryImpl implements WorkerOrderRepository {
   }
 
   @override
+  Future<Result<void>> rejectOrder({
+    required String orderId,
+    required String reasonCode,
+  }) async {
+    try {
+      await remoteDataSource.rejectOrder(orderId, reasonCode);
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } on DioException catch (e) {
+      return Left(_mapDioException(e));
+    } on Object catch (e) {
+      return Left(ServerFailure(e.toString(), statusCode: 500));
+    }
+  }
+
+  @override
   Future<Result<void>> updateOrderStatus({
     required String orderId,
     required String status,

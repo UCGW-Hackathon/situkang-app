@@ -12,6 +12,8 @@ abstract class WorkerOrderRemoteDataSource {
 
   Future<void> acceptOrder(String orderId, int? estimatedArrivalMinutes);
 
+  Future<void> rejectOrder(String orderId, String reasonCode);
+
   Future<void> updateOrderStatus(String orderId, String status);
 
   Future<void> uploadProgressPhoto(
@@ -61,7 +63,18 @@ class WorkerOrderRemoteDataSourceImpl implements WorkerOrderRemoteDataSource {
   Future<void> acceptOrder(String orderId, int? estimatedArrivalMinutes) async {
     await apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.workerOrderAccept(orderId),
-      data: {'estimated_arrival_minutes': ?estimatedArrivalMinutes},
+      data: {
+        if (estimatedArrivalMinutes != null)
+          'estimated_arrival_minutes': estimatedArrivalMinutes
+      },
+    );
+  }
+
+  @override
+  Future<void> rejectOrder(String orderId, String reasonCode) async {
+    await apiClient.post<Map<String, dynamic>>(
+      ApiEndpoints.workerOrderReject(orderId),
+      data: {'reject_reason': reasonCode},
     );
   }
 
@@ -81,7 +94,7 @@ class WorkerOrderRemoteDataSourceImpl implements WorkerOrderRemoteDataSource {
   ) async {
     final formData = FormData.fromMap({
       'photo': await MultipartFile.fromFile(filePath),
-      'caption': ?caption,
+      if (caption != null) 'caption': caption,
     });
 
     await apiClient.upload<Map<String, dynamic>>(
@@ -99,7 +112,7 @@ class WorkerOrderRemoteDataSourceImpl implements WorkerOrderRemoteDataSource {
   }) async {
     await apiClient.post<Map<String, dynamic>>(
       '/worker/orders/$orderId/items',
-      data: {'item_name': itemName, 'cost': cost, 'description': ?description},
+      data: {'item_name': itemName, 'cost': cost, 'description': description},
     );
   }
 
@@ -119,16 +132,22 @@ class WorkerOrderRemoteDataSourceImpl implements WorkerOrderRemoteDataSource {
 
     await apiClient.patch<Map<String, dynamic>>(
       ApiEndpoints.workerOrderStatus(orderId),
-      data: {'status': 'completed'},
+      data: {'status': 'waiting_payment'},
     );
 
     final responseData = invoiceResponse.data!;
     final rawData = responseData['data'];
-    final invoiceJson = rawData is Map<String, dynamic>
+    final responseJson = rawData is Map<String, dynamic>
         ? rawData
         : rawData is Map
         ? Map<String, dynamic>.from(rawData)
         : responseData;
+    final rawInvoice = responseJson['invoice'];
+    final invoiceJson = rawInvoice is Map<String, dynamic>
+        ? rawInvoice
+        : rawInvoice is Map
+        ? Map<String, dynamic>.from(rawInvoice)
+        : responseJson;
 
     return InvoiceModel.fromJson(_normalizeInvoiceJson(invoiceJson, orderId));
   }
@@ -157,33 +176,40 @@ class WorkerOrderRemoteDataSourceImpl implements WorkerOrderRemoteDataSource {
   ) {
     final createdAt =
         json['created_at'] as String? ?? DateTime.now().toIso8601String();
+    // API returns 'line_items', but may also have 'items' from older responses
     final rawItems =
-        json['items'] ?? json['line_items'] ?? json['invoice_line_items'];
+        json['line_items'] ?? json['items'] ?? json['invoice_line_items'];
 
     return {
-      'id': json['invoice_id'] ?? json['id'] ?? '',
+      // InvoiceModel now reads 'invoice_id' (not 'id')
+      'invoice_id': json['invoice_id'] ?? json['id'] ?? '',
       'order_id': json['order_id'] ?? orderId,
       'invoice_number': json['invoice_number'] ?? '',
       'base_service_fee': _asInt(json['base_service_fee']),
       'booking_fee': _asInt(json['booking_fee']),
       'platform_fee': _asInt(json['platform_fee']),
-      'materials_total': _asInt(
-        json['materials_total'] ?? json['total_material_cost'],
+      // InvoiceModel now reads 'total_material_cost'
+      'total_material_cost': _asInt(
+        json['total_material_cost'] ?? json['materials_total'],
       ),
-      'additional_cost_total': _asInt(
-        json['additional_cost_total'] ?? json['total_additional_cost'],
+      // InvoiceModel now reads 'total_additional_cost'
+      'total_additional_cost': _asInt(
+        json['total_additional_cost'] ?? json['additional_cost_total'],
       ),
-      'discount': _asInt(json['discount'] ?? json['discount_amount']),
+      // InvoiceModel now reads 'discount_amount'
+      'discount_amount': _asInt(json['discount_amount'] ?? json['discount']),
       'grand_total': _asInt(json['grand_total']),
       'status': json['status'] ?? json['payment_status'] ?? 'pending',
       'payment_method': json['payment_method'],
-      'items': rawItems is List
+      // InvoiceModel now reads 'line_items'
+      'line_items': rawItems is List
           ? rawItems.map(_normalizeInvoiceItemJson).toList()
           : <Map<String, dynamic>>[],
       'created_at': createdAt,
-      'due_date': json['due_date'] ?? createdAt,
+      'due_date': json['due_date'],
       'paid_at': json['paid_at'],
-      'ai_summary': json['ai_summary'] ?? json['ai_work_summary'],
+      // InvoiceModel now reads 'ai_work_summary'
+      'ai_work_summary': json['ai_work_summary'] ?? json['ai_summary'],
       'worker_notes': json['worker_notes'],
     };
   }

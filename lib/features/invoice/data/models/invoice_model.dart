@@ -39,20 +39,31 @@ class InvoiceModel extends Invoice {
   factory InvoiceModel.fromJson(Map<String, dynamic> json) =>
       _$InvoiceModelFromJson(json);
   const InvoiceModel({
-    required super.id,
+    // API returns 'invoice_id' as the invoice primary key
+    @JsonKey(name: 'invoice_id') required super.id,
     @JsonKey(name: 'order_id') required super.orderId,
     @JsonKey(name: 'invoice_number') required super.invoiceNumber,
     @JsonKey(name: 'base_service_fee') required super.baseServiceFee,
     @JsonKey(name: 'booking_fee') required super.bookingFee,
     @JsonKey(name: 'platform_fee') required super.platformFee,
-    @JsonKey(name: 'materials_total') required super.materialsTotal,
-    @JsonKey(name: 'additional_cost_total') required super.additionalCostTotal,
-    required super.discount,
+    // API returns 'total_material_cost' (not 'materials_total')
+    @JsonKey(name: 'total_material_cost') required super.materialsTotal,
+    // API returns 'total_additional_cost' (not 'additional_cost_total')
+    @JsonKey(name: 'total_additional_cost') required super.additionalCostTotal,
+    // API returns 'discount_amount' (not 'discount')
+    @JsonKey(name: 'discount_amount') required super.discount,
     @JsonKey(name: 'grand_total') required super.grandTotal,
-    required this.statusStr,
-    @JsonKey(name: 'items') required this.itemModels, @JsonKey(name: 'created_at') required super.createdAt, @JsonKey(name: 'due_date') required super.dueDate, @JsonKey(name: 'payment_method') this.paymentMethodStr,
+    // status is not returned by API — default to 'unpaid'
+    this.statusStr = 'unpaid',
+    // API returns 'line_items' (not 'items')
+    @JsonKey(name: 'line_items') required this.itemModels,
+    @JsonKey(name: 'created_at') required super.createdAt,
+    // due_date is not returned by API — default to created_at + 7 days handled in fromJson
+    @JsonKey(name: 'due_date') super.dueDate,
+    @JsonKey(name: 'payment_method') this.paymentMethodStr,
     @JsonKey(name: 'paid_at') super.paidAt,
-    @JsonKey(name: 'ai_summary') super.aiSummary,
+    // API returns 'ai_work_summary' (not 'ai_summary')
+    @JsonKey(name: 'ai_work_summary') super.aiSummary,
     @JsonKey(name: 'worker_notes') super.workerNotes,
   }) : super(
           status: statusStr == 'paid'
@@ -76,7 +87,7 @@ class InvoiceModel extends Invoice {
   @JsonKey(name: 'payment_method')
   final String? paymentMethodStr;
 
-  @JsonKey(name: 'items')
+  @JsonKey(name: 'line_items')
   final List<InvoiceLineItemModel> itemModels;
 
   Map<String, dynamic> toJson() => _$InvoiceModelToJson(this);

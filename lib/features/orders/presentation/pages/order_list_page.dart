@@ -8,6 +8,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/entities/order_filter.dart';
 import '../bloc/order_bloc.dart';
+import '../widgets/order_progress_icon.dart';
 import 'order_detail_page.dart';
 
 /// Page displaying the user's order history with status filter tabs.
@@ -296,20 +297,7 @@ class _OrderCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon Container
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F2F4), // Light teal background
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    iconData,
-                    color: const Color(0xFF006B5E), // Dark teal icon
-                    size: 24,
-                  ),
-                ),
+                OrderProgressIcon(status: order.status, icon: iconData),
                 const SizedBox(width: 16),
 
                 // Middle Column (Title & Worker)
@@ -340,33 +328,6 @@ class _OrderCard extends StatelessWidget {
                     ],
                   ),
                 ),
-
-                // Right Column (Price & Status)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      order.totalPrice != null
-                          ? 'Rp ${NumberFormat('#,###', 'id').format(order.totalPrice)}'
-                          : '-',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: statusColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _getStatusLabel(order.status).toUpperCase(),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                        color: statusColor,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -380,11 +341,14 @@ class _OrderCard extends StatelessWidget {
                   color: Color(0xFFA0AEC0),
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  DateFormat('MMM dd, yyyy').format(order.createdAt),
-                  style: const TextStyle(
-                    color: Color(0xFF718096),
-                    fontSize: 13,
+                Flexible(
+                  child: Text(
+                    DateFormat('MMM dd, yyyy').format(order.createdAt),
+                    style: const TextStyle(
+                      color: Color(0xFF718096),
+                      fontSize: 13,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Padding(
@@ -397,11 +361,24 @@ class _OrderCard extends StatelessWidget {
                   color: Color(0xFFA0AEC0),
                 ),
                 const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    timeStr,
+                    style: const TextStyle(
+                      color: Color(0xFF718096),
+                      fontSize: 13,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const Spacer(),
                 Text(
-                  timeStr,
-                  style: const TextStyle(
-                    color: Color(0xFF718096),
-                    fontSize: 13,
+                  _getStatusLabel(order.status).toUpperCase(),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                    color: statusColor,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
@@ -421,6 +398,8 @@ class _OrderCard extends StatelessWidget {
       case OrderStatus.arrived:
       case OrderStatus.inProgress:
       case OrderStatus.workPaused:
+        return const Color(0xFF2563EB);
+      case OrderStatus.waitingPayment:
         return const Color(0xFF2563EB);
       case OrderStatus.completed:
         return const Color(0xFF00AA13);
@@ -444,6 +423,8 @@ class _OrderCard extends StatelessWidget {
         return 'Dikerjakan';
       case OrderStatus.workPaused:
         return 'Jeda';
+      case OrderStatus.waitingPayment:
+        return 'Menunggu Bayar';
       case OrderStatus.completed:
         return 'Selesai';
       case OrderStatus.cancelled:

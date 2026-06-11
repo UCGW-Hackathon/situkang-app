@@ -19,11 +19,16 @@ import '../../features/invoice/domain/entities/invoice.dart';
 import '../../features/knowledge/presentation/pages/help_center_page.dart';
 import '../../features/notifications/presentation/pages/notification_list_page.dart';
 import '../../features/orders/domain/entities/order.dart';
+import '../../features/orders/domain/entities/order_detail.dart';
 import '../../features/orders/presentation/bloc/order_bloc.dart';
 import '../../features/orders/presentation/pages/order_create_page.dart';
 import '../../features/orders/presentation/pages/order_list_page.dart';
+import '../../features/orders/presentation/pages/order_payment_review_page.dart';
+import '../../features/orders/presentation/pages/order_payment_success_page.dart';
+import '../../features/orders/presentation/pages/order_payment_webview_page.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/tracking/presentation/pages/tracking_page.dart';
 import '../../features/wallet/presentation/pages/wallet_page.dart';
 import '../../features/worker_history/presentation/bloc/worker_history_bloc.dart';
 import '../../features/worker_history/presentation/pages/worker_history_page.dart';
@@ -53,6 +58,7 @@ final GlobalKey<NavigatorState> _userShellNavigatorKey =
 final GlobalKey<NavigatorState> _workerShellNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'workerShell');
 
+// ignore: avoid_positional_boolean_parameters
 GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -157,6 +163,74 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
         ],
       ),
 
+      GoRoute(
+        path: '/orders/:id/tracker',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final orderId = state.pathParameters['id']!;
+          final order = state.extra is OrderDetail
+              ? state.extra as OrderDetail
+              : null;
+          final worker = order?.workerInfo;
+          return TrackingPage(
+            orderId: orderId,
+            workerName: worker?.fullName,
+            workerAvatarUrl: worker?.avatarUrl,
+            workerSpecialization: worker?.specialization,
+            workerRating: worker?.rating,
+            workerPhone: worker?.phone,
+            userLatitude: order?.location.latitude,
+            userLongitude: order?.location.longitude,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/orders/:id/review-payment',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final orderId = state.pathParameters['id']!;
+          final order = state.extra is OrderDetail
+              ? state.extra as OrderDetail
+              : null;
+          return OrderPaymentReviewPage(orderId: orderId, initialOrder: order);
+        },
+      ),
+      GoRoute(
+        path: '/orders/:id/payment-webview',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final orderId = state.pathParameters['id']!;
+          final extra = state.extra is Map<String, dynamic>
+              ? state.extra as Map<String, dynamic>
+              : const <String, dynamic>{};
+          return OrderPaymentWebviewPage(
+            orderId: orderId,
+            checkoutUrl: extra['url'] as String? ?? '',
+            snapToken: extra['token'] as String?,
+            workerName: extra['workerName'] as String?,
+            serviceName: extra['serviceName'] as String?,
+            total: extra['total'] as int?,
+            paymentMethod: extra['paymentMethod'] as String?,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/orders/:id/payment-success',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final orderId = state.pathParameters['id']!;
+          final extra = state.extra is Map<String, dynamic>
+              ? state.extra as Map<String, dynamic>
+              : const <String, dynamic>{};
+          return OrderPaymentSuccessPage(
+            orderId: orderId,
+            workerName: extra['workerName'] as String?,
+            serviceName: extra['serviceName'] as String?,
+            total: extra['total'] as int?,
+            paymentMethod: extra['paymentMethod'] as String?,
+          );
+        },
+      ),
       GoRoute(
         path: '/workers',
         builder: (context, state) => BlocProvider(

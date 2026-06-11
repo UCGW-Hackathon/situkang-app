@@ -18,7 +18,22 @@ class WorkerInvoicePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat('#,###', 'id');
-    final total = invoice?.grandTotal ?? 0;
+    final serviceFee = invoice?.baseServiceFee ?? 0;
+    final materialTotal = invoice?.materialsTotal ?? 0;
+    final additionalCost = invoice?.additionalCostTotal ?? 0;
+    final bookingFee = invoice?.bookingFee ?? 0;
+    final platformFee = invoice?.platformFee ?? 0;
+    final discount = invoice?.discount ?? 0;
+    final computedTotal =
+        serviceFee +
+        materialTotal +
+        additionalCost +
+        bookingFee +
+        platformFee -
+        discount;
+    final total = (invoice?.grandTotal ?? 0) > 0
+        ? invoice!.grandTotal
+        : computedTotal;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
@@ -74,7 +89,12 @@ class WorkerInvoicePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              _SummaryCard(formatter: formatter, invoice: invoice),
+              _SummaryCard(
+                formatter: formatter,
+                serviceFee: serviceFee,
+                materialTotal: materialTotal,
+                total: total,
+              ),
               const SizedBox(height: 22),
               Text(
                 'INFORMASI PELANGGAN',
@@ -132,7 +152,8 @@ class WorkerInvoicePage extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Material: Rp ${formatter.format(invoice?.materialsTotal ?? 0)}',
+                      'Jasa: Rp ${formatter.format(serviceFee)}\nMaterial: Rp ${formatter.format(materialTotal)}',
+                      textAlign: TextAlign.right,
                       style: AppTypography.caption.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -140,9 +161,32 @@ class WorkerInvoicePage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                _SlideActionButton(
-                  text: 'GESER UNTUK SELESAI',
-                  onCompleted: () => context.go('/worker'),
+                Container(
+                  height: 54,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF0F6),
+                    borderRadius: BorderRadius.circular(AppSizing.radiusFull),
+                    border: Border.all(color: const Color(0xFFD7E0EA)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.lock_clock_outlined,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Menunggu pembayaran pelanggan',
+                        style: AppTypography.buttonMedium.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -154,10 +198,17 @@ class WorkerInvoicePage extends StatelessWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.formatter, required this.invoice});
+  const _SummaryCard({
+    required this.formatter,
+    required this.serviceFee,
+    required this.materialTotal,
+    required this.total,
+  });
 
   final NumberFormat formatter;
-  final Invoice? invoice;
+  final int serviceFee;
+  final int materialTotal;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
@@ -173,17 +224,17 @@ class _SummaryCard extends StatelessWidget {
           children: [
             _SummaryRow(
               label: 'Biaya Jasa',
-              value: 'Rp ${formatter.format(invoice?.baseServiceFee ?? 0)}',
+              value: 'Rp ${formatter.format(serviceFee)}',
             ),
             const SizedBox(height: 10),
             _SummaryRow(
               label: 'Biaya Material',
-              value: 'Rp ${formatter.format(invoice?.materialsTotal ?? 0)}',
+              value: 'Rp ${formatter.format(materialTotal)}',
             ),
             const Divider(height: 28),
             _SummaryRow(
               label: 'Total Tagihan',
-              value: 'Rp ${formatter.format(invoice?.grandTotal ?? 0)}',
+              value: 'Rp ${formatter.format(total)}',
               prominent: true,
             ),
           ],

@@ -29,48 +29,58 @@ Map<String, dynamic> _$InvoiceLineItemModelToJson(
 };
 
 InvoiceModel _$InvoiceModelFromJson(Map<String, dynamic> json) => InvoiceModel(
-  id: json['id'] as String,
+  // API returns 'invoice_id' as the invoice primary key
+  id: json['invoice_id'] as String,
   orderId: json['order_id'] as String,
   invoiceNumber: json['invoice_number'] as String,
   baseServiceFee: (json['base_service_fee'] as num).toInt(),
   bookingFee: (json['booking_fee'] as num).toInt(),
-  platformFee: (json['platform_fee'] as num).toInt(),
-  materialsTotal: (json['materials_total'] as num).toInt(),
-  additionalCostTotal: (json['additional_cost_total'] as num).toInt(),
-  discount: (json['discount'] as num).toInt(),
+  platformFee: (json['platform_fee'] as num? ?? 0).toInt(),
+  // API returns 'total_material_cost'
+  materialsTotal: (json['total_material_cost'] as num? ?? 0).toInt(),
+  // API returns 'total_additional_cost'
+  additionalCostTotal: (json['total_additional_cost'] as num? ?? 0).toInt(),
+  // API returns 'discount_amount'
+  discount: (json['discount_amount'] as num? ?? 0).toInt(),
   grandTotal: (json['grand_total'] as num).toInt(),
-  statusStr: json['status'] as String,
-  itemModels: (json['items'] as List<dynamic>)
+  // status not always returned by API — default to 'unpaid'
+  statusStr: json['status'] as String? ?? 'unpaid',
+  // API returns 'line_items'
+  itemModels: (json['line_items'] as List<dynamic>? ?? [])
       .map((e) => InvoiceLineItemModel.fromJson(e as Map<String, dynamic>))
       .toList(),
   createdAt: DateTime.parse(json['created_at'] as String),
-  dueDate: DateTime.parse(json['due_date'] as String),
+  // due_date optional — API may not return it
+  dueDate: json['due_date'] == null
+      ? null
+      : DateTime.parse(json['due_date'] as String),
   paymentMethodStr: json['payment_method'] as String?,
   paidAt: json['paid_at'] == null
       ? null
       : DateTime.parse(json['paid_at'] as String),
-  aiSummary: json['ai_summary'] as String?,
+  // API returns 'ai_work_summary'
+  aiSummary: json['ai_work_summary'] as String?,
   workerNotes: json['worker_notes'] as String?,
 );
 
 Map<String, dynamic> _$InvoiceModelToJson(InvoiceModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      'invoice_id': instance.id,
       'order_id': instance.orderId,
       'invoice_number': instance.invoiceNumber,
       'base_service_fee': instance.baseServiceFee,
       'booking_fee': instance.bookingFee,
       'platform_fee': instance.platformFee,
-      'materials_total': instance.materialsTotal,
-      'additional_cost_total': instance.additionalCostTotal,
-      'discount': instance.discount,
+      'total_material_cost': instance.materialsTotal,
+      'total_additional_cost': instance.additionalCostTotal,
+      'discount_amount': instance.discount,
       'grand_total': instance.grandTotal,
       'created_at': instance.createdAt.toIso8601String(),
-      'due_date': instance.dueDate.toIso8601String(),
+      'due_date': instance.dueDate?.toIso8601String(),
       'paid_at': instance.paidAt?.toIso8601String(),
-      'ai_summary': instance.aiSummary,
+      'ai_work_summary': instance.aiSummary,
       'worker_notes': instance.workerNotes,
       'status': instance.statusStr,
       'payment_method': instance.paymentMethodStr,
-      'items': instance.itemModels.map((e) => e.toJson()).toList(),
+      'line_items': instance.itemModels.map((e) => e.toJson()).toList(),
     };
