@@ -67,13 +67,13 @@ class ChatConversation extends Equatable {
 
   @override
   List<Object?> get props => [
-        orderId,
-        workerName,
-        workerAvatarUrl,
-        isOnline,
-        lastMessage,
-        lastMessageTime,
-        orderTitle,
-        unreadCount,
-      ];
+    orderId,
+    workerName,
+    workerAvatarUrl,
+    isOnline,
+    lastMessage,
+    lastMessageTime,
+    orderTitle,
+    unreadCount,
+  ];
 }

@@ -3,9 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/di/injection.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/chat/domain/entities/chat_conversation.dart';
 import '../../features/chat/presentation/bloc/chat_bloc.dart';
 import '../../features/chat/presentation/pages/chat_list_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
@@ -13,6 +15,7 @@ import '../../features/chat/presentation/pages/worker_chat_page.dart';
 import '../../features/home/domain/entities/active_order.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/invoice/domain/entities/invoice.dart';
 import '../../features/knowledge/presentation/pages/help_center_page.dart';
 import '../../features/notifications/presentation/pages/notification_list_page.dart';
 import '../../features/orders/domain/entities/order.dart';
@@ -26,11 +29,14 @@ import '../../features/worker_history/presentation/bloc/worker_history_bloc.dart
 import '../../features/worker_history/presentation/pages/worker_history_page.dart';
 import '../../features/worker_home/presentation/bloc/worker_home_bloc.dart';
 import '../../features/worker_home/presentation/pages/worker_home_page.dart';
+import '../../features/worker_orders/domain/entities/worker_order_detail.dart';
 import '../../features/worker_orders/presentation/bloc/incoming_order_bloc.dart';
 import '../../features/worker_orders/presentation/bloc/worker_order_bloc.dart';
 import '../../features/worker_orders/presentation/pages/incoming_order_page.dart';
-import '../../features/worker_orders/presentation/pages/worker_order_detail_brief_page.dart';
 import '../../features/worker_orders/presentation/pages/worker_active_order_page.dart';
+import '../../features/worker_orders/presentation/pages/worker_invoice_page.dart';
+import '../../features/worker_orders/presentation/pages/worker_order_detail_brief_page.dart';
+import '../../features/worker_orders/presentation/pages/worker_order_items_page.dart';
 import '../../features/worker_profile/presentation/bloc/worker_profile_bloc.dart';
 import '../../features/worker_profile/presentation/pages/worker_profile_page.dart';
 import '../../features/workers/domain/entities/worker_profile.dart';
@@ -109,18 +115,36 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
           ),
           GoRoute(
             path: '/chat',
-            builder: (context, state) => const ChatListPage(),
+            builder: (context, state) {
+              final authState = context.read<AuthBloc>().state;
+              final currentUserId = authState is Authenticated
+                  ? authState.user.id
+                  : '';
+              return ChatListPage(currentUserId: currentUserId);
+            },
             routes: [
               GoRoute(
                 path: ':id',
                 builder: (context, state) {
                   final orderId = state.pathParameters['id']!;
-                  // we could pass workerName through extra
-                  final workerName = state.extra as String? ?? 'Tukang';
+                  final conversation = state.extra is ChatConversation
+                      ? state.extra as ChatConversation
+                      : null;
+                  final workerName =
+                      conversation?.workerName ??
+                      (state.extra is String
+                          ? state.extra as String
+                          : 'Tukang');
+                  final authState = context.read<AuthBloc>().state;
+                  final currentUserId = authState is Authenticated
+                      ? authState.user.id
+                      : '';
                   return ChatPage(
                     orderId: orderId,
                     workerName: workerName,
-                    currentUserId: '1',
+                    workerAvatarUrl: conversation?.workerAvatarUrl,
+                    isWorkerOnline: conversation?.isOnline ?? false,
+                    currentUserId: currentUserId,
                   );
                 },
               ),
@@ -195,6 +219,30 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
           );
         },
       ),
+      GoRoute(
+        path: '/worker/orders/:id/items',
+        parentNavigatorKey: rootNavigatorKey,
+        redirect: RoleGuard.workerRedirect,
+        builder: (context, state) {
+          final orderId = state.pathParameters['id']!;
+          final detail = state.extra is WorkerOrderDetail
+              ? state.extra as WorkerOrderDetail
+              : null;
+          return WorkerOrderItemsPage(orderId: orderId, detail: detail);
+        },
+      ),
+      GoRoute(
+        path: '/worker/orders/:id/invoice',
+        parentNavigatorKey: rootNavigatorKey,
+        redirect: RoleGuard.workerRedirect,
+        builder: (context, state) {
+          final orderId = state.pathParameters['id']!;
+          final invoice = state.extra is Invoice
+              ? state.extra as Invoice
+              : null;
+          return WorkerInvoicePage(orderId: orderId, invoice: invoice);
+        },
+      ),
 
       // WORKER ROUTES (Shell)
       ShellRoute(
@@ -241,17 +289,36 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
           ),
           GoRoute(
             path: '/worker/chat',
-            builder: (context, state) => const ChatListPage(),
+            builder: (context, state) {
+              final authState = context.read<AuthBloc>().state;
+              final currentUserId = authState is Authenticated
+                  ? authState.user.id
+                  : '';
+              return ChatListPage(isWorker: true, currentUserId: currentUserId);
+            },
             routes: [
               GoRoute(
                 path: ':id',
                 builder: (context, state) {
                   final orderId = state.pathParameters['id']!;
-                  final customerName = state.extra as String? ?? 'Pelanggan';
+                  final conversation = state.extra is ChatConversation
+                      ? state.extra as ChatConversation
+                      : null;
+                  final customerName =
+                      conversation?.workerName ??
+                      (state.extra is String
+                          ? state.extra as String
+                          : 'Pelanggan');
+                  final authState = context.read<AuthBloc>().state;
+                  final currentUserId = authState is Authenticated
+                      ? authState.user.id
+                      : '';
                   return WorkerChatPage(
                     orderId: orderId,
                     customerName: customerName,
-                    currentUserId: '1',
+                    customerAvatarUrl: conversation?.workerAvatarUrl,
+                    isCustomerOnline: conversation?.isOnline ?? false,
+                    currentUserId: currentUserId,
                   );
                 },
               ),

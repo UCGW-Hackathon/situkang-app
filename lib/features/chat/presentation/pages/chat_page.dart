@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -22,7 +23,9 @@ import '../widgets/typing_indicator.dart';
 /// Validates: Requirements 11.1-11.11
 class ChatPage extends StatefulWidget {
   const ChatPage({
-    required this.orderId, required this.currentUserId, super.key,
+    required this.orderId,
+    required this.currentUserId,
+    super.key,
     this.workerName = 'Tukang',
     this.workerAvatarUrl,
     this.isWorkerOnline = false,
@@ -55,6 +58,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
+    unawaited(context.read<ChatBloc>().connectToChat(widget.orderId));
     context.read<ChatBloc>().add(LoadMessages(orderId: widget.orderId));
     context.read<ChatBloc>().add(MarkAsRead(orderId: widget.orderId));
 
@@ -75,11 +79,8 @@ class _ChatPageState extends State<ChatPage> {
       final state = context.read<ChatBloc>().state;
       if (state is ChatLoaded && state.hasMore && !state.isLoadingMore) {
         context.read<ChatBloc>().add(
-              LoadMessages(
-                orderId: widget.orderId,
-                cursor: state.nextCursor,
-              ),
-            );
+          LoadMessages(orderId: widget.orderId, cursor: state.nextCursor),
+        );
       }
     }
   }
@@ -111,7 +112,10 @@ class _ChatPageState extends State<ChatPage> {
                       decoration: BoxDecoration(
                         color: AppColors.success,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.surface, width: 1.5),
+                        border: Border.all(
+                          color: AppColors.surface,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),
@@ -175,8 +179,8 @@ class _ChatPageState extends State<ChatPage> {
                     message: state.failure.message,
                     onRetry: () {
                       context.read<ChatBloc>().add(
-                            LoadMessages(orderId: widget.orderId),
-                          );
+                        LoadMessages(orderId: widget.orderId),
+                      );
                     },
                   );
                 }
@@ -244,26 +248,24 @@ class _ChatPageState extends State<ChatPage> {
             itemCount: state.messages.length,
             itemBuilder: (context, index) {
               final message = state.messages[index];
-              final isMe = message.senderId == widget.currentUserId;
+              final isMe =
+                  message.senderId == widget.currentUserId ||
+                  message.senderId == 'current_user';
 
               // Date separator
-              final showDate = _shouldShowDateSeparator(
-                state.messages,
-                index,
-              );
+              final showDate = _shouldShowDateSeparator(state.messages, index);
 
               return Column(
                 children: [
-                  if (showDate)
-                    _buildDateSeparator(message.createdAt),
+                  if (showDate) _buildDateSeparator(message.createdAt),
                   ChatBubble(
                     message: message,
                     isMe: isMe,
-                    onRetry: message.deliveryStatus ==
-                            MessageDeliveryStatus.failed
+                    onRetry:
+                        message.deliveryStatus == MessageDeliveryStatus.failed
                         ? () => context.read<ChatBloc>().add(
-                              RetryMessage(message: message),
-                            )
+                            RetryMessage(message: message),
+                          )
                         : null,
                   ),
                 ],
@@ -303,9 +305,7 @@ class _ChatPageState extends State<ChatPage> {
           ),
           child: Text(
             _formatDateSeparator(date),
-            style: AppTypography.caption.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTypography.caption.copyWith(fontWeight: FontWeight.w500),
           ),
         ),
       ),
@@ -362,8 +362,7 @@ class _ChatPageState extends State<ChatPage> {
                     filled: true,
                     fillColor: AppColors.surfaceVariant,
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppSizing.radiusFull),
+                      borderRadius: BorderRadius.circular(AppSizing.radiusFull),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -375,11 +374,17 @@ class _ChatPageState extends State<ChatPage> {
                   maxLength: 2000,
                   maxLines: 4,
                   minLines: 1,
-                  buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
+                  buildCounter:
+                      (
+                        _, {
+                        required currentLength,
+                        required isFocused,
+                        maxLength,
+                      }) => null,
                   onChanged: (_) {
                     context.read<ChatBloc>().add(
-                          TypingStarted(orderId: widget.orderId),
-                        );
+                      TypingStarted(orderId: widget.orderId),
+                    );
                   },
                 ),
               ),
@@ -426,11 +431,8 @@ class _ChatPageState extends State<ChatPage> {
     if (text.isEmpty) return;
 
     context.read<ChatBloc>().add(
-          SendTextMessage(
-            orderId: widget.orderId,
-            content: text,
-          ),
-        );
+      SendTextMessage(orderId: widget.orderId, content: text),
+    );
     _messageController.clear();
   }
 
@@ -447,11 +449,8 @@ class _ChatPageState extends State<ChatPage> {
       // Optional: show caption dialog
       if (mounted) {
         context.read<ChatBloc>().add(
-              SendImageMessage(
-                orderId: widget.orderId,
-                image: file,
-              ),
-            );
+          SendImageMessage(orderId: widget.orderId, image: file),
+        );
       }
     } on Exception catch (e) {
       if (mounted) {
@@ -505,7 +504,9 @@ class _ChatPageState extends State<ChatPage> {
     final messageDate = DateTime(date.year, date.month, date.day);
 
     if (messageDate == today) return 'Hari ini';
-    if (messageDate == today.subtract(const Duration(days: 1))) return 'Kemarin';
+    if (messageDate == today.subtract(const Duration(days: 1))) {
+      return 'Kemarin';
+    }
     return DateFormat('dd MMMM yyyy', 'id').format(date);
   }
 }

@@ -27,8 +27,9 @@ class UserModel {
   /// Handles both full user responses (e.g., from /users/me) and partial
   /// responses (e.g., from /auth/login which may omit email/phone).
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final rawUserId = json['user_id'] ?? json['id'];
     return UserModel(
-      userId: json['user_id'] as String,
+      userId: rawUserId as String,
       fullName: json['full_name'] as String,
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
@@ -79,8 +80,7 @@ class UserModel {
       'is_active': isActive,
       if (emailVerifiedAt != null)
         'email_verified_at': emailVerifiedAt!.toIso8601String(),
-      if (lastLoginAt != null)
-        'last_login_at': lastLoginAt!.toIso8601String(),
+      if (lastLoginAt != null) 'last_login_at': lastLoginAt!.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
     };
   }

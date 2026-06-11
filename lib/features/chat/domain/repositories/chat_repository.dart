@@ -59,7 +59,7 @@ abstract class ChatRepository {
   /// Returns conversations sorted by last message time (newest first),
   /// showing worker name, avatar, online status, last message preview,
   /// order title, and unread count.
-  Future<Result<List<ChatConversation>>> getChatList();
+  Future<Result<List<ChatConversation>>> getChatList({bool isWorker = false});
 
   /// Stream of incoming messages from WebSocket.
   ///

@@ -16,6 +16,19 @@ class FetchWorkerOrderDetail extends WorkerOrderEvent {
   List<Object?> get props => [orderId];
 }
 
+class AcceptWorkerOrder extends WorkerOrderEvent {
+  const AcceptWorkerOrder({
+    required this.orderId,
+    this.estimatedArrivalMinutes,
+  });
+
+  final String orderId;
+  final int? estimatedArrivalMinutes;
+
+  @override
+  List<Object?> get props => [orderId, estimatedArrivalMinutes];
+}
+
 class UpdateOrderStatus extends WorkerOrderEvent {
   const UpdateOrderStatus({
     required this.orderId,
@@ -64,11 +77,16 @@ class AddWorkItem extends WorkerOrderEvent {
 }
 
 class CompleteOrder extends WorkerOrderEvent {
-  const CompleteOrder({required this.orderId, this.workerNotes});
+  const CompleteOrder({
+    required this.orderId,
+    this.workerNotes,
+    this.materials = const [],
+  });
 
   final String orderId;
   final String? workerNotes;
+  final List<InvoiceMaterialInput> materials;
 
   @override
-  List<Object?> get props => [orderId, workerNotes];
+  List<Object?> get props => [orderId, workerNotes, materials];
 }

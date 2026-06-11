@@ -6,6 +6,7 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/order.dart';
+import '../../domain/entities/order_filter.dart';
 import '../bloc/order_bloc.dart';
 import 'order_detail_page.dart';
 
@@ -27,6 +28,7 @@ class _OrderListPageState extends State<OrderListPage> {
   static const _statusFilters = <OrderStatus?>[
     null, // Semua
     OrderStatus.pending,
+    OrderStatus.accepted,
     OrderStatus.inProgress,
     OrderStatus.completed,
     OrderStatus.cancelled,
@@ -34,9 +36,10 @@ class _OrderListPageState extends State<OrderListPage> {
 
   /// Labels for the tabs matching the design reference aesthetic.
   static const _statusLabels = <String>[
-    'Bulanan',
-    'Mingguan',
-    'Harian',
+    'Semua',
+    'Menunggu',
+    'Diterima',
+    'Berjalan',
     'Selesai',
     'Batal',
   ];
@@ -59,7 +62,9 @@ class _OrderListPageState extends State<OrderListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FC), // Light blue-grey background from design
+      backgroundColor: const Color(
+        0xFFF5F8FC,
+      ), // Light blue-grey background from design
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,16 +85,25 @@ class _OrderListPageState extends State<OrderListPage> {
                             child: GestureDetector(
                               onTap: () => _onFilterSelected(index),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? const Color(0xFF006B5E) : const Color(0xFFDEE8F5),
+                                  color: isSelected
+                                      ? const Color(0xFF006B5E)
+                                      : const Color(0xFFDEE8F5),
                                   borderRadius: BorderRadius.circular(24),
                                 ),
                                 child: Text(
                                   _statusLabels[index],
                                   style: TextStyle(
-                                    color: isSelected ? Colors.white : const Color(0xFF4A5568),
-                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : const Color(0xFF4A5568),
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -109,7 +123,11 @@ class _OrderListPageState extends State<OrderListPage> {
                       color: Color(0xFFDEE8F5),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.tune, color: Color(0xFF1A202C), size: 20),
+                    child: const Icon(
+                      Icons.tune,
+                      color: Color(0xFF1A202C),
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -143,8 +161,8 @@ class _OrderListPageState extends State<OrderListPage> {
                       onRetry: () {
                         final status = _statusFilters[_selectedIndex];
                         context.read<OrderBloc>().add(
-                              ApplyStatusFilterRequested(status: status),
-                            );
+                          ApplyStatusFilterRequested(status: status),
+                        );
                       },
                     );
                   }
@@ -205,16 +223,24 @@ class _OrderListPageState extends State<OrderListPage> {
           order: order,
           onTap: () {
             context.read<OrderBloc>().add(
-                  FetchOrderDetailRequested(orderId: order.id),
-                );
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => BlocProvider.value(
-                  value: context.read<OrderBloc>(),
-                  child: OrderDetailPage(orderId: order.id),
-                ),
-              ),
+              FetchOrderDetailRequested(orderId: order.id),
             );
+            Navigator.of(context)
+                .push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => BlocProvider.value(
+                      value: context.read<OrderBloc>(),
+                      child: OrderDetailPage(orderId: order.id),
+                    ),
+                  ),
+                )
+                .then((_) {
+                  if (!context.mounted) return;
+                  final status = _statusFilters[_selectedIndex];
+                  context.read<OrderBloc>().add(
+                    FetchOrdersRequested(filter: OrderFilter(status: status)),
+                  );
+                });
           },
         );
       },
@@ -224,10 +250,7 @@ class _OrderListPageState extends State<OrderListPage> {
 
 /// Card widget displaying order summary information matching the design.
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({
-    required this.order,
-    this.onTap,
-  });
+  const _OrderCard({required this.order, this.onTap});
 
   final Order order;
   final VoidCallback? onTap;
@@ -351,21 +374,35 @@ class _OrderCard extends StatelessWidget {
             // Bottom Row (Date & Time)
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFFA0AEC0)),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 16,
+                  color: Color(0xFFA0AEC0),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   DateFormat('MMM dd, yyyy').format(order.createdAt),
-                  style: const TextStyle(color: Color(0xFF718096), fontSize: 13),
+                  style: const TextStyle(
+                    color: Color(0xFF718096),
+                    fontSize: 13,
+                  ),
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Text('•', style: TextStyle(color: Color(0xFFA0AEC0))),
                 ),
-                const Icon(Icons.access_time, size: 16, color: Color(0xFFA0AEC0)),
+                const Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: Color(0xFFA0AEC0),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   timeStr,
-                  style: const TextStyle(color: Color(0xFF718096), fontSize: 13),
+                  style: const TextStyle(
+                    color: Color(0xFF718096),
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
@@ -378,41 +415,41 @@ class _OrderCard extends StatelessWidget {
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return const Color(0xFFD97706); // Amber
+        return const Color(0xFF7B8490);
       case OrderStatus.accepted:
       case OrderStatus.onTheWay:
       case OrderStatus.arrived:
       case OrderStatus.inProgress:
       case OrderStatus.workPaused:
-        return const Color(0xFF2563EB); // Blue
+        return const Color(0xFF2563EB);
       case OrderStatus.completed:
-        return const Color(0xFF16A34A); // Green matching the design
+        return const Color(0xFF00AA13);
       case OrderStatus.cancelled:
       case OrderStatus.rejected:
-        return const Color(0xFFDC2626); // Red
+        return const Color(0xFFDC2626);
     }
   }
 
   String _getStatusLabel(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return 'Pending';
+        return 'Menunggu';
       case OrderStatus.accepted:
-        return 'Accepted';
+        return 'Diterima';
       case OrderStatus.onTheWay:
-        return 'On The Way';
+        return 'Menuju';
       case OrderStatus.arrived:
-        return 'Arrived';
+        return 'Tiba';
       case OrderStatus.inProgress:
-        return 'In Progress';
+        return 'Dikerjakan';
       case OrderStatus.workPaused:
-        return 'Paused';
+        return 'Jeda';
       case OrderStatus.completed:
-        return 'Completed';
+        return 'Selesai';
       case OrderStatus.cancelled:
-        return 'Cancelled';
+        return 'Batal';
       case OrderStatus.rejected:
-        return 'Rejected';
+        return 'Ditolak';
     }
   }
 }

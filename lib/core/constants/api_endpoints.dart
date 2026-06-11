@@ -40,8 +40,7 @@ class ApiEndpoints {
   static String workerDetail(String workerId) => '/workers/$workerId';
 
   /// Returns the path for a specific worker's reviews.
-  static String workerReviews(String workerId) =>
-      '/workers/$workerId/reviews';
+  static String workerReviews(String workerId) => '/workers/$workerId/reviews';
 
   /// Returns the path for a specific worker's services.
   static String workerServices(String workerId) =>
@@ -69,8 +68,7 @@ class ApiEndpoints {
   // ─── Purchases (User Side) ───────────────────────────────────────────────────
 
   /// Returns the path for purchases of an order.
-  static String orderPurchases(String orderId) =>
-      '/orders/$orderId/purchases';
+  static String orderPurchases(String orderId) => '/orders/$orderId/purchases';
 
   /// Returns the path for a specific purchase detail.
   static String orderPurchaseDetail(String orderId, String purchaseId) =>
@@ -99,8 +97,7 @@ class ApiEndpoints {
       '/orders/$orderId/chat/messages';
 
   /// Returns the path to mark chat messages as read.
-  static String chatMarkRead(String orderId) =>
-      '/orders/$orderId/chat/read';
+  static String chatMarkRead(String orderId) => '/orders/$orderId/chat/read';
 
   /// Chat list for user.
   static const String chatList = '/chats';
@@ -175,8 +172,7 @@ class ApiEndpoints {
   static const String workerOrders = '/worker/orders';
 
   /// Returns the path for a specific worker order detail.
-  static String workerOrderDetail(String orderId) =>
-      '/worker/orders/$orderId';
+  static String workerOrderDetail(String orderId) => '/worker/orders/$orderId';
 
   /// Returns the path to update order status.
   static String workerOrderStatus(String orderId) =>
@@ -214,8 +210,9 @@ class ApiEndpoints {
 
   /// Returns the path to respond to a clarification request.
   static String workerPurchaseClarifyResponse(
-          String orderId, String purchaseId) =>
-      '/worker/orders/$orderId/purchases/$purchaseId/clarify-response';
+    String orderId,
+    String purchaseId,
+  ) => '/worker/orders/$orderId/purchases/$purchaseId/clarify-response';
 
   // ─── Worker Chat ─────────────────────────────────────────────────────────────
 

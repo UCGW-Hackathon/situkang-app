@@ -13,7 +13,7 @@ import 'profile_state.dart';
 @injectable
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc({required this.profileRepository})
-      : super(const ProfileInitial()) {
+    : super(const ProfileInitial()) {
     on<FetchProfile>(_onFetchProfile);
     on<UpdateProfile>(_onUpdateProfile);
     on<UpdateAvatar>(_onUpdateAvatar);
@@ -36,12 +36,13 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     FetchProfile event,
     Emitter<ProfileState> emit,
   ) async {
+    final previousUser = _currentUser;
     emit(const ProfileLoading());
 
     final result = await profileRepository.getProfile();
 
     result.fold(
-      (failure) => emit(ProfileError(failure: failure, user: _currentUser)),
+      (failure) => emit(ProfileError(failure: failure, user: previousUser)),
       (user) => emit(ProfileLoaded(user: user)),
     );
   }

@@ -1,11 +1,18 @@
 import '../../../../core/error/result.dart';
 import '../../../invoice/domain/entities/invoice.dart';
+import '../entities/invoice_material_input.dart';
 import '../entities/worker_order_detail.dart';
 
 /// Repository interface for a worker managing an active order.
 abstract class WorkerOrderRepository {
   /// Fetches the worker-facing detail brief for an order.
   Future<Result<WorkerOrderDetail>> getOrderDetail(String orderId);
+
+  /// Accepts a pending order assigned to the current worker.
+  Future<Result<void>> acceptOrder({
+    required String orderId,
+    int? estimatedArrivalMinutes,
+  });
 
   /// Updates the status of the active order (e.g., on_the_way, arrived, in_progress, completed).
   Future<Result<void>> updateOrderStatus({
@@ -32,5 +39,6 @@ abstract class WorkerOrderRepository {
   Future<Result<Invoice>> completeOrder({
     required String orderId,
     String? workerNotes,
+    List<InvoiceMaterialInput> materials = const [],
   });
 }

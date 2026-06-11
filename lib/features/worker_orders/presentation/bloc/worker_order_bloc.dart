@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../invoice/domain/entities/invoice.dart';
+import '../../domain/entities/invoice_material_input.dart';
 import '../../domain/entities/worker_order_detail.dart';
 import '../../domain/repositories/worker_order_repository.dart';
 
@@ -14,6 +15,7 @@ part 'worker_order_state.dart';
 class WorkerOrderBloc extends Bloc<WorkerOrderEvent, WorkerOrderState> {
   WorkerOrderBloc(this.repository) : super(WorkerOrderInitial()) {
     on<FetchWorkerOrderDetail>(_onFetchWorkerOrderDetail);
+    on<AcceptWorkerOrder>(_onAcceptWorkerOrder);
     on<UpdateOrderStatus>(_onUpdateOrderStatus);
     on<UploadProgressPhoto>(_onUploadProgressPhoto);
     on<AddWorkItem>(_onAddWorkItem);
@@ -36,13 +38,30 @@ class WorkerOrderBloc extends Bloc<WorkerOrderEvent, WorkerOrderState> {
     );
   }
 
+  Future<void> _onAcceptWorkerOrder(
+    AcceptWorkerOrder event,
+    Emitter<WorkerOrderState> emit,
+  ) async {
+    emit(WorkerOrderLoading());
+
+    final result = await repository.acceptOrder(
+      orderId: event.orderId,
+      estimatedArrivalMinutes: event.estimatedArrivalMinutes,
+    );
+
+    result.fold(
+      (failure) => emit(WorkerOrderError(failure)),
+      (_) => emit(const WorkerOrderStatusUpdated('accepted')),
+    );
+  }
+
   Future<void> _onUpdateOrderStatus(
     UpdateOrderStatus event,
     Emitter<WorkerOrderState> emit,
   ) async {
     // Validate state machine
     final validTransitions = {
-      'accepted': ['on_the_way'],
+      'accepted': ['on_the_way', 'in_progress'],
       'on_the_way': ['arrived'],
       'arrived': ['in_progress'],
       'in_progress': ['work_paused', 'completed'],
@@ -118,6 +137,7 @@ class WorkerOrderBloc extends Bloc<WorkerOrderEvent, WorkerOrderState> {
     final result = await repository.completeOrder(
       orderId: event.orderId,
       workerNotes: event.workerNotes,
+      materials: event.materials,
     );
 
     result.fold(

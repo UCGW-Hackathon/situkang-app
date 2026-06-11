@@ -19,19 +19,12 @@ class WorkerActiveOrderPage extends StatefulWidget {
 class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
   late String _currentStatus;
   bool _isSharingLocation = false;
-  final _workerNotesController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _currentStatus = widget.order.status.value;
     _updateLocationSharingState();
-  }
-
-  @override
-  void dispose() {
-    _workerNotesController.dispose();
-    super.dispose();
   }
 
   void _updateLocationSharingState() {
@@ -69,51 +62,6 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
       isScrollControlled: true,
       builder: (context) {
         return const SizedBox.shrink();
-      },
-    );
-  }
-
-  void _showCompleteDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Selesaikan Pesanan?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Pastikan semua pekerjaan telah selesai dan tagihan telah dimasukkan.',
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppTextField(
-                controller: _workerNotesController,
-                label: 'Catatan untuk Pelanggan (Opsional)',
-                maxLines: 2,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.read<WorkerOrderBloc>().add(
-                  CompleteOrder(
-                    orderId: widget.order.id,
-                    workerNotes: _workerNotesController.text.trim().isNotEmpty
-                        ? _workerNotesController.text.trim()
-                        : null,
-                  ),
-                );
-              },
-              child: const Text('Selesaikan'),
-            ),
-          ],
-        );
       },
     );
   }
@@ -409,7 +357,8 @@ class _WorkerActiveOrderPageState extends State<WorkerActiveOrderPage> {
       case 'in_progress':
         return AppButton(
           text: 'Selesaikan Pesanan',
-          onPressed: _showCompleteDialog,
+          onPressed: () =>
+              context.push('/worker/orders/${widget.order.id}/items'),
         );
       case 'completed':
         return const SizedBox.shrink();

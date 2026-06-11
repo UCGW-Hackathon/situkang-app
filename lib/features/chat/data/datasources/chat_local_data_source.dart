@@ -55,7 +55,9 @@ class ChatLocalDataSourceImpl implements ChatLocalDataSource {
 
   @override
   Future<void> cacheMessages(
-      String orderId, List<ChatMessageModel> messages) async {
+    String orderId,
+    List<ChatMessageModel> messages,
+  ) async {
     final key = '$_messagesKeyPrefix$orderId';
     final jsonList = messages.map((m) => m.toJson()).toList();
     await cacheManager.put(key, jsonList);
@@ -71,8 +73,7 @@ class ChatLocalDataSourceImpl implements ChatLocalDataSource {
     if (data == null) return null;
 
     return data
-        .map((item) =>
-            ChatMessageModel.fromJson(item as Map<String, dynamic>))
+        .map((item) => ChatMessageModel.fromJson(item as Map<String, dynamic>))
         .toList();
   }
 
@@ -91,8 +92,10 @@ class ChatLocalDataSourceImpl implements ChatLocalDataSource {
     if (data == null) return null;
 
     return data
-        .map((item) =>
-            ChatConversationModel.fromJson(item as Map<String, dynamic>))
+        .map(
+          (item) =>
+              ChatConversationModel.fromJson(item as Map<String, dynamic>),
+        )
         .toList();
   }
 

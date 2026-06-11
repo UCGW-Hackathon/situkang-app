@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/enums.dart';
@@ -28,13 +29,13 @@ class OrderDetailPage extends StatelessWidget {
       body: BlocConsumer<OrderBloc, OrderState>(
         listener: (context, state) {
           if (state is OrderCreated) {
-            // Order was cancelled/updated successfully
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Pesanan berhasil diperbarui'),
+                content: Text('Pesanan berhasil dibatalkan'),
                 backgroundColor: AppColors.success,
               ),
             );
+            context.go('/home');
           } else if (state is OrderError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

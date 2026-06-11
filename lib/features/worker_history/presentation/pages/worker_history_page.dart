@@ -25,6 +25,7 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
   static const _statusFilters = <OrderStatus?>[
     null, // Semua
     OrderStatus.pending,
+    OrderStatus.accepted,
     OrderStatus.inProgress,
     OrderStatus.completed,
     OrderStatus.cancelled,
@@ -33,6 +34,7 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
   static const _statusLabels = <String>[
     'Semua',
     'Menunggu',
+    'Diterima',
     'Berjalan',
     'Selesai',
     'Batal',
@@ -213,9 +215,18 @@ class _WorkerHistoryPageState extends State<WorkerHistoryPage> {
                               return _OrderCard(
                                 order: order,
                                 formatter: _formatter,
-                                onTap: () => context.push(
-                                  '/worker/orders/${order.id}/brief',
-                                ),
+                                onTap: () {
+                                  context
+                                      .push('/worker/orders/${order.id}/brief')
+                                      .then((_) {
+                                        if (!context.mounted) return;
+                                        final status =
+                                            _statusFilters[_selectedIndex];
+                                        context.read<WorkerHistoryBloc>().add(
+                                          FilterWorkerHistory(status),
+                                        );
+                                      });
+                                },
                               );
                             },
                           ),
@@ -427,41 +438,41 @@ class _OrderCard extends StatelessWidget {
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return const Color(0xFFD97706); // Amber
+        return const Color(0xFF7B8490);
       case OrderStatus.accepted:
       case OrderStatus.onTheWay:
       case OrderStatus.arrived:
       case OrderStatus.inProgress:
       case OrderStatus.workPaused:
-        return const Color(0xFF2563EB); // Blue
+        return const Color(0xFF2563EB);
       case OrderStatus.completed:
-        return const Color(0xFF16A34A); // Green matching the design
+        return const Color(0xFF00AA13);
       case OrderStatus.cancelled:
       case OrderStatus.rejected:
-        return const Color(0xFFDC2626); // Red
+        return const Color(0xFFDC2626);
     }
   }
 
   String _getStatusLabel(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return 'Pending';
+        return 'Menunggu';
       case OrderStatus.accepted:
-        return 'Accepted';
+        return 'Diterima';
       case OrderStatus.onTheWay:
-        return 'On The Way';
+        return 'Menuju';
       case OrderStatus.arrived:
-        return 'Arrived';
+        return 'Tiba';
       case OrderStatus.inProgress:
-        return 'In Progress';
+        return 'Dikerjakan';
       case OrderStatus.workPaused:
-        return 'Paused';
+        return 'Jeda';
       case OrderStatus.completed:
-        return 'Completed';
+        return 'Selesai';
       case OrderStatus.cancelled:
-        return 'Cancelled';
+        return 'Batal';
       case OrderStatus.rejected:
-        return 'Rejected';
+        return 'Ditolak';
     }
   }
 }

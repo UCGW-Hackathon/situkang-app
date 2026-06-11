@@ -1148,6 +1148,31 @@ paths:
           in: path
           required: true
           schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purchases, total_material_cost]
+              properties:
+                purchases:
+                  type: array
+                  description: Material/tool additions included in the final invoice.
+                  items:
+                    allOf:
+                      - $ref: '#/components/schemas/PurchaseInput'
+                      - type: object
+                        properties:
+                          purchase_id:
+                            type: string
+                            description: Existing draft purchase ID from the database, if already created.
+                total_material_cost:
+                  type: integer
+                  example: 65000
+                worker_notes:
+                  type: string
+                  example: Pekerjaan selesai, pipa bocor sudah diganti.
       responses:
         '201':
           description: Invoice generated successfully

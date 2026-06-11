@@ -8,9 +8,7 @@ import '../../../../core/theme/theme.dart';
 ///
 /// Validates: Requirement 11.5
 class TypingIndicator extends StatefulWidget {
-  const TypingIndicator({
-    required this.name, super.key,
-  });
+  const TypingIndicator({required this.name, super.key});
 
   /// The name of the person who is typing.
   final String name;

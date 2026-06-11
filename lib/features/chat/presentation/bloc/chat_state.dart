@@ -69,13 +69,13 @@ class ChatLoaded extends ChatState {
 
   @override
   List<Object?> get props => [
-        messages,
-        hasMore,
-        nextCursor,
-        isCounterpartTyping,
-        isLoadingMore,
-        isSending,
-      ];
+    messages,
+    hasMore,
+    nextCursor,
+    isCounterpartTyping,
+    isLoadingMore,
+    isSending,
+  ];
 }
 
 /// State emitted when a chat operation fails.

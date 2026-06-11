@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/domain/entities/user.dart';
@@ -16,51 +15,99 @@ import 'edit_profile_page.dart';
 ///
 /// Shows name, email, phone, avatar, and address.
 /// Provides navigation to edit profile, update avatar, and update location.
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<ProfileBloc>().add(const FetchProfile());
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Profil Saya'), centerTitle: true),
-      body: BlocBuilder<ProfileBloc, ProfileState>(
-        builder: (context, state) {
-          User? user;
-          var isUpdating = false;
-          String? errorMessage;
+      body: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) {
+          final authUser = authState is Authenticated ? authState.user : null;
 
-          if (state is ProfileLoaded) {
-            user = state.user;
-          } else if (state is ProfileUpdating) {
-            user = state.user;
-            isUpdating = true;
-          } else if (state is ProfileError) {
-            user = state.user;
-            errorMessage = state.failure.message;
-          }
+          return BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              var user = authUser;
+              var isUpdating = false;
+              String? errorMessage;
 
-          // Fallback to mock user if profile not loaded
-          final displayUser =
-              user ??
-              User(
-                id: 'mock-user-id',
-                fullName: 'Budi Santoso',
-                email: 'budi.santoso@gmail.com',
-                phone: '081234567890',
-                role: UserRole.user,
-                createdAt: DateTime(2025),
-                address: 'Jl. Merdeka No. 12',
+              if (state is ProfileLoaded) {
+                user = state.user;
+              } else if (state is ProfileUpdating) {
+                user = state.user;
+                isUpdating = true;
+              } else if (state is ProfileError) {
+                user = state.user ?? authUser;
+                errorMessage = state.failure.message;
+              }
+
+              if (user == null) {
+                return _ProfileLoadingOrError(
+                  errorMessage: errorMessage,
+                  isLoading: state is ProfileLoading || state is ProfileInitial,
+                );
+              }
+
+              return _ProfileContent(
+                user: user,
+                isUpdating: isUpdating || state is ProfileLoading,
+                errorMessage: errorMessage,
               );
-
-          return _ProfileContent(
-            user: displayUser,
-            isUpdating:
-                isUpdating ||
-                state is ProfileLoading ||
-                state is ProfileInitial,
-            errorMessage: errorMessage,
+            },
           );
         },
+      ),
+    );
+  }
+}
+
+class _ProfileLoadingOrError extends StatelessWidget {
+  const _ProfileLoadingOrError({required this.isLoading, this.errorMessage});
+
+  final bool isLoading;
+  final String? errorMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<ProfileBloc>().add(const FetchProfile());
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppSpacing.pagePaddingHorizontal),
+        children: [
+          SizedBox(height: MediaQuery.sizeOf(context).height * 0.28),
+          if (isLoading) ...[
+            const Center(child: CircularProgressIndicator()),
+          ] else ...[
+            const Icon(
+              Icons.error_outline,
+              color: AppColors.error,
+              size: AppSizing.iconLg,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              errorMessage ?? 'Profil belum bisa dimuat',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
       ),
     );
   }

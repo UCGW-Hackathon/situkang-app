@@ -157,7 +157,9 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Result<List<ChatConversation>>> getChatList() async {
+  Future<Result<List<ChatConversation>>> getChatList({
+    bool isWorker = false,
+  }) async {
     try {
       if (!connectivityManager.isOnline) {
         // Return cached chat list when offline
@@ -168,7 +170,7 @@ class ChatRepositoryImpl implements ChatRepository {
         return const Left(NetworkFailure());
       }
 
-      final models = await remoteDataSource.getChatList();
+      final models = await remoteDataSource.getChatList(isWorker: isWorker);
 
       // Cache the chat list
       await localDataSource.cacheChatList(models);

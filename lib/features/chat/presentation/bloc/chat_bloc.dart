@@ -98,9 +98,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       },
       (messages) {
         final hasMore = messages.length >= AppConstants.chatPageSize;
-        final nextCursor = messages.isNotEmpty
-            ? messages.last.createdAt.toIso8601String()
-            : null;
+        final nextCursor = messages.isNotEmpty ? messages.last.id : null;
 
         if (isLoadingMore && currentState is ChatLoaded) {
           // Append older messages to the end of the list

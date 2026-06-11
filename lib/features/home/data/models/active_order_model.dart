@@ -19,12 +19,22 @@ class ActiveOrderModel {
   /// Returns `null` if the JSON is null (no active order).
   static ActiveOrderModel? fromJson(Map<String, dynamic>? json) {
     if (json == null) return null;
+    final worker = json['worker'] as Map<String, dynamic>?;
+    final service = json['service'] as Map<String, dynamic>?;
+
     return ActiveOrderModel(
-      orderId: json['order_id'] as String,
-      status: OrderStatus.fromString(json['status'] as String),
-      workerName: json['worker_name'] as String,
-      serviceName: json['service_name'] as String,
-      etaMinutes: json['eta_minutes'] as int?,
+      orderId: (json['order_id'] ?? json['id']).toString(),
+      status: OrderStatus.fromString(json['status'] as String? ?? 'pending'),
+      workerName:
+          json['worker_name'] as String? ??
+          worker?['full_name'] as String? ??
+          'Tukang',
+      serviceName:
+          json['service_name'] as String? ??
+          service?['name'] as String? ??
+          json['title'] as String? ??
+          'Pesanan',
+      etaMinutes: (json['eta_minutes'] as num?)?.toInt(),
     );
   }
 

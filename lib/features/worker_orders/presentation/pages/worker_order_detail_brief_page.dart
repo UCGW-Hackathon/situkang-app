@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -97,12 +98,23 @@ class _WorkerOrderDetailBriefPageState
             FetchWorkerOrderDetail(orderId: widget.orderId),
           );
         }
+
+        if (state is WorkerOrderCompleted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Pekerjaan selesai. Tagihan berhasil dibuat.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          context.go('/worker');
+        }
       },
       builder: (context, state) {
         if (state is WorkerOrderInitial ||
             state is WorkerOrderDetailLoading ||
             state is WorkerOrderLoading ||
-            state is WorkerOrderStatusUpdated) {
+            state is WorkerOrderStatusUpdated ||
+            state is WorkerOrderCompleted) {
           return const Scaffold(
             backgroundColor: _screenBackground,
             body: Center(child: LoadingIndicator()),
@@ -516,6 +528,7 @@ class _WorkerOrderDetailBriefPageState
   ) {
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
     final nextStatus = _nextStatus(detail.status);
+    final canStartWork = _canStartWork(detail);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -562,7 +575,41 @@ class _WorkerOrderDetailBriefPageState
                 ),
               ),
               const SizedBox(height: 16),
-              if (nextStatus != null)
+              if (detail.status == OrderStatus.pending)
+                _SlideToStartButton(
+                  text: 'Geser untuk Terima Pekerjaan',
+                  onCompleted: () {
+                    context.read<WorkerOrderBloc>().add(
+                      AcceptWorkerOrder(orderId: detail.id),
+                    );
+                  },
+                )
+              else if (detail.status == OrderStatus.accepted)
+                canStartWork
+                    ? _SlideToStartButton(
+                        text: 'Geser untuk Kerjakan',
+                        onCompleted: () {
+                          context.read<WorkerOrderBloc>().add(
+                            UpdateOrderStatus(
+                              orderId: detail.id,
+                              status: 'in_progress',
+                              currentStatus: detail.status.value,
+                            ),
+                          );
+                        },
+                      )
+                    : _DistanceLockedAction(text: _startWorkLockedText(detail))
+              else if (detail.status == OrderStatus.inProgress)
+                _SlideToStartButton(
+                  text: 'Geser untuk Selesaikan Pekerjaan',
+                  onCompleted: () {
+                    context.push(
+                      '/worker/orders/${detail.id}/items',
+                      extra: detail,
+                    );
+                  },
+                )
+              else if (nextStatus != null)
                 _SlideToStartButton(
                   text: _slideText(detail.status),
                   onCompleted: () {
@@ -610,14 +657,8 @@ class _WorkerOrderDetailBriefPageState
   }
 
   String? _distanceText(WorkerOrderDetail detail) {
-    if (_currentLocation == null || !detail.hasUsableLocation) return null;
-
-    final target = LatLng(detail.location.latitude, detail.location.longitude);
-    final meters = const Distance().as(
-      LengthUnit.Meter,
-      _currentLocation!,
-      target,
-    );
+    final meters = _distanceMeters(detail);
+    if (meters == null) return null;
 
     if (meters >= 1000) {
       return '${(meters / 1000).toStringAsFixed(1)} km dari lokasi Anda';
@@ -625,10 +666,30 @@ class _WorkerOrderDetailBriefPageState
     return '${meters.round()} m dari lokasi Anda';
   }
 
+  double? _distanceMeters(WorkerOrderDetail detail) {
+    if (_currentLocation == null || !detail.hasUsableLocation) return null;
+
+    final target = LatLng(detail.location.latitude, detail.location.longitude);
+    return const Distance().as(LengthUnit.Meter, _currentLocation!, target);
+  }
+
+  bool _canStartWork(WorkerOrderDetail detail) {
+    final meters = _distanceMeters(detail);
+    return meters != null && meters < 100;
+  }
+
+  String _startWorkLockedText(WorkerOrderDetail detail) {
+    final meters = _distanceMeters(detail);
+    if (meters == null) {
+      return 'Aktifkan lokasi untuk mulai pekerjaan';
+    }
+    return 'Dekati lokasi pelanggan (<100 m). Saat ini ${_distanceText(detail)}';
+  }
+
   String? _nextStatus(OrderStatus status) {
     switch (status) {
       case OrderStatus.accepted:
-        return 'on_the_way';
+        return null;
       case OrderStatus.onTheWay:
         return 'arrived';
       case OrderStatus.arrived:
@@ -646,7 +707,7 @@ class _WorkerOrderDetailBriefPageState
   String _slideText(OrderStatus status) {
     switch (status) {
       case OrderStatus.accepted:
-        return 'Geser untuk Mulai Kerja';
+        return 'Geser untuk Kerjakan';
       case OrderStatus.onTheWay:
         return 'Geser Saat Tiba Lokasi';
       case OrderStatus.arrived:
@@ -683,12 +744,14 @@ class _WorkerOrderDetailBriefPageState
 
   String _statusUpdatedMessage(String status) {
     switch (status) {
+      case 'in_progress':
+        return 'Pekerjaan dimulai.';
       case 'on_the_way':
         return 'Status diperbarui: menuju lokasi.';
       case 'arrived':
         return 'Status diperbarui: tiba di lokasi.';
-      case 'in_progress':
-        return 'Status diperbarui: pekerjaan dimulai.';
+      case 'accepted':
+        return 'Pekerjaan berhasil diterima.';
       default:
         return 'Status pekerjaan diperbarui.';
     }
@@ -881,6 +944,8 @@ class _SlideToStartButton extends StatefulWidget {
 
 class _SlideToStartButtonState extends State<_SlideToStartButton> {
   static const _thumbSize = 48.0;
+  static const _gojekGreen = Color(0xFF00AA13);
+  static const _trackColor = Color(0xFF00647C);
   double _dragValue = 0;
   bool _completed = false;
 
@@ -889,11 +954,15 @@ class _SlideToStartButtonState extends State<_SlideToStartButton> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxDrag = math.max(0.0, constraints.maxWidth - _thumbSize - 8);
+        final progressWidth = math.min(
+          constraints.maxWidth,
+          _dragValue + _thumbSize + 4,
+        );
 
         return Container(
           height: 56,
           decoration: BoxDecoration(
-            color: _WorkerOrderDetailBriefPageState._brandTeal,
+            color: _trackColor,
             borderRadius: BorderRadius.circular(AppSizing.radiusFull),
             boxShadow: [
               BoxShadow(
@@ -903,16 +972,40 @@ class _SlideToStartButtonState extends State<_SlideToStartButton> {
               ),
             ],
           ),
+          clipBehavior: Clip.antiAlias,
           child: Stack(
             alignment: Alignment.center,
             children: [
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 90),
+                    curve: Curves.easeOut,
+                    width: progressWidth,
+                    decoration: const BoxDecoration(
+                      color: _gojekGreen,
+                      borderRadius: BorderRadius.horizontal(
+                        left: Radius.circular(AppSizing.radiusFull),
+                        right: Radius.circular(AppSizing.radiusFull),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               Padding(
-                padding: const EdgeInsets.only(left: 44),
-                child: Text(
-                  widget.text,
-                  style: AppTypography.buttonLarge.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                padding: const EdgeInsets.only(left: 48, right: 18),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 120),
+                  opacity: _completed ? 0.82 : 1,
+                  child: Text(
+                    widget.text,
+                    style: AppTypography.buttonLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -934,6 +1027,8 @@ class _SlideToStartButtonState extends State<_SlideToStartButton> {
                         _dragValue = maxDrag;
                         _completed = true;
                       });
+                      HapticFeedback.heavyImpact();
+                      unawaited(SystemSound.play(SystemSoundType.alert));
                       widget.onCompleted();
                     } else {
                       setState(() {
@@ -955,9 +1050,11 @@ class _SlideToStartButtonState extends State<_SlideToStartButton> {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.keyboard_double_arrow_right,
-                      color: _WorkerOrderDetailBriefPageState._brandTeal,
+                    child: Icon(
+                      _completed
+                          ? Icons.check_rounded
+                          : Icons.keyboard_double_arrow_right,
+                      color: _completed ? _gojekGreen : _trackColor,
                     ),
                   ),
                 ),
@@ -966,6 +1063,34 @@ class _SlideToStartButtonState extends State<_SlideToStartButton> {
           ),
         );
       },
+    );
+  }
+}
+
+class _DistanceLockedAction extends StatelessWidget {
+  const _DistanceLockedAction({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 56),
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppSizing.radiusFull),
+        border: Border.all(color: const Color(0xFFD7DEE5)),
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: AppTypography.buttonSmall.copyWith(
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

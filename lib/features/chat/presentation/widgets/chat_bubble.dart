@@ -13,7 +13,9 @@ import '../../domain/entities/chat_message.dart';
 /// Validates: Requirements 11.1, 11.2, 11.3, 11.9
 class ChatBubble extends StatelessWidget {
   const ChatBubble({
-    required this.message, required this.isMe, super.key,
+    required this.message,
+    required this.isMe,
+    super.key,
     this.onRetry,
   });
 
@@ -36,8 +38,9 @@ class ChatBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
-        mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) const SizedBox(width: AppSpacing.xl),
@@ -191,6 +194,15 @@ class ChatBubble extends StatelessWidget {
             ),
           ),
         ],
+        if (message.mediaUrl == null && message.content.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            message.content,
+            style: AppTypography.bodySmall.copyWith(
+              color: isMe ? AppColors.onPrimary : AppColors.textPrimary,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -210,9 +222,7 @@ class ChatBubble extends StatelessWidget {
           ),
           child: Text(
             message.content,
-            style: AppTypography.caption.copyWith(
-              fontStyle: FontStyle.italic,
-            ),
+            style: AppTypography.caption.copyWith(fontStyle: FontStyle.italic),
             textAlign: TextAlign.center,
           ),
         ),

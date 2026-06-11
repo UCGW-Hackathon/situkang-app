@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
@@ -56,7 +55,7 @@ abstract class ChatRemoteDataSource {
   Future<void> markAsRead(String orderId, {bool isWorker = false});
 
   /// Fetches the list of active chat conversations.
-  Future<List<ChatConversationModel>> getChatList();
+  Future<List<ChatConversationModel>> getChatList({bool isWorker = false});
 }
 
 /// Implementation of [ChatRemoteDataSource] using the [ApiClient].
@@ -75,7 +74,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   }) async {
     final queryParams = <String, dynamic>{'limit': limit};
     if (cursor != null) {
-      queryParams['cursor'] = cursor;
+      queryParams['before_id'] = cursor;
     }
 
     final response = await apiClient.get<Map<String, dynamic>>(
@@ -128,20 +127,17 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     String? caption,
     bool isWorker = false,
   }) async {
-    final formData = FormData.fromMap(<String, dynamic>{
-      'message_type': 'image',
-      'image': await MultipartFile.fromFile(
-        image.path,
-        filename: image.path.split('/').last,
-      ),
-      'caption': ?caption,
-    });
-
-    final response = await apiClient.upload<Map<String, dynamic>>(
+    final fileName = image.path.split('/').last.split(r'\').last;
+    final response = await apiClient.post<Map<String, dynamic>>(
       isWorker
           ? ApiEndpoints.workerChatMessages(orderId)
           : ApiEndpoints.chatMessages(orderId),
-      data: formData,
+      data: {
+        'message_type': 'image',
+        'content': caption?.trim().isNotEmpty == true
+            ? caption!.trim()
+            : fileName,
+      },
     );
 
     final data = response.data;
@@ -163,9 +159,11 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   }
 
   @override
-  Future<List<ChatConversationModel>> getChatList() async {
+  Future<List<ChatConversationModel>> getChatList({
+    bool isWorker = false,
+  }) async {
     final response = await apiClient.get<Map<String, dynamic>>(
-      ApiEndpoints.chatList,
+      isWorker ? ApiEndpoints.workerChatList : ApiEndpoints.chatList,
     );
 
     final data = response.data;
@@ -174,9 +172,17 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     }
 
     // Handle wrapped response format: { "status": "success", "data": { "conversations": [...] } }
-    final responseData = data['data'] as Map<String, dynamic>? ?? data;
-    final conversationsList =
-        responseData['conversations'] as List<dynamic>? ?? [];
+    final rawData = data['data'];
+    final conversationsList = rawData is List
+        ? rawData
+        : rawData is Map<String, dynamic>
+        ? rawData['conversations'] as List<dynamic>? ??
+              rawData['chats'] as List<dynamic>? ??
+              rawData['items'] as List<dynamic>? ??
+              []
+        : data['conversations'] as List<dynamic>? ??
+              data['chats'] as List<dynamic>? ??
+              [];
 
     return conversationsList
         .map(

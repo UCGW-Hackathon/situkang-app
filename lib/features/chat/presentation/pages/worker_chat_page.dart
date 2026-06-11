@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -57,6 +58,7 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
   @override
   void initState() {
     super.initState();
+    unawaited(context.read<ChatBloc>().connectToChat(widget.orderId));
     context.read<ChatBloc>().add(
       LoadMessages(orderId: widget.orderId, isWorker: true),
     );
@@ -254,7 +256,9 @@ class _WorkerChatPageState extends State<WorkerChatPage> {
             itemCount: state.messages.length,
             itemBuilder: (context, index) {
               final message = state.messages[index];
-              final isMe = message.senderId == widget.currentUserId;
+              final isMe =
+                  message.senderId == widget.currentUserId ||
+                  message.senderId == 'current_user';
 
               // Date separator
               final showDate = _shouldShowDateSeparator(state.messages, index);

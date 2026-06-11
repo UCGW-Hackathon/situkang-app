@@ -37,7 +37,8 @@ abstract class WorkerPurchaseRemoteDataSource {
 }
 
 @LazySingleton(as: WorkerPurchaseRemoteDataSource)
-class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSource {
+class WorkerPurchaseRemoteDataSourceImpl
+    implements WorkerPurchaseRemoteDataSource {
   const WorkerPurchaseRemoteDataSourceImpl(this.apiClient);
 
   final ApiClient apiClient;
@@ -54,38 +55,39 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
     String? reason,
     String? receiptPhotoPath,
   }) async {
-    final formDataMap = <String, dynamic>{
-      'item_name': itemName,
-      'category': category,
-      'quantity': quantity,
-      'unit': unit,
-      'unit_price': unitPrice,
-      'total_price': totalPrice,
-      'reason': ?reason,
-    };
-
-    if (receiptPhotoPath != null) {
-      formDataMap['receipt_photo'] = await MultipartFile.fromFile(receiptPhotoPath);
-    }
-
-    final response = await apiClient.upload<Map<String, dynamic>>(
+    final response = await apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.workerOrderPurchases(orderId),
-      data: FormData.fromMap(formDataMap),
+      data: <String, dynamic>{
+        'item_name': itemName,
+        'category': category,
+        'quantity': quantity,
+        'unit': unit,
+        'unit_price': unitPrice,
+        'total_price': totalPrice,
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
     );
 
-    final apiResponse = ApiResponse<PurchaseModel>.fromJson(response.data!, fromJsonT: (json) => PurchaseModel.fromJson(json as Map<String, dynamic>),
+    final apiResponse = ApiResponse<PurchaseModel>.fromJson(
+      response.data!,
+      fromJsonT: (json) => PurchaseModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;
   }
 
   @override
-  Future<List<PurchaseModel>> processAiInput(String orderId, String rawText) async {
+  Future<List<PurchaseModel>> processAiInput(
+    String orderId,
+    String rawText,
+  ) async {
     final response = await apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.workerPurchaseAiProcess(orderId),
       data: {'raw_input': rawText},
     );
 
-    final apiResponse = ApiResponse<List<PurchaseModel>>.fromJson(response.data!, fromJsonT: (json) => (json as List)
+    final apiResponse = ApiResponse<List<PurchaseModel>>.fromJson(
+      response.data!,
+      fromJsonT: (json) => (json as List)
           .map((e) => PurchaseModel.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
@@ -93,7 +95,10 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
   }
 
   @override
-  Future<List<PurchaseModel>> scanReceipt(String orderId, String photoPath) async {
+  Future<List<PurchaseModel>> scanReceipt(
+    String orderId,
+    String photoPath,
+  ) async {
     final formData = FormData.fromMap({
       'receipt': await MultipartFile.fromFile(photoPath),
     });
@@ -103,7 +108,9 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
       data: formData,
     );
 
-    final apiResponse = ApiResponse<List<PurchaseModel>>.fromJson(response.data!, fromJsonT: (json) => (json as List)
+    final apiResponse = ApiResponse<List<PurchaseModel>>.fromJson(
+      response.data!,
+      fromJsonT: (json) => (json as List)
           .map((e) => PurchaseModel.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
@@ -111,12 +118,17 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
   }
 
   @override
-  Future<PurchaseModel> submitForApproval(String orderId, String purchaseId) async {
+  Future<PurchaseModel> submitForApproval(
+    String orderId,
+    String purchaseId,
+  ) async {
     final response = await apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.workerPurchaseSubmit(orderId, purchaseId),
     );
 
-    final apiResponse = ApiResponse<PurchaseModel>.fromJson(response.data!, fromJsonT: (json) => PurchaseModel.fromJson(json as Map<String, dynamic>),
+    final apiResponse = ApiResponse<PurchaseModel>.fromJson(
+      response.data!,
+      fromJsonT: (json) => PurchaseModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;
   }
@@ -145,7 +157,9 @@ class WorkerPurchaseRemoteDataSourceImpl implements WorkerPurchaseRemoteDataSour
       },
     );
 
-    final apiResponse = ApiResponse<PurchaseModel>.fromJson(response.data!, fromJsonT: (json) => PurchaseModel.fromJson(json as Map<String, dynamic>),
+    final apiResponse = ApiResponse<PurchaseModel>.fromJson(
+      response.data!,
+      fromJsonT: (json) => PurchaseModel.fromJson(json as Map<String, dynamic>),
     );
     return apiResponse.data!;
   }

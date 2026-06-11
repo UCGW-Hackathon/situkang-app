@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -39,13 +41,24 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   ActiveOrder? _optimisticActiveOrder;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _optimisticActiveOrder = widget.initialActiveOrder;
     context.read<HomeBloc>().add(const FetchHomeData());
+    _refreshTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+      if (!mounted) return;
+      context.read<HomeBloc>().add(const RefreshHomeData());
+    });
     _fetchAndUpdateLocation();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchAndUpdateLocation() async {
@@ -95,7 +108,7 @@ class _HomePageState extends State<HomePage> {
           }
         },
       );
-    } catch (e) {
+    } on Object catch (e) {
       debugPrint('Error fetching/updating location: $e');
     }
   }
@@ -124,7 +137,7 @@ class _HomePageState extends State<HomePage> {
           return displayName;
         }
       }
-    } catch (e) {
+    } on Object catch (e) {
       debugPrint('Reverse geocoding error: $e');
     }
     return '';
@@ -201,17 +214,25 @@ class _HomeContent extends StatelessWidget {
                     activeOrder: activeOrder!,
                     onTap: () {
                       final orderId = activeOrder!.orderId;
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => BlocProvider(
-                            create: (_) => getIt<OrderBloc>()
-                              ..add(
-                                FetchOrderDetailRequested(orderId: orderId),
+                      Navigator.of(context)
+                          .push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => BlocProvider(
+                                create: (_) => getIt<OrderBloc>()
+                                  ..add(
+                                    FetchOrderDetailRequested(orderId: orderId),
+                                  ),
+                                child: OrderDetailPage(orderId: orderId),
                               ),
-                            child: OrderDetailPage(orderId: orderId),
-                          ),
-                        ),
-                      );
+                            ),
+                          )
+                          .then((_) {
+                            if (context.mounted) {
+                              context.read<HomeBloc>().add(
+                                const RefreshHomeData(),
+                              );
+                            }
+                          });
                     },
                   ),
                 ),
@@ -538,13 +559,15 @@ class _PromoArticleStrip extends StatelessWidget {
     final children = <Widget>[];
 
     for (final promo in promos) {
-      children.add(_PromoCard(promo: promo));
-      children.add(const SizedBox(width: 12));
+      children
+        ..add(_PromoCard(promo: promo))
+        ..add(const SizedBox(width: 12));
     }
 
     for (final article in articles) {
-      children.add(_ArticleCard(article: article));
-      children.add(const SizedBox(width: 12));
+      children
+        ..add(_ArticleCard(article: article))
+        ..add(const SizedBox(width: 12));
     }
 
     if (children.isNotEmpty) {

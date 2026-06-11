@@ -30,24 +30,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Result<User>> getProfile() async {
     try {
-      // Try to get fresh data from the API
       final userModel = await remoteDataSource.getProfile();
-      // Cache the fresh data
       await localDataSource.cacheProfile(userModel);
       return Right(userModel.toEntity());
     } on DioException catch (e) {
-      // On network failure, try to return cached data
-      final cachedModel = await localDataSource.getCachedProfile();
-      if (cachedModel != null) {
-        return Right(cachedModel.toEntity());
-      }
       return Left(_mapDioExceptionToFailure(e));
     } on Exception catch (e) {
-      // On other failures, try cache as fallback
-      final cachedModel = await localDataSource.getCachedProfile();
-      if (cachedModel != null) {
-        return Right(cachedModel.toEntity());
-      }
       return Left(ServerFailure(e.toString(), statusCode: 500));
     }
   }

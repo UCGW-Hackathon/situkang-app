@@ -14,11 +14,7 @@ import '../../domain/entities/active_order.dart';
 /// service name, and ETA in minutes.
 /// Requirement 3.3: Hide when no active order exists.
 class ActiveOrderBanner extends StatelessWidget {
-  const ActiveOrderBanner({
-    required this.activeOrder,
-    super.key,
-    this.onTap,
-  });
+  const ActiveOrderBanner({required this.activeOrder, super.key, this.onTap});
 
   /// The active order data to display.
   final ActiveOrder activeOrder;
@@ -28,6 +24,8 @@ class ActiveOrderBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _getStatusColors(activeOrder.status);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -36,15 +34,15 @@ class ActiveOrderBanner extends StatelessWidget {
         ),
         padding: AppSpacing.cardPadding,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary, AppColors.primaryLight],
+          gradient: LinearGradient(
+            colors: [colors.$1, colors.$2],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.3),
+              color: colors.$1.withValues(alpha: 0.26),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -131,6 +129,24 @@ class ActiveOrderBanner extends StatelessWidget {
     );
   }
 
+  (Color, Color) _getStatusColors(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return (const Color(0xFF7B8490), const Color(0xFFA8B0BA));
+      case OrderStatus.completed:
+        return (const Color(0xFF00AA13), const Color(0xFF37D64A));
+      case OrderStatus.accepted:
+      case OrderStatus.onTheWay:
+      case OrderStatus.arrived:
+      case OrderStatus.inProgress:
+      case OrderStatus.workPaused:
+        return (AppColors.primary, AppColors.primaryLight);
+      case OrderStatus.cancelled:
+      case OrderStatus.rejected:
+        return (AppColors.error, const Color(0xFFFF7A7A));
+    }
+  }
+
   IconData _getStatusIcon(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
@@ -160,6 +176,8 @@ class ActiveOrderBanner extends StatelessWidget {
         return 'Tukang Telah Tiba';
       case OrderStatus.inProgress:
         return 'Sedang Dikerjakan';
+      case OrderStatus.completed:
+        return 'Pekerjaan Selesai';
       default:
         return 'Pesanan Aktif';
     }
