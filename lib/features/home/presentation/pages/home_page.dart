@@ -645,25 +645,7 @@ class _PromoCard extends StatelessWidget {
                     height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _teal,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Klaim Sekarang',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+
               ],
             ),
           ),
@@ -685,7 +667,10 @@ class _ArticleCard extends StatelessWidget {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => ArticleDetailPage(articleId: article.id),
+            builder: (_) => ArticleDetailPage(
+              articleId: article.id,
+              title: article.title,
+            ),
           ),
         );
       },

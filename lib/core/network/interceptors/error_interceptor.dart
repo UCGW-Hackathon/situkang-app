@@ -28,6 +28,10 @@ class ErrorInterceptor extends Interceptor {
     );
   }
 
+  Failure mapDioExceptionToFailure(DioException err) {
+    return _mapDioExceptionToFailure(err);
+  }
+
   Failure _mapDioExceptionToFailure(DioException err) {
     switch (err.type) {
       case DioExceptionType.connectionTimeout:
@@ -58,7 +62,7 @@ class ErrorInterceptor extends Interceptor {
           return const NetworkFailure();
         }
         return const ServerFailure(
-          'Terjadi kesalahan yang tidak diketahui',
+          'Email atau password salah',
           statusCode: 0,
         );
     }
@@ -71,7 +75,22 @@ class ErrorInterceptor extends Interceptor {
 
     final statusCode = response.statusCode ?? 0;
     final data = response.data;
-    final message = _extractMessage(data) ?? _defaultMessageForStatus(statusCode);
+    var message = _extractMessage(data) ?? _defaultMessageForStatus(statusCode);
+
+    final lowercaseMessage = message.toLowerCase();
+    if (lowercaseMessage.contains('duplicate key') ||
+        lowercaseMessage.contains('already exists') ||
+        lowercaseMessage.contains('unique constraint') ||
+        lowercaseMessage.contains('duplicate')) {
+      if (lowercaseMessage.contains('phone')) {
+        message = 'Nomor telepon sudah terdaftar, silakan gunakan nomor lain';
+      } else if (lowercaseMessage.contains('email')) {
+        message = 'Email sudah terdaftar, silakan gunakan email lain';
+      } else {
+        message = 'Data yang dimasukkan sudah terdaftar, silakan gunakan data lain';
+      }
+    }
+
     final errorCode = _extractErrorCode(data);
 
     switch (statusCode) {

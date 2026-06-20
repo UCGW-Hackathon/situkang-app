@@ -202,7 +202,7 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              'Pendapatan Hari Ini',
+              'Akumulasi Mingguan',
               style: AppTypography.caption.copyWith(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w400,
@@ -210,7 +210,7 @@ class _WorkerHomePageState extends State<WorkerHomePage> {
             ),
             const SizedBox(height: 2),
             Text(
-              'Rp${NumberFormat('#,###', 'id').format(dashboard.earningsToday)}',
+              'Rp${NumberFormat('#,###', 'id').format(dashboard.earningsWeek)}',
               style: AppTypography.h5.copyWith(
                 fontWeight: FontWeight.bold,
                 color: const Color(

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 void main() async {
-  const baseUrl = 'https://xryz-gcw-situkang.hf.space/v1';
+  const baseUrl = 'http://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1';
   
   final loginRes = await http.post(
     Uri.parse('$baseUrl/auth/login'),

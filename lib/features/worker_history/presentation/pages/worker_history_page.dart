@@ -424,6 +424,7 @@ class _OrderCard extends StatelessWidget {
       case OrderStatus.workPaused:
         return const Color(0xFF2563EB);
       case OrderStatus.waitingPayment:
+      case OrderStatus.paid:
         return const Color(0xFF2563EB);
       case OrderStatus.completed:
         return const Color(0xFF00AA13);
@@ -449,6 +450,8 @@ class _OrderCard extends StatelessWidget {
         return 'Jeda';
       case OrderStatus.waitingPayment:
         return 'Menunggu Bayar';
+      case OrderStatus.paid:
+        return 'Sudah Bayar';
       case OrderStatus.completed:
         return 'Selesai';
       case OrderStatus.cancelled:

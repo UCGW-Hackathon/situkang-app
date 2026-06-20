@@ -84,6 +84,8 @@ class WorkerOrderBloc extends Bloc<WorkerOrderEvent, WorkerOrderState> {
       'arrived': ['in_progress'],
       'in_progress': ['work_paused', 'completed'],
       'work_paused': ['in_progress'],
+      'waiting_payment': ['completed'],
+      'paid': ['completed'],
     };
 
     if (validTransitions[event.currentStatus] == null ||

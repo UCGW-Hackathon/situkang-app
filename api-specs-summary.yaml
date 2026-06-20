@@ -3,7 +3,7 @@ info:
   title: SiTukang API
   version: 1.0.0
 servers:
-  - url: https://xryz-gcw-situkang.hf.space/v1
+  - url: http://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1
   - url: http://localhost:8080/v1
 security:
   - BearerAuth: []

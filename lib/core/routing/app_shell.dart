@@ -190,7 +190,21 @@ class _ShellScaffoldState extends State<_ShellScaffold> {
         _lastMessageTimes[item.orderId] = current;
 
         if (current == null) continue;
-        if (previous == null || current.isAfter(previous)) {
+
+        final isNew = current.toUtc().isAfter(
+              DateTime.now().toUtc().subtract(const Duration(seconds: 30)),
+            );
+        bool shouldShow = false;
+
+        if (previous == null) {
+          if (isNew) {
+            shouldShow = true;
+          }
+        } else if (current.isAfter(previous)) {
+          shouldShow = true;
+        }
+
+        if (shouldShow) {
           if (newest == null ||
               current.isAfter(
                 newest.lastMessageTime ??

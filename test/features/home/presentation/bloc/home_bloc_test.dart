@@ -24,6 +24,8 @@ void main() {
 
   setUp(() {
     mockHomeRepository = MockHomeRepository();
+    when(() => mockHomeRepository.getCachedHomeData())
+        .thenAnswer((_) async => const Right(null));
     homeBloc = HomeBloc(homeRepository: mockHomeRepository);
   });
 
@@ -189,6 +191,22 @@ void main() {
             failure:
                 ServerFailure('Terjadi kesalahan pada server', statusCode: 500),
           ),
+        ],
+      );
+
+      blocTest<HomeBloc, HomeState>(
+        'emits [HomeLoaded(cached), HomeLoaded(fresh)] when getCachedHomeData and getHomeData both succeed (Stale-While-Revalidate)',
+        build: () {
+          when(() => mockHomeRepository.getCachedHomeData())
+              .thenAnswer((_) async => const Right(tHomeData));
+          when(() => mockHomeRepository.getHomeData())
+              .thenAnswer((_) async => const Right(tHomeDataNoActiveOrder));
+          return homeBloc;
+        },
+        act: (bloc) => bloc.add(const FetchHomeData()),
+        expect: () => [
+          const HomeLoaded(homeData: tHomeData),
+          const HomeLoaded(homeData: tHomeDataNoActiveOrder),
         ],
       );
     });

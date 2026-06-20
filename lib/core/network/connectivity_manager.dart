@@ -75,7 +75,7 @@ class ConnectivityManagerImpl implements ConnectivityManager {
   /// [lookupHost] is the hostname used for DNS lookups.
   ConnectivityManagerImpl({
     Duration checkInterval = const Duration(seconds: 3),
-    String lookupHost = 'xryz-gcw-situkang.hf.space',
+    String lookupHost = 'situkang-api-20260616.eastasia.azurecontainer.io',
   }) : _checkInterval = checkInterval,
        _lookupHost = lookupHost {
     _startPeriodicCheck();

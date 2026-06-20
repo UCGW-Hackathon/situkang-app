@@ -214,7 +214,7 @@ class _WorkerOrderItemsPageState extends State<WorkerOrderItemsPage> {
           ),
         ),
         FilledButton.icon(
-          onPressed: _isSaving ? null : _showAddItemSheet,
+          onPressed: _isSaving ? null : _showAddMethodSelectionSheet,
           style: FilledButton.styleFrom(
             backgroundColor: _brandTeal,
             foregroundColor: Colors.white,
@@ -396,6 +396,219 @@ class _WorkerOrderItemsPageState extends State<WorkerOrderItemsPage> {
     );
   }
 
+  Future<void> _showAddMethodSelectionSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Tambah Biaya Material',
+                  style: AppTypography.h4.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Pilih cara untuk mencatat pengeluaran material pekerjaan ini',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    // Manual Input
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showAddItemSheet();
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFFE2E6EC), width: 1.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFE9F2FF),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.edit_note, color: _brandTeal, size: 28),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Input Manual',
+                                style: AppTypography.bodyLarge.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Ketik nama & harga',
+                                textAlign: TextAlign.center,
+                                style: AppTypography.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Scan Invoice
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                          _navigateToScanner();
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: _brandTeal.withValues(alpha: 0.5), width: 1.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFE8F8F5),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.document_scanner, color: Colors.teal, size: 28),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Scan Invoice',
+                                    style: AppTypography.bodyLarge.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Foto struk otomatis',
+                                    textAlign: TextAlign.center,
+                                    style: AppTypography.caption.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Positioned(
+                                top: -28,
+                                right: -4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'AI INSTAN',
+                                    style: AppTypography.caption.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _navigateToScanner() async {
+    final result = await context.push<List<PurchaseInput>>(
+      '/worker/orders/${widget.orderId}/scan',
+    );
+    if (result != null && result.isNotEmpty) {
+      await _addScannedItems(result);
+    }
+  }
+
+  Future<void> _addScannedItems(List<PurchaseInput> items) async {
+    setState(() => _isSaving = true);
+    
+    int successCount = 0;
+    String lastError = '';
+
+    for (final item in items) {
+      final res = await _purchaseRepository.addPurchase(
+        orderId: widget.orderId,
+        itemName: item.itemName,
+        category: 'material',
+        quantity: item.quantity,
+        unit: item.unit,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+        reason: item.reason.isEmpty ? null : item.reason,
+      );
+      
+      res.fold(
+        (failure) {
+          lastError = failure.message;
+        },
+        (purchase) {
+          successCount++;
+          setState(() => _items.add(purchase));
+        },
+      );
+    }
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    if (successCount > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Berhasil menambahkan $successCount material dari invoice!'),
+          backgroundColor: _gojekGreen,
+        ),
+      );
+    }
+    
+    if (successCount < items.length && lastError.isNotEmpty) {
+      _showError('Gagal menambahkan beberapa material: $lastError');
+    }
+  }
+
   Future<void> _showAddItemSheet() async {
     final nameController = TextEditingController();
     final quantityController = TextEditingController(text: '1');
@@ -404,7 +617,7 @@ class _WorkerOrderItemsPageState extends State<WorkerOrderItemsPage> {
     final reasonController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
-    final result = await showModalBottomSheet<_PurchaseInput>(
+    final result = await showModalBottomSheet<PurchaseInput>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -494,7 +707,7 @@ class _WorkerOrderItemsPageState extends State<WorkerOrderItemsPage> {
                     final quantity = int.parse(quantityController.text);
                     final unitPrice = int.parse(priceController.text);
                     Navigator.of(context).pop(
-                      _PurchaseInput(
+                      PurchaseInput(
                         itemName: nameController.text.trim(),
                         quantity: quantity,
                         unit: unitController.text.trim(),
@@ -522,7 +735,7 @@ class _WorkerOrderItemsPageState extends State<WorkerOrderItemsPage> {
     await _addItem(result);
   }
 
-  Future<void> _addItem(_PurchaseInput input) async {
+  Future<void> _addItem(PurchaseInput input) async {
     setState(() => _isSaving = true);
 
     final result = await _purchaseRepository.addPurchase(
@@ -610,8 +823,8 @@ class _WorkerOrderItemsPageState extends State<WorkerOrderItemsPage> {
   }
 }
 
-class _PurchaseInput {
-  const _PurchaseInput({
+class PurchaseInput {
+  const PurchaseInput({
     required this.itemName,
     required this.quantity,
     required this.unit,

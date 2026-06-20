@@ -140,6 +140,9 @@ class OrderRepositoryImpl implements OrderRepository {
 
   /// Maps [DioException] to typed [Failure] objects.
   Failure _mapDioExceptionToFailure(DioException exception) {
+    if (exception.error is Failure) {
+      return exception.error as Failure;
+    }
     if (exception.type == DioExceptionType.connectionTimeout ||
         exception.type == DioExceptionType.receiveTimeout ||
         exception.type == DioExceptionType.sendTimeout) {

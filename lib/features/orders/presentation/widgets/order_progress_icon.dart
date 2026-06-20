@@ -77,6 +77,8 @@ class OrderProgressIcon extends StatelessWidget {
         return 0.75;
       case OrderStatus.waitingPayment:
         return 0.9;
+      case OrderStatus.paid:
+        return 0.95;
       case OrderStatus.completed:
         return 1;
       case OrderStatus.cancelled:
@@ -95,6 +97,7 @@ class OrderProgressIcon extends StatelessWidget {
       case OrderStatus.inProgress:
       case OrderStatus.workPaused:
       case OrderStatus.waitingPayment:
+      case OrderStatus.paid:
         return _activeColor;
       case OrderStatus.completed:
         return _completedColor;

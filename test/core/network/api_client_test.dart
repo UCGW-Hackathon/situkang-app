@@ -28,6 +28,12 @@ void main() {
     when(
       () => mockTokenStorage.getAccessToken(),
     ).thenAnswer((_) async => 'test-access-token');
+    when(
+      () => mockTokenStorage.getRefreshToken(),
+    ).thenAnswer((_) async => 'test-refresh-token');
+    when(
+      () => mockTokenStorage.clearTokens(),
+    ).thenAnswer((_) async {});
 
     dio = Dio(BaseOptions(baseUrl: 'https://api.situkang.id/v1'));
     dioAdapter = DioAdapter(dio: dio);
@@ -239,6 +245,12 @@ void main() {
     });
 
     test('should map 401 to AuthFailure', () async {
+      dioAdapter.onPost(
+        '/auth/refresh',
+        (server) => server.reply(401, {'status': 'error', 'message': 'Token expired'}),
+        data: {'refresh_token': 'test-refresh-token'},
+      );
+
       dioAdapter.onGet(
         '/test',
         (server) =>

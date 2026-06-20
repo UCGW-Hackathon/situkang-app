@@ -520,6 +520,8 @@ class _TrackerSheet extends StatelessWidget {
         return 'Pekerjaan selesai';
       case OrderStatus.waitingPayment:
         return 'Menunggu pembayaran';
+      case OrderStatus.paid:
+        return 'Sudah dibayar';
       case OrderStatus.pending:
       case OrderStatus.cancelled:
       case OrderStatus.rejected:

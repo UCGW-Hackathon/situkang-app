@@ -9,10 +9,10 @@ class AppConstants {
 
   /// Base URL for REST API calls.
   /// Override via environment config for staging/dev.
-  static const String baseUrl = 'https://xryz-gcw-situkang.hf.space/v1';
+  static const String baseUrl = 'http://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1';
 
   /// WebSocket base URL for real-time features (tracking, chat).
-  static const String webSocketUrl = 'wss://xryz-gcw-situkang.hf.space/v1/ws';
+  static const String webSocketUrl = 'ws://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1/ws';
 
   /// Public Mapbox access token. Pass with:
   /// `--dart-define=MAPBOX_ACCESS_TOKEN=YOUR_TOKEN`
@@ -20,16 +20,22 @@ class AppConstants {
     'MAPBOX_ACCESS_TOKEN',
   );
 
+  /// Gemini API Key. Pass with:
+  /// `--dart-define=GEMINI_API_KEY=YOUR_KEY`
+  static const String geminiApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+  );
+
   // ─── Timeouts ────────────────────────────────────────────────────────────────
 
   /// HTTP connection timeout.
-  static const Duration connectTimeout = Duration(seconds: 60);
+  static const Duration connectTimeout = Duration(seconds: 8);
 
   /// HTTP send timeout.
-  static const Duration sendTimeout = Duration(seconds: 120);
+  static const Duration sendTimeout = Duration(seconds: 15);
 
   /// HTTP receive (response) timeout.
-  static const Duration receiveTimeout = Duration(seconds: 120);
+  static const Duration receiveTimeout = Duration(seconds: 15);
 
   /// Buffer time before token expiry to trigger a proactive refresh.
   static const Duration tokenRefreshBuffer = Duration(seconds: 60);

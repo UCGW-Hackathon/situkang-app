@@ -48,7 +48,7 @@ class DioApiClient implements ApiClient {
       AuthInterceptor(tokenStorage: tokenStorage),
       TokenRefreshInterceptor(
         tokenStorage: tokenStorage,
-        refreshDio: Dio(_dio.options),
+        refreshDio: Dio(_dio.options)..httpClientAdapter = _dio.httpClientAdapter,
       ),
       LoggingInterceptor(),
       ErrorInterceptor(),

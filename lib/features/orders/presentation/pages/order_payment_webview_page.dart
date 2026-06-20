@@ -13,6 +13,7 @@ class OrderPaymentWebviewPage extends StatefulWidget {
     required this.orderId,
     required this.checkoutUrl,
     this.snapToken,
+    this.paymentId,
     this.workerName,
     this.serviceName,
     this.total,
@@ -23,6 +24,7 @@ class OrderPaymentWebviewPage extends StatefulWidget {
   final String orderId;
   final String checkoutUrl;
   final String? snapToken;
+  final String? paymentId;
   final String? workerName;
   final String? serviceName;
   final int? total;
@@ -94,6 +96,21 @@ class _OrderPaymentWebviewPageState extends State<OrderPaymentWebviewPage> {
     if (!mounted) return;
     setState(() => _isSyncing = true);
     try {
+      final paymentId = widget.paymentId;
+      if (paymentId != null && paymentId.isNotEmpty) {
+        try {
+          await getIt<ApiClient>().post<Map<String, dynamic>>(
+            '/payments/sandbox-callback',
+            data: {
+              'payment_id': paymentId,
+              'status': 'success',
+            },
+          );
+        } catch (_) {
+          // Ignore callback failure to not block normal flow
+        }
+      }
+
       await getIt<ApiClient>().post<Map<String, dynamic>>(
         ApiEndpoints.orderPaymentSync(widget.orderId),
       );

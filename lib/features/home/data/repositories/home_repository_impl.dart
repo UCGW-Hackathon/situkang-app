@@ -48,6 +48,19 @@ class HomeRepositoryImpl implements HomeRepository {
     }
   }
 
+  @override
+  Future<Result<HomeData?>> getCachedHomeData() async {
+    try {
+      final cachedModel = await localDataSource.getCachedHomeData();
+      if (cachedModel != null) {
+        return Right(cachedModel.toEntity());
+      }
+      return const Right(null);
+    } on Exception catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
   /// Maps [DioException] to typed [Failure] objects.
   Failure _mapDioExceptionToFailure(DioException exception) {
     if (exception.type == DioExceptionType.connectionTimeout ||

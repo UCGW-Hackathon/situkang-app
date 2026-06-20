@@ -154,6 +154,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   /// Maps [DioException] to typed [Failure] objects.
   Failure _mapDioExceptionToFailure(DioException exception) {
+    if (exception.error is Failure) {
+      return exception.error as Failure;
+    }
     if (exception.type == DioExceptionType.connectionTimeout ||
         exception.type == DioExceptionType.receiveTimeout ||
         exception.type == DioExceptionType.sendTimeout) {
@@ -170,6 +173,20 @@ class ProfileRepositoryImpl implements ProfileRepository {
     var message = 'Terjadi kesalahan pada server';
     if (responseData is Map<String, dynamic>) {
       message = responseData['message'] as String? ?? message;
+    }
+
+    final lowercaseMessage = message.toLowerCase();
+    if (lowercaseMessage.contains('duplicate key') ||
+        lowercaseMessage.contains('already exists') ||
+        lowercaseMessage.contains('unique constraint') ||
+        lowercaseMessage.contains('duplicate')) {
+      if (lowercaseMessage.contains('phone')) {
+        message = 'Nomor telepon sudah terdaftar, silakan gunakan nomor lain';
+      } else if (lowercaseMessage.contains('email')) {
+        message = 'Email sudah terdaftar, silakan gunakan email lain';
+      } else {
+        message = 'Data yang dimasukkan sudah terdaftar, silakan gunakan data lain';
+      }
     }
 
     if (statusCode == 401 || statusCode == 403) {

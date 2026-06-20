@@ -37,6 +37,11 @@ class WorkerOrderDetail extends Equatable {
     this.photos = const [],
     this.acceptedAt,
     this.updatedAt,
+    this.bookingFee = 2000,
+    this.baseServiceFee,
+    this.totalMaterialCost = 0,
+    this.totalAdditionalCost = 0,
+    this.grandTotal,
   });
 
   final String id;
@@ -52,6 +57,11 @@ class WorkerOrderDetail extends Equatable {
   final List<String> photos;
   final DateTime? acceptedAt;
   final DateTime? updatedAt;
+  final int bookingFee;
+  final int? baseServiceFee;
+  final int totalMaterialCost;
+  final int totalAdditionalCost;
+  final int? grandTotal;
 
   bool get hasUsableLocation =>
       location.latitude != 0 && location.longitude != 0;
@@ -71,5 +81,10 @@ class WorkerOrderDetail extends Equatable {
     photos,
     acceptedAt,
     updatedAt,
+    bookingFee,
+    baseServiceFee,
+    totalMaterialCost,
+    totalAdditionalCost,
+    grandTotal,
   ];
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/di/injection.dart';
+
 import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -24,6 +26,7 @@ class OrderListPage extends StatefulWidget {
 
 class _OrderListPageState extends State<OrderListPage> {
   int _selectedIndex = 0;
+  List<Order>? _cachedOrders;
 
   /// Status filter options for the tabs.
   static const _statusFilters = <OrderStatus?>[
@@ -55,6 +58,7 @@ class _OrderListPageState extends State<OrderListPage> {
     if (_selectedIndex == index) return;
     setState(() {
       _selectedIndex = index;
+      _cachedOrders = null;
     });
     final status = _statusFilters[index];
     context.read<OrderBloc>().add(ApplyStatusFilterRequested(status: status));
@@ -152,11 +156,15 @@ class _OrderListPageState extends State<OrderListPage> {
             Expanded(
               child: BlocBuilder<OrderBloc, OrderState>(
                 builder: (context, state) {
-                  if (state is OrderLoading) {
+                  if (state is OrdersLoaded) {
+                    _cachedOrders = state.orders;
+                  }
+
+                  if (state is OrderLoading && _cachedOrders == null) {
                     return const _OrderListSkeleton();
                   }
 
-                  if (state is OrderError) {
+                  if (state is OrderError && _cachedOrders == null) {
                     return AppErrorWidget(
                       message: state.failure.message,
                       onRetry: () {
@@ -168,11 +176,11 @@ class _OrderListPageState extends State<OrderListPage> {
                     );
                   }
 
-                  if (state is OrdersLoaded) {
-                    if (state.orders.isEmpty) {
+                  if (_cachedOrders != null) {
+                    if (_cachedOrders!.isEmpty) {
                       return _buildEmptyState();
                     }
-                    return _buildOrderList(state);
+                    return _buildOrderList(_cachedOrders!);
                   }
 
                   return const SizedBox.shrink();
@@ -214,23 +222,21 @@ class _OrderListPageState extends State<OrderListPage> {
     );
   }
 
-  Widget _buildOrderList(OrdersLoaded state) {
+  Widget _buildOrderList(List<Order> orders) {
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 24),
-      itemCount: state.orders.length,
+      itemCount: orders.length,
       itemBuilder: (context, index) {
-        final order = state.orders[index];
+        final order = orders[index];
         return _OrderCard(
           order: order,
           onTap: () {
-            context.read<OrderBloc>().add(
-              FetchOrderDetailRequested(orderId: order.id),
-            );
             Navigator.of(context)
                 .push(
                   MaterialPageRoute<void>(
-                    builder: (_) => BlocProvider.value(
-                      value: context.read<OrderBloc>(),
+                    builder: (_) => BlocProvider<OrderBloc>(
+                      create: (_) => getIt<OrderBloc>()
+                        ..add(FetchOrderDetailRequested(orderId: order.id)),
                       child: OrderDetailPage(orderId: order.id),
                     ),
                   ),
@@ -401,6 +407,8 @@ class _OrderCard extends StatelessWidget {
         return const Color(0xFF2563EB);
       case OrderStatus.waitingPayment:
         return const Color(0xFF2563EB);
+      case OrderStatus.paid:
+        return const Color(0xFF00AA13);
       case OrderStatus.completed:
         return const Color(0xFF00AA13);
       case OrderStatus.cancelled:
@@ -425,6 +433,8 @@ class _OrderCard extends StatelessWidget {
         return 'Jeda';
       case OrderStatus.waitingPayment:
         return 'Menunggu Bayar';
+      case OrderStatus.paid:
+        return 'Sudah Dibayar';
       case OrderStatus.completed:
         return 'Selesai';
       case OrderStatus.cancelled:

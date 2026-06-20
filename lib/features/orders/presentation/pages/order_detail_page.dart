@@ -673,6 +673,7 @@ class OrderDetailPage extends StatelessWidget {
       OrderStatus.workPaused => true,
       OrderStatus.pending ||
       OrderStatus.waitingPayment ||
+      OrderStatus.paid ||
       OrderStatus.completed ||
       OrderStatus.cancelled ||
       OrderStatus.rejected => false,
@@ -721,6 +722,7 @@ class OrderDetailPage extends StatelessWidget {
       OrderStatus.arrived ||
       OrderStatus.inProgress ||
       OrderStatus.waitingPayment ||
+      OrderStatus.paid ||
       OrderStatus.workPaused => true,
       OrderStatus.pending ||
       OrderStatus.accepted ||
@@ -816,6 +818,8 @@ class OrderDetailPage extends StatelessWidget {
         return 'mulai mengerjakan pesanan';
       case OrderStatus.waitingPayment:
         return 'menunggu pembayaran';
+      case OrderStatus.paid:
+        return 'sudah membayar';
       case OrderStatus.pending:
       case OrderStatus.accepted:
       case OrderStatus.completed:
@@ -871,6 +875,8 @@ class OrderDetailPage extends StatelessWidget {
         return AppColors.statusInProgress;
       case OrderStatus.waitingPayment:
         return AppColors.statusAccepted;
+      case OrderStatus.paid:
+        return AppColors.success;
       case OrderStatus.completed:
         return AppColors.success;
       case OrderStatus.cancelled:
@@ -896,6 +902,8 @@ class OrderDetailPage extends StatelessWidget {
         return Icons.pause_circle_outline;
       case OrderStatus.waitingPayment:
         return Icons.payments_outlined;
+      case OrderStatus.paid:
+        return Icons.check_circle_outline;
       case OrderStatus.completed:
         return Icons.check_circle_outline;
       case OrderStatus.cancelled:
@@ -921,6 +929,8 @@ class OrderDetailPage extends StatelessWidget {
         return 'Pekerjaan Dijeda';
       case OrderStatus.waitingPayment:
         return 'Menunggu Pembayaran';
+      case OrderStatus.paid:
+        return 'Sudah Dibayar';
       case OrderStatus.completed:
         return 'Selesai';
       case OrderStatus.cancelled:

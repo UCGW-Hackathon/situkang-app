@@ -135,6 +135,8 @@ class ActiveOrderBanner extends StatelessWidget {
         return (const Color(0xFF7B8490), const Color(0xFFA8B0BA));
       case OrderStatus.waitingPayment:
         return (AppColors.primary, AppColors.primaryLight);
+      case OrderStatus.paid:
+        return (AppColors.success, AppColors.successLight);
       case OrderStatus.completed:
         return (AppColors.success, AppColors.successLight);
       case OrderStatus.accepted:
@@ -163,6 +165,8 @@ class ActiveOrderBanner extends StatelessWidget {
         return Icons.build;
       case OrderStatus.waitingPayment:
         return Icons.payments_outlined;
+      case OrderStatus.paid:
+        return Icons.check_circle_outline;
       case OrderStatus.completed:
         return Icons.check_circle_outline;
       default:
@@ -184,6 +188,8 @@ class ActiveOrderBanner extends StatelessWidget {
         return 'Sedang Dikerjakan';
       case OrderStatus.waitingPayment:
         return 'Menunggu Pembayaran';
+      case OrderStatus.paid:
+        return 'Sudah Dibayar';
       case OrderStatus.completed:
         return 'Selesai';
       default:

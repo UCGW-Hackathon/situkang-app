@@ -24,12 +24,30 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     FetchHomeData event,
     Emitter<HomeState> emit,
   ) async {
-    emit(const HomeLoading());
+    final cachedResult = await homeRepository.getCachedHomeData();
+    bool hasCachedData = false;
+    cachedResult.fold(
+      (_) {},
+      (cachedData) {
+        if (cachedData != null) {
+          emit(HomeLoaded(homeData: cachedData));
+          hasCachedData = true;
+        }
+      },
+    );
+
+    if (!hasCachedData) {
+      emit(const HomeLoading());
+    }
 
     final result = await homeRepository.getHomeData();
 
     result.fold(
-      (failure) => emit(HomeError(failure: failure)),
+      (failure) {
+        if (!hasCachedData) {
+          emit(HomeError(failure: failure));
+        }
+      },
       (homeData) => emit(HomeLoaded(homeData: homeData)),
     );
   }

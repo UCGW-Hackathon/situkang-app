@@ -12,6 +12,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/theme.dart';
 import '../../domain/entities/order_detail.dart';
 import '../../domain/repositories/order_repository.dart';
+import '../helpers/rag_parser.dart';
 
 class OrderPaymentReviewPage extends StatefulWidget {
   const OrderPaymentReviewPage({
@@ -50,6 +51,10 @@ class _OrderPaymentReviewPageState extends State<OrderPaymentReviewPage> {
     final invoice = await _tryLoadInvoice(apiClient, order);
     final purchases = await _tryLoadPurchases(apiClient);
     final items = _buildReviewItems(order, invoice, purchases);
+
+    // Evaluate price anomalies via RAG ask pipeline
+    await _evaluateAnomalies(items);
+
     final total =
         invoice?.grandTotal ??
         order.grandTotal ??
@@ -62,6 +67,66 @@ class _OrderPaymentReviewPageState extends State<OrderPaymentReviewPage> {
       total: total,
       appTransactionFee: _appTransactionFee,
     );
+  }
+
+  Future<void> _evaluateAnomalies(List<_ReviewLineItem> items) async {
+    print('--- RAG EVALUATION START ---');
+    print('Evaluating ${items.length} items:');
+    for (final item in items) {
+      print(' - Item: "${item.title}" | Amount: ${item.amount} | Category: ${item.category}');
+    }
+    
+    try {
+      if (items.isEmpty) {
+        print('No items to evaluate.');
+        return;
+      }
+      
+      final titles = items.map((item) => item.title).join(', ');
+      print('Querying RAG with titles: "$titles"');
+      
+      final dio = Dio();
+      final response = await dio.post(
+        'https://ragrag-api.azurewebsites.net/ask',
+        data: {
+          'question': 'Berapa harga patokan untuk layanan-layanan berikut? $titles',
+        },
+      );
+      
+      print('RAG Response Status: ${response.statusCode}');
+      final responseData = response.data;
+      if (responseData != null && responseData['answer'] is String) {
+        final answer = responseData['answer'] as String;
+        print('RAG Raw Answer:\n$answer\n');
+        
+        final patokanPrices = RagParser.parsePatokanPrices(answer);
+        print('Parsed Patokan Prices: $patokanPrices');
+        
+        for (final item in items) {
+          final patokanPrice = RagParser.findPatokanPrice(item.title, patokanPrices);
+          print('Matching "${item.title}": matched patokan price = $patokanPrice');
+          if (patokanPrice != null && item.amount > patokanPrice) {
+            final diffPercent = ((item.amount - patokanPrice) / patokanPrice * 100).round();
+            print('  Price is higher: offered = ${item.amount}, patokan = $patokanPrice, markup = $diffPercent%');
+            if (diffPercent >= 20) {
+              item.isAnomaly = true;
+              item.anomalyWarning = 'Perhatian: Harga ini $diffPercent% lebih tinggi dari rata-rata pasar (harga patokan Rp ${NumberFormat('#,###', 'id').format(patokanPrice)}). Silakan konfirmasi kembali dengan tukang.';
+              print('  --> FLAGGED AS ANOMALY! Warning: ${item.anomalyWarning}');
+            } else {
+              print('  --> Under 20% markup, not flagged.');
+            }
+          } else {
+            print('  --> Not higher than patokan or no patokan price found.');
+          }
+        }
+      } else {
+        print('RAG ResponseData has null or invalid answer: $responseData');
+      }
+    } catch (e, stackTrace) {
+      print('RAG Evaluation Error: $e');
+      print(stackTrace);
+    }
+    print('--- RAG EVALUATION END ---');
   }
 
   Future<OrderDetail> _resolveOrder() async {
@@ -188,17 +253,17 @@ class _OrderPaymentReviewPageState extends State<OrderPaymentReviewPage> {
       );
       if (!mounted) return;
 
-      if (_selectedPaymentMethod == _PaymentMethod.cash) {
-        final rawResponse = response.data;
-        final rawData = rawResponse != null ? rawResponse['data'] : null;
-        final paymentId = rawData is Map<String, dynamic>
-            ? rawData['payment_id'] as String?
-            : rawData is Map
-                ? rawData['payment_id'] as String?
-                : rawResponse != null
-                    ? rawResponse['payment_id'] as String?
-                    : null;
+      final rawResponse = response.data;
+      final rawData = rawResponse != null ? rawResponse['data'] : null;
+      final paymentId = rawData is Map<String, dynamic>
+          ? rawData['payment_id'] as String?
+          : rawData is Map
+              ? rawData['payment_id'] as String?
+              : rawResponse != null
+                  ? rawResponse['payment_id'] as String?
+                  : null;
 
+      if (_selectedPaymentMethod == _PaymentMethod.cash) {
         if (paymentId != null && paymentId.isNotEmpty) {
           try {
             await getIt<ApiClient>().post<Map<String, dynamic>>(
@@ -237,6 +302,7 @@ class _OrderPaymentReviewPageState extends State<OrderPaymentReviewPage> {
           extra: {
             'url': _normalizePaymentUrl(redirectUrl),
             'token': paymentTarget.token,
+            'paymentId': paymentId,
             'workerName': data.order.workerInfo?.fullName ?? 'Tukang',
             'serviceName': data.order.serviceInfo?.name ?? data.order.title,
             'total': data.payableTotal,
@@ -385,8 +451,6 @@ class _OrderPaymentReviewPageState extends State<OrderPaymentReviewPage> {
                       child: _CostReviewCard(item: item),
                     ),
                   ),
-                const SizedBox(height: 6),
-                const _DummyAnomalyCard(),
                 const SizedBox(height: 16),
                 const _AiInfoBox(),
                 const SizedBox(height: 18),
@@ -546,11 +610,13 @@ class _ReviewInvoice {
 }
 
 class _ReviewLineItem {
-  const _ReviewLineItem({
+  _ReviewLineItem({
     required this.title,
     required this.subtitle,
     required this.amount,
     required this.category,
+    this.isAnomaly = false,
+    this.anomalyWarning = '',
   });
 
   factory _ReviewLineItem.fromInvoiceJson(dynamic raw) {
@@ -596,6 +662,8 @@ class _ReviewLineItem {
   final String subtitle;
   final int amount;
   final String category;
+  bool isAnomaly;
+  String anomalyWarning;
 }
 
 class _Header extends StatelessWidget {
@@ -700,12 +768,19 @@ class _CostReviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat('#,###', 'id');
+    
+    final backgroundColor = item.isAnomaly ? const Color(0xFFFFF1F1) : Colors.white;
+    final borderColor = item.isAnomaly ? const Color(0xFFFFD2D2) : const Color(0xFFE4EAF0);
+    final amountColor = item.isAnomaly 
+        ? _OrderPaymentReviewPageState._dangerRed 
+        : _OrderPaymentReviewPageState._brandTeal;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE4EAF0)),
+        border: Border.all(color: borderColor, width: item.isAnomaly ? 1.2 : 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -731,21 +806,42 @@ class _CostReviewCard extends StatelessWidget {
               Text(
                 'Rp ${formatter.format(item.amount)}',
                 style: AppTypography.caption.copyWith(
-                  color: _OrderPaymentReviewPageState._brandTeal,
+                  color: amountColor,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          const _FairBadge(),
+          if (item.isAnomaly)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE53935),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'Anomali Harga',
+                style: AppTypography.caption.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            )
+          else
+            const _FairBadge(),
           const SizedBox(height: 9),
           Text(
-            item.subtitle.isEmpty
-                ? 'Sesuai dengan harga pasar saat ini'
-                : item.subtitle,
+            item.isAnomaly
+                ? item.anomalyWarning
+                : item.subtitle.isEmpty
+                    ? 'Sesuai dengan harga pasar saat ini'
+                    : item.subtitle,
             style: AppTypography.caption.copyWith(
-              color: AppColors.textSecondary,
+              color: item.isAnomaly 
+                  ? _OrderPaymentReviewPageState._dangerRed 
+                  : AppColors.textSecondary,
+              fontWeight: item.isAnomaly ? FontWeight.w700 : FontWeight.normal,
               height: 1.35,
             ),
           ),
@@ -776,71 +872,6 @@ class _FairBadge extends StatelessWidget {
             style: AppTypography.caption.copyWith(
               color: const Color(0xFF008C2E),
               fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DummyAnomalyCard extends StatelessWidget {
-  const _DummyAnomalyCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF1F1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFFFD2D2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Semen Instant (1 sak 40kg)',
-                  style: AppTypography.label.copyWith(
-                    color: const Color(0xFF111827),
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              Text(
-                'Rp 120.000',
-                style: AppTypography.caption.copyWith(
-                  color: _OrderPaymentReviewPageState._dangerRed,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 7),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE53935),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'Anomali Harga',
-              style: AppTypography.caption.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          const SizedBox(height: 9),
-          Text(
-            'Perhatian: Harga ini 40% lebih tinggi dari rata-rata pasar. Silakan konfirmasi kembali dengan tukang.',
-            style: AppTypography.caption.copyWith(
-              color: _OrderPaymentReviewPageState._dangerRed,
-              fontWeight: FontWeight.w700,
-              height: 1.35,
             ),
           ),
         ],

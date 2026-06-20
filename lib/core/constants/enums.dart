@@ -25,6 +25,7 @@ enum OrderStatus {
   inProgress,
   workPaused,
   waitingPayment,
+  paid,
   completed,
   cancelled,
   rejected;
@@ -72,6 +73,7 @@ enum OrderStatus {
     OrderStatus.arrived,
     OrderStatus.inProgress,
     OrderStatus.waitingPayment,
+    OrderStatus.paid,
   ].contains(this);
 
   /// Whether this order can be cancelled by the user.

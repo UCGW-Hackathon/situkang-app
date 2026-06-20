@@ -48,7 +48,11 @@ class OrderModel {
       categoryId: json['category_id'] as String?,
       worker: worker,
       serviceName: json['service_name'] as String?,
-      totalPrice: json['total_price'] as int?,
+      totalPrice: json['total_price'] is num
+          ? (json['total_price'] as num).toInt()
+          : json['grand_total'] is num
+              ? (json['grand_total'] as num).toInt()
+              : null,
       completedAt: json['completed_at'] != null
           ? DateTime.tryParse(json['completed_at'] as String)
           : null,

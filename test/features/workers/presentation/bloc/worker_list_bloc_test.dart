@@ -19,6 +19,11 @@ void main() {
 
   setUp(() {
     mockRepository = MockWorkerRepository();
+    when(() => mockRepository.getCachedNearbyWorkers(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          perPage: any(named: 'perPage'),
+        )).thenAnswer((_) async => const Right(null));
     bloc = WorkerListBloc(workerRepository: mockRepository);
   });
 
@@ -130,6 +135,36 @@ void main() {
                 filter: const WorkerFilter(),
               )).called(1);
         },
+      );
+
+      blocTest<WorkerListBloc, WorkerListState>(
+        'emits [WorkerListLoaded(cached), WorkerListLoaded(fresh)] when getCachedNearbyWorkers and getNearbyWorkers both succeed (Stale-While-Revalidate)',
+        build: () {
+          when(() => mockRepository.getCachedNearbyWorkers(
+                filter: any(named: 'filter'),
+                page: any(named: 'page'),
+                perPage: any(named: 'perPage'),
+              )).thenAnswer((_) async => Right(tWorkerListResultPage2));
+          when(() => mockRepository.getNearbyWorkers(
+                filter: any(named: 'filter'),
+                page: any(named: 'page'),
+                perPage: any(named: 'perPage'),
+              )).thenAnswer((_) async => Right(tWorkerListResult));
+          return bloc;
+        },
+        act: (bloc) => bloc.add(const FetchWorkers()),
+        expect: () => [
+          WorkerListLoaded(
+            workers: tWorkerListResultPage2.workers,
+            filter: const WorkerFilter(),
+            hasMore: true,
+          ),
+          WorkerListLoaded(
+            workers: tWorkers,
+            filter: const WorkerFilter(),
+            hasMore: true,
+          ),
+        ],
       );
 
       blocTest<WorkerListBloc, WorkerListState>(

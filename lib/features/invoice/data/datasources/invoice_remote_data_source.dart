@@ -53,8 +53,8 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
       ApiEndpoints.orderPayment(orderId),
       data: {
         'payment_method': 'bank_transfer',
-        'payment_proof_url': 'https://xryz-gcw-situkang.hf.space/v1/proofs/proof_$orderId.jpg',
-        'transaction_proof_url': 'https://xryz-gcw-situkang.hf.space/v1/proofs/proof_$orderId.jpg',
+        'payment_proof_url': 'http://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1/proofs/proof_$orderId.jpg',
+        'transaction_proof_url': 'http://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1/proofs/proof_$orderId.jpg',
       },
     );
     // Refetch the updated invoice

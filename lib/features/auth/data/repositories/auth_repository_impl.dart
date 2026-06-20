@@ -46,7 +46,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return Right((userModel.toEntity(), tokenModel.toEntity()));
     } on DioException catch (e) {
-      return Left(_mapDioException(e));
+      final failure = _mapDioException(e);
+      if (failure is AuthFailure || e.response?.statusCode == 401 || e.response?.statusCode == 400) {
+        return const Left(AuthFailure('Email atau password salah'));
+      }
+      return Left(failure);
     } on Exception catch (e) {
       return Left(ServerFailure(
         e.toString(),
@@ -196,6 +200,9 @@ class AuthRepositoryImpl implements AuthRepository {
   /// - Connection errors → NetworkFailure
   /// - Timeout → TimeoutFailure
   Failure _mapDioException(DioException e) {
+    if (e.error is Failure) {
+      return e.error as Failure;
+    }
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
@@ -223,7 +230,10 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     final statusCode = response.statusCode ?? 0;
-    final data = response.data as Map<String, dynamic>?;
+    final rawData = response.data;
+    final Map<String, dynamic>? data = rawData is Map
+        ? rawData.cast<String, dynamic>()
+        : null;
     final message = data?['message'] as String? ?? 'Terjadi kesalahan';
     final errorCode = data?['error_code'] as String?;
 

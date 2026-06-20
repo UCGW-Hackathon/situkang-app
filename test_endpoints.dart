@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 void main() async {
   print('Logging in...');
   final loginRes = await http.post(
-    Uri.parse('https://xryz-gcw-situkang.hf.space/v1/auth/login'),
+    Uri.parse('http://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1/auth/login'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       'email': 'muhfardanhafidz@gmail.com',
@@ -31,7 +31,7 @@ void main() async {
   
   for (final ep in endpointsToTest) {
     print('\nTesting $ep...');
-    final res = await http.get(Uri.parse('https://xryz-gcw-situkang.hf.space/v1$ep'), headers: headers);
+    final res = await http.get(Uri.parse('http://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1$ep'), headers: headers);
     print('Status: ${res.statusCode}');
     if (res.statusCode == 200) {
       print('SUCCESS! Body: ${res.body}');

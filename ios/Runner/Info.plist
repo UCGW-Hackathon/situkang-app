@@ -8,6 +8,10 @@
 	<string>Aplikasi membutuhkan izin lokasi untuk mencarikan tukang terdekat dan menetapkan alamat pekerjaan.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Aplikasi membutuhkan izin lokasi untuk mencarikan tukang terdekat dan menetapkan alamat pekerjaan.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi memerlukan akses kamera untuk memindai invoice/kuitansi material secara otomatis.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aplikasi memerlukan akses mikrofon untuk merekam video (jika diperlukan).</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

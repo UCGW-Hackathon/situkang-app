@@ -149,6 +149,32 @@ class WorkerRepositoryImpl implements WorkerRepository {
     }
   }
 
+  @override
+  Future<Result<WorkerListResult?>> getCachedNearbyWorkers({
+    WorkerFilter? filter,
+    int page = 1,
+    int perPage = 10,
+  }) async {
+    try {
+      final cacheKey = _buildCacheKey(filter, page, perPage);
+      final cached = await localDataSource.getCachedNearbyWorkers(cacheKey);
+      if (cached != null) {
+        return Right(WorkerListResult(
+          workers: cached.map((m) => m.toEntity()).toList(),
+          paginationMeta: PaginationMeta(
+            currentPage: page,
+            perPage: perPage,
+            total: cached.length,
+            totalPages: 1,
+          ),
+        ));
+      }
+      return const Right(null);
+    } on Exception catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
   /// Builds a cache key based on the filter and pagination parameters.
   String _buildCacheKey(WorkerFilter? filter, int page, int perPage) {
     final parts = <String>[

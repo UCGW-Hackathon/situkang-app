@@ -104,9 +104,13 @@ class _WorkerOrderDetailBriefPageState
               backgroundColor: AppColors.success,
             ),
           );
-          context.read<WorkerOrderBloc>().add(
-            FetchWorkerOrderDetail(orderId: widget.orderId),
-          );
+          if (state.newStatus == 'completed') {
+            context.go('/worker');
+          } else {
+            context.read<WorkerOrderBloc>().add(
+              FetchWorkerOrderDetail(orderId: widget.orderId),
+            );
+          }
         }
 
         if (state is WorkerOrderCompleted) {
@@ -858,6 +862,19 @@ class _WorkerOrderDetailBriefPageState
                     );
                   },
                 )
+              else if (detail.status == OrderStatus.paid || detail.status == OrderStatus.waitingPayment)
+                _SlideToStartButton(
+                  text: 'Geser untuk Selesaikan Pekerjaan',
+                  onCompleted: () {
+                    context.read<WorkerOrderBloc>().add(
+                      UpdateOrderStatus(
+                        orderId: detail.id,
+                        status: 'completed',
+                        currentStatus: detail.status.value,
+                      ),
+                    );
+                  },
+                )
               else if (nextStatus != null)
                 _SlideToStartButton(
                   text: _slideText(detail.status),
@@ -886,6 +903,26 @@ class _WorkerOrderDetailBriefPageState
                     ),
                   ),
                 ),
+              if (detail.status == OrderStatus.waitingPayment || detail.status == OrderStatus.paid) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      context.push('/worker/orders/${detail.id}/invoice');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _brandTeal,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.receipt_long, size: 20),
+                    label: const Text('Lihat Detail Invoice / Pembayaran'),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -1011,6 +1048,7 @@ class _WorkerOrderDetailBriefPageState
       case OrderStatus.pending:
       case OrderStatus.inProgress:
       case OrderStatus.waitingPayment:
+      case OrderStatus.paid:
       case OrderStatus.completed:
       case OrderStatus.cancelled:
       case OrderStatus.rejected:
@@ -1031,6 +1069,7 @@ class _WorkerOrderDetailBriefPageState
       case OrderStatus.pending:
       case OrderStatus.inProgress:
       case OrderStatus.waitingPayment:
+      case OrderStatus.paid:
       case OrderStatus.completed:
       case OrderStatus.cancelled:
       case OrderStatus.rejected:
@@ -1044,6 +1083,8 @@ class _WorkerOrderDetailBriefPageState
         return 'Pekerjaan sedang berlangsung';
       case OrderStatus.waitingPayment:
         return 'Menunggu pembayaran pelanggan';
+      case OrderStatus.paid:
+        return 'Pelanggan sudah membayar';
       case OrderStatus.completed:
         return 'Pekerjaan selesai';
       case OrderStatus.cancelled:
@@ -1069,6 +1110,8 @@ class _WorkerOrderDetailBriefPageState
         return 'Status diperbarui: tiba di lokasi.';
       case 'accepted':
         return 'Pekerjaan berhasil diterima.';
+      case 'completed':
+        return 'Pekerjaan berhasil diselesaikan.';
       default:
         return 'Status pekerjaan diperbarui.';
     }
@@ -1478,6 +1521,7 @@ class _StatusBadge extends StatelessWidget {
       case OrderStatus.inProgress:
       case OrderStatus.workPaused:
       case OrderStatus.waitingPayment:
+      case OrderStatus.paid:
       case OrderStatus.completed:
         return (const Color(0xFF00647C), const Color(0x1A00647C));
       case OrderStatus.pending:
@@ -1504,6 +1548,8 @@ class _StatusBadge extends StatelessWidget {
         return 'Jeda';
       case OrderStatus.waitingPayment:
         return 'Menunggu Bayar';
+      case OrderStatus.paid:
+        return 'Sudah Bayar';
       case OrderStatus.completed:
         return 'Selesai';
       case OrderStatus.cancelled:

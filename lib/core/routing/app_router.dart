@@ -42,6 +42,7 @@ import '../../features/worker_orders/presentation/pages/worker_active_order_page
 import '../../features/worker_orders/presentation/pages/worker_invoice_page.dart';
 import '../../features/worker_orders/presentation/pages/worker_order_detail_brief_page.dart';
 import '../../features/worker_orders/presentation/pages/worker_order_items_page.dart';
+import '../../features/worker_orders/presentation/pages/worker_invoice_scan_page.dart';
 import '../../features/worker_profile/presentation/bloc/worker_profile_bloc.dart';
 import '../../features/worker_profile/presentation/pages/worker_profile_page.dart';
 import '../../features/workers/domain/entities/worker_profile.dart';
@@ -207,6 +208,7 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
             orderId: orderId,
             checkoutUrl: extra['url'] as String? ?? '',
             snapToken: extra['token'] as String?,
+            paymentId: extra['paymentId'] as String?,
             workerName: extra['workerName'] as String?,
             serviceName: extra['serviceName'] as String?,
             total: extra['total'] as int?,
@@ -303,6 +305,15 @@ GoRouter createAppRouter(String? initialRole, bool isAuthenticated) {
               ? state.extra as WorkerOrderDetail
               : null;
           return WorkerOrderItemsPage(orderId: orderId, detail: detail);
+        },
+      ),
+      GoRoute(
+        path: '/worker/orders/:id/scan',
+        parentNavigatorKey: rootNavigatorKey,
+        redirect: RoleGuard.workerRedirect,
+        builder: (context, state) {
+          final orderId = state.pathParameters['id']!;
+          return WorkerInvoiceScanPage(orderId: orderId);
         },
       ),
       GoRoute(

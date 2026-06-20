@@ -17,6 +17,11 @@ class WorkerOrderDetailModel {
     this.photos = const [],
     this.acceptedAt,
     this.updatedAt,
+    this.bookingFee = 2000,
+    this.baseServiceFee,
+    this.totalMaterialCost = 0,
+    this.totalAdditionalCost = 0,
+    this.grandTotal,
   });
 
   factory WorkerOrderDetailModel.fromJson(Map<String, dynamic> json) {
@@ -58,6 +63,11 @@ class WorkerOrderDetailModel {
       photos: _parsePhotos(orderJson),
       acceptedAt: _dateTime(orderJson, const ['accepted_at']),
       updatedAt: _dateTime(orderJson, const ['updated_at']),
+      bookingFee: _asInt(orderJson, const ['booking_fee']) ?? 2000,
+      baseServiceFee: _asInt(orderJson, const ['base_service_fee']),
+      totalMaterialCost: _asInt(orderJson, const ['total_material_cost']) ?? 0,
+      totalAdditionalCost: _asInt(orderJson, const ['total_additional_cost']) ?? 0,
+      grandTotal: _asInt(orderJson, const ['grand_total']),
     );
   }
 
@@ -74,6 +84,11 @@ class WorkerOrderDetailModel {
   final List<String> photos;
   final DateTime? acceptedAt;
   final DateTime? updatedAt;
+  final int bookingFee;
+  final int? baseServiceFee;
+  final int totalMaterialCost;
+  final int totalAdditionalCost;
+  final int? grandTotal;
 
   WorkerOrderDetail toEntity() => WorkerOrderDetail(
     id: orderId,
@@ -89,6 +104,11 @@ class WorkerOrderDetailModel {
     photos: photos,
     acceptedAt: acceptedAt,
     updatedAt: updatedAt,
+    bookingFee: bookingFee,
+    baseServiceFee: baseServiceFee,
+    totalMaterialCost: totalMaterialCost,
+    totalAdditionalCost: totalAdditionalCost,
+    grandTotal: grandTotal,
   );
 
   static OrderLocation _parseLocation(Map<String, dynamic> json) {
@@ -209,4 +229,18 @@ DateTime? _dateTime(Map<String, dynamic> json, List<String> keys) {
   final value = _string(json, keys);
   if (value == null) return null;
   return DateTime.tryParse(value);
+}
+
+int? _asInt(Map<String, dynamic>? json, List<String> keys) {
+  if (json == null) return null;
+  for (final key in keys) {
+    final value = json[key];
+    if (value is int) return value;
+    if (value is num) return value.round();
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+  }
+  return null;
 }

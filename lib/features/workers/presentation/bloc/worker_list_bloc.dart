@@ -53,14 +53,38 @@ class WorkerListBloc extends Bloc<WorkerListEvent, WorkerListState> {
     FetchWorkers event,
     Emitter<WorkerListState> emit,
   ) async {
-    emit(const WorkerListLoading());
+    final cachedResult = await _workerRepository.getCachedNearbyWorkers(
+      filter: _currentFilter,
+    );
+    bool hasCachedData = false;
+    cachedResult.fold(
+      (_) {},
+      (cachedData) {
+        if (cachedData != null) {
+          emit(WorkerListLoaded(
+            workers: cachedData.workers,
+            filter: _currentFilter,
+            hasMore: cachedData.hasNextPage,
+          ));
+          hasCachedData = true;
+        }
+      },
+    );
+
+    if (!hasCachedData) {
+      emit(const WorkerListLoading());
+    }
 
     final result = await _workerRepository.getNearbyWorkers(
       filter: _currentFilter,
     );
 
     result.fold(
-      (failure) => emit(WorkerListError(failure: failure)),
+      (failure) {
+        if (!hasCachedData) {
+          emit(WorkerListError(failure: failure));
+        }
+      },
       (workerListResult) => emit(WorkerListLoaded(
         workers: workerListResult.workers,
         filter: _currentFilter,

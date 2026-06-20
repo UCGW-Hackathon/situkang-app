@@ -17,4 +17,7 @@ abstract class HomeRepository {
   /// Returns [NetworkFailure] when offline with no cached data.
   /// Returns [ServerFailure] on API errors.
   Future<Result<HomeData>> getHomeData();
+
+  /// Retrieves the locally cached home data if available.
+  Future<Result<HomeData?>> getCachedHomeData();
 }

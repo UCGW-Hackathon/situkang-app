@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 
 import '../../constants/api_endpoints.dart';
+import 'error_interceptor.dart';
 import '../../storage/token_storage.dart';
 
 /// Callback type for notifying the app that authentication has been lost.
@@ -75,7 +76,16 @@ class TokenRefreshInterceptor extends Interceptor {
         final response = await _retryRequest(err.requestOptions, newToken);
         return handler.resolve(response);
       } on DioException catch (e) {
-        return handler.reject(e);
+        final failure = ErrorInterceptor().mapDioExceptionToFailure(e);
+        return handler.reject(
+          DioException(
+            requestOptions: err.requestOptions,
+            response: e.response,
+            type: e.type,
+            error: failure,
+            message: failure.message,
+          ),
+        );
       } catch (e) {
         return handler.reject(
           DioException(
@@ -104,31 +114,28 @@ class TokenRefreshInterceptor extends Interceptor {
       final statusCode = refreshError.response?.statusCode;
 
       if (statusCode == 401 || statusCode == 403) {
-        // Refresh token is expired or revoked — clear tokens and notify
         await _tokenStorage.clearTokens();
         _onAuthenticationLost?.call();
         _rejectAllPending(refreshError);
       } else if (_isNetworkError(refreshError)) {
-        // Network error during refresh — retain tokens for future retry
         _rejectAllPending(refreshError);
       } else {
-        // Other server errors — clear tokens as a safety measure
         await _tokenStorage.clearTokens();
         _onAuthenticationLost?.call();
         _rejectAllPending(refreshError);
       }
 
+      final failure = ErrorInterceptor().mapDioExceptionToFailure(refreshError);
       return handler.reject(
         DioException(
           requestOptions: err.requestOptions,
           response: refreshError.response,
           type: refreshError.type,
-          error: refreshError.error,
-          message: refreshError.message,
+          error: failure,
+          message: failure.message,
         ),
       );
     } catch (e) {
-      // Unexpected error — reject everything
       final dioError = DioException(
         requestOptions: err.requestOptions,
         error: e,

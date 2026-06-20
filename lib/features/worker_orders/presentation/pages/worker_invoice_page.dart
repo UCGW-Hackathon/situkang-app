@@ -3,10 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/constants/enums.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../invoice/domain/entities/invoice.dart';
+import '../../../invoice/domain/repositories/invoice_repository.dart';
+import '../../domain/entities/worker_order_detail.dart';
+import '../../domain/repositories/worker_order_repository.dart';
 
-class WorkerInvoicePage extends StatelessWidget {
+class WorkerInvoicePage extends StatefulWidget {
   const WorkerInvoicePage({required this.orderId, this.invoice, super.key});
 
   final String orderId;
@@ -16,14 +21,54 @@ class WorkerInvoicePage extends StatelessWidget {
   static const _screenBackground = Color(0xFFF7F8FE);
 
   @override
+  State<WorkerInvoicePage> createState() => _WorkerInvoicePageState();
+}
+
+class _WorkerInvoicePageState extends State<WorkerInvoicePage> {
+  Invoice? _invoice;
+  WorkerOrderDetail? _orderDetail;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _invoice = widget.invoice;
+    _refreshInvoice();
+  }
+
+  Future<void> _refreshInvoice() async {
+    setState(() => _isLoading = true);
+    final invoiceResult = await getIt<InvoiceRepository>().getInvoice(orderId: widget.orderId);
+    final orderResult = await getIt<WorkerOrderRepository>().getOrderDetail(widget.orderId);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    invoiceResult.fold(
+      (failure) {
+        // Suppress error snackbar popups (e.g. DioException Resource Not Found) as requested
+      },
+      (invoice) {
+        setState(() => _invoice = invoice);
+      },
+    );
+
+    orderResult.fold(
+      (failure) {},
+      (orderDetail) {
+        setState(() => _orderDetail = orderDetail);
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat('#,###', 'id');
-    final serviceFee = invoice?.baseServiceFee ?? 0;
-    final materialTotal = invoice?.materialsTotal ?? 0;
-    final additionalCost = invoice?.additionalCostTotal ?? 0;
-    final bookingFee = invoice?.bookingFee ?? 0;
-    final platformFee = invoice?.platformFee ?? 0;
-    final discount = invoice?.discount ?? 0;
+    final serviceFee = _invoice?.baseServiceFee ?? _orderDetail?.baseServiceFee ?? 0;
+    final materialTotal = _invoice?.materialsTotal ?? _orderDetail?.totalMaterialCost ?? 0;
+    final additionalCost = _invoice?.additionalCostTotal ?? _orderDetail?.totalAdditionalCost ?? 0;
+    final bookingFee = _invoice?.bookingFee ?? _orderDetail?.bookingFee ?? 0;
+    final platformFee = _invoice?.platformFee ?? 0;
+    final discount = _invoice?.discount ?? 0;
     final computedTotal =
         serviceFee +
         materialTotal +
@@ -31,13 +76,15 @@ class WorkerInvoicePage extends StatelessWidget {
         bookingFee +
         platformFee -
         discount;
-    final total = (invoice?.grandTotal ?? 0) > 0
-        ? invoice!.grandTotal
-        : computedTotal;
+    final total = (_invoice?.grandTotal ?? 0) > 0
+        ? _invoice!.grandTotal
+        : (_orderDetail?.grandTotal ?? 0) > 0
+            ? _orderDetail!.grandTotal!
+            : computedTotal;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: _screenBackground,
+      backgroundColor: WorkerInvoicePage._screenBackground,
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
@@ -54,9 +101,11 @@ class WorkerInvoicePage extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Menunggu Pembayaran',
+                      (_invoice?.status == PaymentStatus.paid || _orderDetail?.status == OrderStatus.paid)
+                          ? 'Pembayaran Selesai'
+                          : 'Menunggu Pembayaran',
                       style: AppTypography.label.copyWith(
-                        color: _brandTeal,
+                        color: WorkerInvoicePage._brandTeal,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -65,7 +114,9 @@ class WorkerInvoicePage extends StatelessWidget {
               ),
               const SizedBox(height: 36),
               Text(
-                'Terima Pembayaran Tunai',
+                (_invoice?.status == PaymentStatus.paid || _orderDetail?.status == OrderStatus.paid)
+                    ? 'Pembayaran Berhasil'
+                    : 'Terima Pembayaran Tunai',
                 textAlign: TextAlign.center,
                 style: AppTypography.h3.copyWith(
                   color: AppColors.textPrimary,
@@ -74,7 +125,9 @@ class WorkerInvoicePage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Silakan kumpulkan pembayaran tunai dari pelanggan sesuai total di bawah.',
+                (_invoice?.status == PaymentStatus.paid || _orderDetail?.status == OrderStatus.paid)
+                    ? 'Pelanggan telah melunasi pembayaran untuk pekerjaan ini.'
+                    : 'Silakan kumpulkan pembayaran tunai dari pelanggan sesuai total di bawah.',
                 textAlign: TextAlign.center,
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textSecondary,
@@ -104,7 +157,10 @@ class WorkerInvoicePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              _CustomerCard(),
+              _CustomerCard(
+                customerName: _orderDetail?.customer?.fullName,
+                customerAvatar: _orderDetail?.customer?.avatarUrl,
+              ),
             ],
           ),
         ),
@@ -135,7 +191,9 @@ class WorkerInvoicePage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Total Biaya Yang Harus Dibayarkan',
+                            (_invoice?.status == PaymentStatus.paid || _orderDetail?.status == OrderStatus.paid)
+                                ? 'Total Biaya Telah Dibayar'
+                                : 'Total Biaya Yang Harus Dibayarkan',
                             style: AppTypography.caption.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -144,7 +202,7 @@ class WorkerInvoicePage extends StatelessWidget {
                           Text(
                             'Rp ${formatter.format(total)}',
                             style: AppTypography.h4.copyWith(
-                              color: _brandTeal,
+                              color: WorkerInvoicePage._brandTeal,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -161,33 +219,75 @@ class WorkerInvoicePage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Container(
-                  height: 54,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEAF0F6),
-                    borderRadius: BorderRadius.circular(AppSizing.radiusFull),
-                    border: Border.all(color: const Color(0xFFD7E0EA)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                if (_invoice?.status == PaymentStatus.paid || _orderDetail?.status == OrderStatus.paid)
+                  _SlideActionButton(
+                    text: 'GESER UNTUK MENYELESAIKAN PEKERJAAN',
+                    onCompleted: () async {
+                      await getIt<WorkerOrderRepository>().updateOrderStatus(
+                        orderId: widget.orderId,
+                        status: 'completed',
+                      );
+                      if (context.mounted) {
+                        context.go('/worker');
+                      }
+                    },
+                  )
+                else
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.lock_clock_outlined,
-                        size: 18,
-                        color: AppColors.textSecondary,
+                      Container(
+                        height: 54,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEAF0F6),
+                          borderRadius: BorderRadius.circular(AppSizing.radiusFull),
+                          border: Border.all(color: const Color(0xFFD7E0EA)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.lock_clock_outlined,
+                              size: 18,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Menunggu pembayaran pelanggan',
+                              style: AppTypography.buttonMedium.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Menunggu pembayaran pelanggan',
-                        style: AppTypography.buttonMedium.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w800,
+                      const SizedBox(height: 10),
+                      ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _refreshInvoice,
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.refresh, size: 18),
+                        label: const Text('Cek Status Pembayaran'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: WorkerInvoicePage._brandTeal,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
               ],
             ),
           ),
@@ -285,8 +385,17 @@ class _SummaryRow extends StatelessWidget {
 }
 
 class _CustomerCard extends StatelessWidget {
+  const _CustomerCard({
+    this.customerName,
+    this.customerAvatar,
+  });
+
+  final String? customerName;
+  final String? customerAvatar;
+
   @override
   Widget build(BuildContext context) {
+    final avatar = customerAvatar?.trim();
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -296,10 +405,13 @@ class _CustomerCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 20,
-            backgroundColor: Color(0xFFE5D8C4),
-            child: Icon(Icons.person, color: WorkerInvoicePage._brandTeal),
+            backgroundColor: const Color(0xFFE5D8C4),
+            backgroundImage: avatar == null || avatar.isEmpty ? null : NetworkImage(avatar),
+            child: avatar == null || avatar.isEmpty
+                ? const Icon(Icons.person, color: WorkerInvoicePage._brandTeal)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -307,14 +419,14 @@ class _CustomerCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Pelanggan',
+                  customerName ?? 'Pelanggan Setia',
                   style: AppTypography.label.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 Text(
-                  'Pelanggan Setia',
+                  'Pelanggan',
                   style: AppTypography.caption.copyWith(
                     color: AppColors.textSecondary,
                   ),

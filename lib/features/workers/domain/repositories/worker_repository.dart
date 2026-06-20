@@ -37,4 +37,11 @@ abstract class WorkerRepository {
     int page = 1,
     int perPage = 10,
   });
+
+  /// Retrieves the locally cached nearby workers if available.
+  Future<Result<WorkerListResult?>> getCachedNearbyWorkers({
+    WorkerFilter? filter,
+    int page = 1,
+    int perPage = 10,
+  });
 }
