@@ -501,12 +501,14 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
           style: AppTypography.label,
         ),
         const SizedBox(height: AppSpacing.xs),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ..._photos.asMap().entries.map(
-              (entry) => _buildPhotoThumbnail(entry.value, entry.key),
+              (entry) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _buildPhotoThumbnail(entry.value, entry.key),
+              ),
             ),
             if (_photos.length < AppConstants.maxOrderPhotos)
               _buildAddPhotoArea(),
