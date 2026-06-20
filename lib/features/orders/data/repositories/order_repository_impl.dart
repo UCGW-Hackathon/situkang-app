@@ -35,7 +35,7 @@ class OrderRepositoryImpl implements OrderRepository {
       return Right(orderModel.toEntity());
     } on DioException catch (e) {
       return Left(_mapDioExceptionToFailure(e));
-    } on Exception catch (e) {
+    } catch (e) {
       return Left(ServerFailure(e.toString(), statusCode: 500));
     }
   }
@@ -76,7 +76,7 @@ class OrderRepositoryImpl implements OrderRepository {
         ));
       }
       return Left(_mapDioExceptionToFailure(e));
-    } on Exception catch (e) {
+    } catch (e) {
       return Left(ServerFailure(e.toString(), statusCode: 500));
     }
   }
@@ -95,7 +95,7 @@ class OrderRepositoryImpl implements OrderRepository {
         return Right(cached.toEntity());
       }
       return Left(_mapDioExceptionToFailure(e));
-    } on Exception catch (e) {
+    } catch (e) {
       // On other failures, try cache as fallback
       final cached = await localDataSource.getCachedOrderDetail(orderId);
       if (cached != null) {
@@ -122,7 +122,7 @@ class OrderRepositoryImpl implements OrderRepository {
       return Right(orderModel.toEntity());
     } on DioException catch (e) {
       return Left(_mapDioExceptionToFailure(e));
-    } on Exception catch (e) {
+    } catch (e) {
       return Left(ServerFailure(e.toString(), statusCode: 500));
     }
   }

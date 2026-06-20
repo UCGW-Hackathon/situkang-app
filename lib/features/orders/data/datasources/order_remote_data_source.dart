@@ -105,10 +105,14 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
           data: formData,
         );
 
-        final responseData = response.data!;
-        final fileData = responseData['data'] as Map<String, dynamic>;
-        final url = fileData['url'] as String;
-        photoUrls.add(url);
+        final responseData = response.data;
+        if (responseData != null && responseData['data'] is Map) {
+          final fileData = responseData['data'] as Map;
+          final url = fileData['url']?.toString();
+          if (url != null && url.isNotEmpty) {
+            photoUrls.add(url);
+          }
+        }
       }
       requestData['photos'] = photoUrls;
     }
@@ -119,7 +123,13 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     );
 
     final data = response.data!;
-    final orderJson = data['data'] as Map<String, dynamic>;
+    final rawOrderJson = data['data'];
+    final Map<String, dynamic> orderJson;
+    if (rawOrderJson is Map) {
+      orderJson = Map<String, dynamic>.from(rawOrderJson);
+    } else {
+      orderJson = {};
+    }
     return OrderModel.fromJson(orderJson);
   }
 
@@ -167,7 +177,13 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     );
 
     final data = response.data!;
-    final orderJson = data['data'] as Map<String, dynamic>;
+    final rawOrderJson = data['data'];
+    final Map<String, dynamic> orderJson;
+    if (rawOrderJson is Map) {
+      orderJson = Map<String, dynamic>.from(rawOrderJson);
+    } else {
+      orderJson = {};
+    }
     return OrderDetailModel.fromJson(orderJson);
   }
 
@@ -188,7 +204,13 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     );
 
     final data = response.data!;
-    final orderJson = data['data'] as Map<String, dynamic>;
+    final rawOrderJson = data['data'];
+    final Map<String, dynamic> orderJson;
+    if (rawOrderJson is Map) {
+      orderJson = Map<String, dynamic>.from(rawOrderJson);
+    } else {
+      orderJson = {};
+    }
     return OrderModel.fromJson(orderJson);
   }
 }
