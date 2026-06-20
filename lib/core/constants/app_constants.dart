@@ -9,10 +9,10 @@ class AppConstants {
 
   /// Base URL for REST API calls.
   /// Override via environment config for staging/dev.
-  static const String baseUrl = 'http://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1';
+  static const String baseUrl = 'http://situkang-api-v2.eastasia.azurecontainer.io:7860/v1';
 
   /// WebSocket base URL for real-time features (tracking, chat).
-  static const String webSocketUrl = 'ws://situkang-api-20260616.eastasia.azurecontainer.io:7860/v1/ws';
+  static const String webSocketUrl = 'ws://situkang-api-v2.eastasia.azurecontainer.io:7860/v1/ws';
 
   /// Public Mapbox access token. Pass with:
   /// `--dart-define=MAPBOX_ACCESS_TOKEN=YOUR_TOKEN`
