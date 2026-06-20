@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
@@ -86,16 +88,29 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
         'notes': params.notes,
     };
 
-    // Handle photos upload by converting to base64 strings
+    // Upload photos to POST /upload/damage_proof first and collect their URLs
     if (params.photos.isNotEmpty) {
-      final base64Photos = <String>[];
+      final photoUrls = <String>[];
       for (final photo in params.photos) {
-        final bytes = await photo.readAsBytes();
-        final base64String = base64Encode(bytes);
-        // Add data URI scheme as standard for base64 image uploads unless backend expects raw base64.
-        base64Photos.add('data:image/jpeg;base64,$base64String');
+        final fileName = photo.path.split('/').last;
+        final formData = FormData.fromMap({
+          'file': await MultipartFile.fromFile(
+            photo.path,
+            filename: fileName,
+          ),
+        });
+
+        final response = await apiClient.upload<Map<String, dynamic>>(
+          '/upload/damage_proof',
+          data: formData,
+        );
+
+        final responseData = response.data!;
+        final fileData = responseData['data'] as Map<String, dynamic>;
+        final url = fileData['url'] as String;
+        photoUrls.add(url);
       }
-      requestData['photos'] = base64Photos;
+      requestData['photos'] = photoUrls;
     }
 
     final response = await apiClient.post<Map<String, dynamic>>(
